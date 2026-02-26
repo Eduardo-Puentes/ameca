@@ -23,6 +23,9 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
             <Link href="/eventos" className="hover:text-[var(--ink)]">
               Eventos
             </Link>
+            <Link href="/register" className="hover:text-[var(--ink)]">
+              Crear cuenta
+            </Link>
             <Link href="/login" className="rounded-full bg-[var(--accent)] px-4 py-2 text-white">
               Iniciar sesión
             </Link>

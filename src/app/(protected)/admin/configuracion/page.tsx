@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/Card";
 
 export default function AdminConfiguracionPage() {
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
         title="Configuración"
         subtitle="Ajustes generales del sistema"

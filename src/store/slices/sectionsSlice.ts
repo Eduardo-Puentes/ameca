@@ -6,7 +6,7 @@ import {
   listSectionRequests,
   listSections,
   updateSection,
-} from "@/lib/mock/api";
+} from "@/lib/data";
 
 export type SectionsSlice = {
   sections: Section[];

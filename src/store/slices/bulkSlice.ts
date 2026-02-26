@@ -8,7 +8,7 @@ import {
   saveBulkTiers,
   sendBulkInvites,
   validateBulkToken,
-} from "@/lib/mock/api";
+} from "@/lib/data";
 
 export type BulkSlice = {
   bulkLinks: BulkLink[];
@@ -23,7 +23,10 @@ export type BulkSlice = {
   loadBulkLinks: (eventId?: string) => Promise<void>;
   loadBulkTiers: () => Promise<void>;
   saveTiers: (tiers: BulkTier[]) => Promise<void>;
-  createLink: (eventId: string, payload: Partial<BulkLink>) => Promise<BulkLink>;
+  createLink: (
+    eventId: string,
+    payload: Partial<BulkLink> & { allowedEmails?: string[] }
+  ) => Promise<BulkLink>;
   sendInvites: (bulkId: string) => Promise<void>;
   validateToken: (token: string) => Promise<void>;
   registerWithToken: (token: string) => Promise<{ status: string; message: string }>;

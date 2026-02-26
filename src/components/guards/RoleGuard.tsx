@@ -15,12 +15,26 @@ export function RoleGuard({
 }) {
   const router = useRouter();
   const user = useAppStore((state) => state.user);
+  const authReady = useAppStore((state) => state.authReady);
 
   useEffect(() => {
+    if (!authReady) {
+      return;
+    }
     if (!user || !allowed.includes(user.role)) {
       router.replace("/login");
     }
-  }, [user, allowed, router]);
+  }, [user, allowed, router, authReady]);
+
+  if (!authReady) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[var(--bg)]">
+        <div className="rounded-2xl bg-[var(--surface)] px-6 py-4 text-sm text-[var(--muted)]">
+          Validando sesión...
+        </div>
+      </div>
+    );
+  }
 
   if (!user || !allowed.includes(user.role)) {
     return (

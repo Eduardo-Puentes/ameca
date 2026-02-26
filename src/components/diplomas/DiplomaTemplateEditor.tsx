@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import type { DiplomaField, DiplomaTemplate, Event, Member } from "@/lib/types";
+import type { DiplomaField, DiplomaFieldKey, DiplomaTemplate, Event, Member } from "@/lib/types";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
@@ -58,17 +58,20 @@ export function DiplomaTemplateEditor({
   template: DiplomaTemplate;
   event: Event;
   participant: Member;
-  onSave: (template: DiplomaTemplate) => void;
+  onSave: (template: DiplomaTemplate, assetFile?: File | null) => void;
 }) {
   const [draft, setDraft] = useState<DiplomaTemplate>(template);
   const [selectedId, setSelectedId] = useState<string | null>(template.fields[0]?.id ?? null);
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [fieldPickerOpen, setFieldPickerOpen] = useState(false);
+  const [assetFile, setAssetFile] = useState<File | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setDraft(template);
     setSelectedId(template.fields[0]?.id ?? null);
+    setAssetFile(null);
   }, [template]);
 
   const previewContext = useMemo(
@@ -158,6 +161,28 @@ export function DiplomaTemplateEditor({
     }));
   };
 
+  const addField = (key: DiplomaFieldKey) => {
+    const index = draft.fields.length;
+    const column = index % 2;
+    const row = Math.floor(index / 2);
+    const x = column === 0 ? 8 : 55;
+    const y = clamp(8 + row * 10, 6, 88);
+    const newField = createDiplomaField({
+      key,
+      x,
+      y,
+      width: 35,
+      height: 8,
+    });
+    setDraft((prev) => ({ ...prev, fields: [...prev.fields, newField] }));
+    setSelectedId(newField.id);
+  };
+
+  const canAddField = (key: DiplomaFieldKey) => {
+    if (key === "custom_text") return true;
+    return !draft.fields.some((field) => field.key === key);
+  };
+
   const removeField = (fieldId: string) => {
     setDraft((prev) => ({
       ...prev,
@@ -174,7 +199,7 @@ export function DiplomaTemplateEditor({
         <div>
           <div className="text-lg font-semibold text-[var(--ink)]">Plantilla</div>
           <div className="text-sm text-[var(--muted)]">
-            Arrastra para crear campos. Usa el panel lateral para ajustar estilos.
+            Añade campos desde el panel o arrastra sobre la plantilla para ubicarlos.
           </div>
         </div>
 
@@ -183,6 +208,7 @@ export function DiplomaTemplateEditor({
           accept=".png,.jpg,.jpeg,.pdf"
           helper="Si subes un PDF, se mostrará un placeholder."
           onFile={(file) => {
+            setAssetFile(file ?? null);
             if (!file) {
               setDraft((prev) => ({
                 ...prev,
@@ -205,7 +231,7 @@ export function DiplomaTemplateEditor({
 
         <div
           ref={containerRef}
-          className="relative h-[520px] w-full overflow-hidden rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface-2)]"
+          className="relative w-full overflow-hidden rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface-2)]"
           onMouseDown={(event) => {
             if (event.target !== event.currentTarget) return;
             const point = getPoint(event);
@@ -225,17 +251,20 @@ export function DiplomaTemplateEditor({
             });
           }}
         >
+          <img
+            src={
+              draft.templateAssetType === "pdf"
+                ? "/diploma-template-placeholder.svg"
+                : draft.templateAssetUrl
+            }
+            alt="Plantilla"
+            className="block w-full select-none object-contain pointer-events-none"
+          />
           {draft.templateAssetType === "pdf" ? (
-            <div className="flex h-full items-center justify-center text-sm text-[var(--muted)]">
+            <div className="pointer-events-none absolute inset-0 flex items-center justify-center text-sm text-[var(--muted)]">
               PDF cargado: {draft.templateAssetName ?? "plantilla.pdf"}
             </div>
-          ) : (
-            <img
-              src={draft.templateAssetUrl}
-              alt="Plantilla"
-              className="h-full w-full object-cover"
-            />
-          )}
+          ) : null}
           {draft.fields.map((field) => (
             <FieldBox
               key={field.id}
@@ -273,11 +302,52 @@ export function DiplomaTemplateEditor({
 
       <div className="space-y-4">
         <Card className="space-y-3">
-          <div className="text-lg font-semibold text-[var(--ink)]">Campos</div>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="text-lg font-semibold text-[var(--ink)]">Campos</div>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => setFieldPickerOpen((prev) => !prev)}
+            >
+              {fieldPickerOpen ? "Cerrar" : "Añadir campo"}
+            </Button>
+          </div>
+          {fieldPickerOpen ? (
+            <div className="rounded-xl border border-[var(--border)] bg-white/70 p-3">
+              <div className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">
+                Campos disponibles
+              </div>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                {fieldOptions.map(([value, label]) => {
+                  const key = value as DiplomaFieldKey;
+                  const disabled = !canAddField(key);
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      className={`flex items-center justify-between rounded-lg border px-3 py-2 text-left text-xs font-semibold transition ${
+                        disabled
+                          ? "border-[var(--border)] bg-[var(--surface-2)] text-[var(--muted)]"
+                          : "border-[var(--accent-soft)] bg-[var(--accent-soft)] text-[var(--accent-strong)] hover:bg-[var(--surface-2)]"
+                      }`}
+                      onClick={() => {
+                        if (disabled) return;
+                        addField(key);
+                      }}
+                      disabled={disabled}
+                    >
+                      <span>{label}</span>
+                      {disabled ? <span className="text-[10px]">Agregado</span> : null}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
           <div className="space-y-3">
             {draft.fields.length === 0 ? (
               <div className="text-sm text-[var(--muted)]">
-                Crea al menos un campo para comenzar.
+                Añade un campo para comenzar.
               </div>
             ) : (
               draft.fields.map((field) => (
@@ -392,7 +462,14 @@ export function DiplomaTemplateEditor({
         <Card className="space-y-3">
           <div className="text-lg font-semibold text-[var(--ink)]">Acciones</div>
           <div className="flex flex-wrap gap-2">
-            <Button onClick={() => onSave({ ...draft, updatedAt: new Date().toISOString().split("T")[0] })}>
+            <Button
+              onClick={() =>
+                onSave(
+                  { ...draft, updatedAt: new Date().toISOString().split("T")[0] },
+                  assetFile
+                )
+              }
+            >
               Guardar configuración
             </Button>
             <Button

@@ -121,6 +121,29 @@ export type Member = {
   expirationDate: string;
   role: Role;
   organization?: string;
+  organizationId?: string;
+};
+
+export type OrganizationStatus = "pending" | "approved" | "rejected";
+
+export type Organization = {
+  id: string;
+  name: string;
+  status: OrganizationStatus;
+  representativeName?: string;
+  createdAt: string;
+};
+
+export type OrganizationRequest = {
+  id: string;
+  organizationId: string;
+  organizationName: string;
+  memberId: string;
+  memberName: string;
+  memberEmail: string;
+  status: RequestStatus;
+  comments?: string;
+  createdAt: string;
 };
 
 export type RegistrationStatus = {

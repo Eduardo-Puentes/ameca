@@ -49,7 +49,7 @@ export default function MemberEventoDetallePage() {
       memberName: member.fullName,
       memberEmail: member.email,
       sectionName: "General",
-      paymentProofUrl: proofFile ? proofFile.name : "#",
+      paymentProofFile: proofFile,
     });
     pushToast({
       title: "Solicitud enviada",
@@ -60,7 +60,7 @@ export default function MemberEventoDetallePage() {
 
   if (!event) {
     return (
-      <div>
+      <div className="space-y-6">
         <PageHeader title="Evento" subtitle="No encontrado" breadcrumb={["Miembro", "Eventos"]} />
         <Card>Evento no encontrado.</Card>
       </div>
@@ -68,7 +68,7 @@ export default function MemberEventoDetallePage() {
   }
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
         title={event.name}
         subtitle="Detalles y registro"

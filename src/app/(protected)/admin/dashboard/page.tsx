@@ -154,7 +154,7 @@ export default function AdminDashboardPage() {
   }, [bulkLinks]);
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
         title="Panel de administración"
         subtitle="Resumen ejecutivo de aprobaciones y eventos activos"

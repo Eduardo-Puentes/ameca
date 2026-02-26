@@ -8,6 +8,8 @@ import type {
   EventRequest,
   Member,
   MembershipRequest,
+  Organization,
+  OrganizationRequest,
   RequestStatus,
   Section,
   SectionRequest,
@@ -36,10 +38,34 @@ let bulkLinks = [...mockBulkLinks];
 let diplomaTemplates = [...mockDiplomaTemplates];
 let diplomaRecords = [...mockDiplomaRecords];
 let attendanceRecords = [...mockAttendanceRecords];
+const generateId = (prefix: string) => `${prefix}-${Math.random().toString(36).slice(2, 8)}`;
+let organizations: Organization[] = [
+  {
+    id: generateId("org"),
+    name: "Universidad Central",
+    status: "approved",
+    representativeName: "Dra. Riley Shaw",
+    createdAt: "2026-02-01",
+  },
+  {
+    id: generateId("org"),
+    name: "Instituto Biomédico",
+    status: "approved",
+    representativeName: "Ariana Torres",
+    createdAt: "2026-02-05",
+  },
+];
+let organizationRequests: OrganizationRequest[] = [];
 
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const generateId = (prefix: string) => `${prefix}-${Math.random().toString(36).slice(2, 8)}`;
+const roleFromEmail = (email: string) => {
+  if (email.includes("superuser")) return "superadmin";
+  if (email.includes("admin")) return "admin";
+  if (email.includes("staff")) return "staff";
+  if (email.includes("representative")) return "representative";
+  return "member";
+};
 
 export async function authLogin(role: string) {
   await wait(300);
@@ -69,6 +95,49 @@ export async function authLogin(role: string) {
       role: roleLabel,
     },
   };
+}
+
+export async function authLoginWithCredentials(email: string) {
+  const role = roleFromEmail(email);
+  return authLogin(role);
+}
+
+export async function authRegister(payload: { fullName: string; email: string }) {
+  await wait(350);
+  const role = roleFromEmail(payload.email);
+  members = [
+    {
+      id: generateId("member"),
+      fullName: payload.fullName,
+      email: payload.email,
+      profileType: "standard",
+      verified: false,
+      expirationDate: "",
+      role,
+      organization: "",
+    },
+    ...members,
+  ];
+  return authLogin(role);
+}
+
+export async function authRegisterRepresentative(payload: {
+  fullName: string;
+  email: string;
+  organizationName: string;
+}) {
+  await wait(350);
+  organizations = [
+    {
+      id: generateId("org"),
+      name: payload.organizationName,
+      status: "pending",
+      representativeName: payload.fullName,
+      createdAt: "2026-02-10",
+    },
+    ...organizations,
+  ];
+  return authLogin("representative");
 }
 
 export async function listEvents() {
@@ -115,14 +184,108 @@ export async function listMembers() {
   return [...members];
 }
 
+export async function createAdminUser(payload: {
+  fullName: string;
+  email: string;
+  role: "admin" | "staff";
+}) {
+  await wait(300);
+  return {
+    id: generateId("admin"),
+    email: payload.email,
+    role: payload.role,
+    tempPassword: "ChangeMe123!",
+  };
+}
+
 export async function updateMember(id: string, payload: Partial<Member>) {
   await wait(200);
   members = members.map((member) => (member.id === id ? { ...member, ...payload } : member));
   return members.find((member) => member.id === id) ?? null;
 }
 
+export async function listOrganizations() {
+  await wait(200);
+  return organizations.filter((org) => org.status === "approved");
+}
+
+export async function listMyOrganizationRequests() {
+  await wait(200);
+  return organizationRequests;
+}
+
+export async function createOrganizationJoinRequest(orgId: string) {
+  await wait(250);
+  const org = organizations.find((item) => item.id === orgId);
+  if (!org) {
+    throw new Error("Organization not found");
+  }
+  const req: OrganizationRequest = {
+    id: generateId("org-req"),
+    organizationId: org.id,
+    organizationName: org.name,
+    memberId: "member-1",
+    memberName: "Jordan Lee",
+    memberEmail: "jordan.lee@uni.edu",
+    status: "pending",
+    createdAt: "2026-02-20",
+  };
+  organizationRequests = [req, ...organizationRequests];
+  return req;
+}
+
+export async function listOrganizationJoinRequests(orgId: string) {
+  await wait(200);
+  return organizationRequests.filter((req) => req.organizationId === orgId);
+}
+
+export async function updateOrganizationJoinRequest(id: string, status: RequestStatus) {
+  await wait(200);
+  organizationRequests = organizationRequests.map((req) =>
+    req.id === id ? { ...req, status } : req
+  );
+  return organizationRequests.find((req) => req.id === id)!;
+}
+
+export async function listPendingOrganizations() {
+  await wait(200);
+  return organizations.filter((org) => org.status === "pending");
+}
+
+export async function updateOrganizationStatus(id: string, status: "approved" | "rejected") {
+  await wait(200);
+  organizations = organizations.map((org) =>
+    org.id === id ? { ...org, status } : org
+  );
+  return organizations.find((org) => org.id === id)!;
+}
+
 export async function listMemberRequests() {
   await wait(220);
+  return [...membershipRequests];
+}
+
+export async function createMembershipUpgradeRequest(
+  profileType: string,
+  _paymentProof?: File | null
+) {
+  await wait(220);
+  const newRequest: MembershipRequest = {
+    id: generateId("mem"),
+    memberId: members[0]?.id ?? "member-000",
+    memberName: members[0]?.fullName ?? "Miembro",
+    profileType,
+    status: "pending",
+    paymentProofUrl: "#",
+    comments: "",
+    createdAt: new Date().toISOString().split("T")[0],
+  };
+  membershipRequests = [newRequest, ...membershipRequests];
+  return newRequest;
+}
+
+export async function listMembershipUpgradeRequests() {
+  await wait(200);
   return [...membershipRequests];
 }
 
@@ -163,7 +326,9 @@ export async function denyEventRequest(id: string, comments?: string) {
   return eventRequests.find((req) => req.id === id) ?? null;
 }
 
-export async function createEventRequest(payload: Partial<EventRequest>) {
+export async function createEventRequest(
+  payload: Partial<EventRequest> & { paymentProofFile?: File | null }
+) {
   await wait(300);
   const newRequest: EventRequest = {
     id: generateId("req"),
@@ -220,7 +385,10 @@ export async function listBulkLinks(eventId?: string) {
   return bulkLinks.filter((link) => link.eventId === eventId);
 }
 
-export async function createBulkLink(eventId: string, payload: Partial<BulkLink>) {
+export async function createBulkLink(
+  eventId: string,
+  payload: Partial<BulkLink> & { allowedEmails?: string[] }
+) {
   await wait(260);
   const link: BulkLink = {
     id: generateId("bulk"),
@@ -276,7 +444,11 @@ export async function getDiplomaTemplate(eventId: string) {
   return diplomaTemplates.find((item) => item.eventId === eventId) ?? null;
 }
 
-export async function saveDiplomaTemplate(eventId: string, template: DiplomaTemplate) {
+export async function saveDiplomaTemplate(
+  eventId: string,
+  template: DiplomaTemplate,
+  _assetFile?: File | null
+) {
   await wait(200);
   const existing = diplomaTemplates.find((item) => item.eventId === eventId);
   if (existing) {

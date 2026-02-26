@@ -58,7 +58,7 @@ export default function AdminSeccionesPage() {
   ];
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
         title="Solicitudes de sección"
         subtitle="Aprobación de nuevas secciones"

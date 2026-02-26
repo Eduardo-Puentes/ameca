@@ -27,19 +27,19 @@ export default function AdminEventosPage() {
   };
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
         title="Eventos"
         subtitle="Crea y gestiona eventos activos"
         breadcrumb={["Admin", "Eventos"]}
       />
 
-      <div className="flex items-center justify-between">
+      <Card className="flex flex-wrap items-center justify-between gap-3 p-4">
         <div className="text-sm text-[var(--muted)]">
           Total de eventos: {events.length}
         </div>
         <Button onClick={() => setOpen(true)}>Nuevo evento</Button>
-      </div>
+      </Card>
 
       <div className="grid gap-4 md:grid-cols-2">
         {events.map((event) => (

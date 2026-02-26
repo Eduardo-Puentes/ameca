@@ -35,7 +35,7 @@ export default function DiplomaPlantillaPage() {
 
   if (!event) {
     return (
-      <div>
+      <div className="space-y-6">
         <PageHeader
           title="Plantilla de diplomas"
           subtitle="Evento no encontrado"
@@ -48,7 +48,7 @@ export default function DiplomaPlantillaPage() {
 
   if (!participant) {
     return (
-      <div>
+      <div className="space-y-6">
         <PageHeader
           title="Plantilla de diplomas"
           subtitle="Sin miembros de referencia"
@@ -60,7 +60,7 @@ export default function DiplomaPlantillaPage() {
   }
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
         title="Plantilla de diplomas"
         subtitle="Define áreas y estilos sobre la plantilla"
@@ -71,8 +71,8 @@ export default function DiplomaPlantillaPage() {
         template={template}
         event={event}
         participant={participant}
-        onSave={async (next) => {
-          await saveTemplate(eventId, next);
+        onSave={async (next, assetFile) => {
+          await saveTemplate(eventId, next, assetFile);
           pushToast({ title: "Plantilla guardada", tone: "success" });
         }}
       />

@@ -1,6 +1,6 @@
 import type { StateCreator } from "zustand";
 import type { AttendanceRecord } from "@/lib/types";
-import { listAttendance, recordAttendanceScan, searchAttendance } from "@/lib/mock/api";
+import { listAttendance, recordAttendanceScan, searchAttendance } from "@/lib/data";
 
 export type AttendanceSlice = {
   attendanceRecords: AttendanceRecord[];

@@ -31,7 +31,7 @@ export default function StaffValidacionesPage() {
   ];
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
         title="Validaciones"
         subtitle="Historial de escaneos"

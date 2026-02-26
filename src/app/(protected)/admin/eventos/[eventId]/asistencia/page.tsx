@@ -55,7 +55,7 @@ export default function AdminAsistenciaPage() {
   ];
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
         title="Asistencia"
         subtitle="Escaneo QR y validaciones del evento"

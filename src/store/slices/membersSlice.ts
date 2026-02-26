@@ -1,6 +1,6 @@
 import type { StateCreator } from "zustand";
 import type { Member } from "@/lib/types";
-import { listMembers, updateMember } from "@/lib/mock/api";
+import { getMemberMe, listMembers, updateMember } from "@/lib/data";
 
 export type MembersSlice = {
   members: Member[];
@@ -14,7 +14,9 @@ export const createMembersSlice: StateCreator<MembersSlice, [], [], MembersSlice
   membersLoading: false,
   loadMembers: async () => {
     set({ membersLoading: true });
-    const data = await listMembers();
+    const role = get().role;
+    const data =
+      role === "admin" || role === "superadmin" ? await listMembers() : [await getMemberMe()];
     set({ members: data, membersLoading: false });
   },
   updateMemberProfile: async (id, payload) => {

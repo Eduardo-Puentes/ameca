@@ -29,7 +29,7 @@ export default function MemberBulkPage() {
   };
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
         title="Registro bulk"
         subtitle="Valida tu token y solicita descuento"

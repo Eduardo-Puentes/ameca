@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { IBM_Plex_Mono, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { ToastViewport } from "@/components/ui/Toast";
+import { AuthHydrator } from "@/components/auth/AuthHydrator";
 
 const amecaSans = Space_Grotesk({
   variable: "--font-ameca-sans",
@@ -31,6 +32,7 @@ export default function RootLayout({
       <body
         className={`${amecaSans.variable} ${amecaMono.variable} antialiased`}
       >
+        <AuthHydrator />
         {children}
         <ToastViewport />
       </body>

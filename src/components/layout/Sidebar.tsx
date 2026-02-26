@@ -19,6 +19,12 @@ export function Sidebar({ items }: { items: NavItem[] }) {
   const pathname = usePathname();
   const router = useRouter();
   const logout = useAppStore((state) => state.logout);
+  const matchRoute = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+  const activeHref = items.reduce((best, item) => {
+    if (!matchRoute(item.href)) return best;
+    if (!best || item.href.length > best.length) return item.href;
+    return best;
+  }, "");
 
   return (
     <aside className="flex h-full w-full flex-col rounded-3xl bg-[var(--surface)] p-6 shadow-lg">
@@ -41,7 +47,7 @@ export function Sidebar({ items }: { items: NavItem[] }) {
       <nav className="flex flex-1 flex-col gap-2">
         {items.map((item) => {
           const Icon = item.icon;
-          const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+          const active = item.href === activeHref;
           return (
             <Link
               key={item.label}

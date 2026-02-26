@@ -3,20 +3,26 @@ import type { EventRequest, MembershipRequest } from "@/lib/types";
 import {
   approveEventRequest,
   approveMemberRequest,
+  createMembershipUpgradeRequest,
   createEventRequest,
   denyEventRequest,
   denyMemberRequest,
   listEventRequests,
+  listMyEventRequests,
+  listMembershipUpgradeRequests,
   listMemberRequests,
-} from "@/lib/mock/api";
+} from "@/lib/data";
 
 export type RequestsSlice = {
   membershipRequests: MembershipRequest[];
   eventRequests: EventRequest[];
   requestsLoading: boolean;
   loadMembershipRequests: () => Promise<void>;
+  createMembershipRequest: (profileType: string, paymentProof?: File | null) => Promise<void>;
   loadEventRequests: (eventId: string) => Promise<void>;
-  createMemberEventRequest: (payload: Partial<EventRequest>) => Promise<EventRequest>;
+  createMemberEventRequest: (
+    payload: Partial<EventRequest> & { paymentProofFile?: File | null }
+  ) => Promise<EventRequest>;
   approveMembershipRequest: (id: string, comments?: string) => Promise<void>;
   rejectMembershipRequest: (id: string, comments?: string) => Promise<void>;
   approveEventRegistration: (id: string, comments?: string) => Promise<void>;
@@ -29,12 +35,26 @@ export const createRequestsSlice: StateCreator<RequestsSlice, [], [], RequestsSl
   requestsLoading: false,
   loadMembershipRequests: async () => {
     set({ requestsLoading: true });
-    const data = await listMemberRequests();
+    const role = get().role;
+    const data =
+      role === "admin" || role === "superadmin"
+        ? await listMemberRequests()
+        : await listMembershipUpgradeRequests();
+    set({ membershipRequests: data, requestsLoading: false });
+  },
+  createMembershipRequest: async (profileType, paymentProof) => {
+    set({ requestsLoading: true });
+    await createMembershipUpgradeRequest(profileType, paymentProof);
+    const data = await listMembershipUpgradeRequests();
     set({ membershipRequests: data, requestsLoading: false });
   },
   loadEventRequests: async (eventId) => {
     set({ requestsLoading: true });
-    const data = await listEventRequests(eventId);
+    const role = get().role;
+    const data =
+      role === "admin" || role === "superadmin"
+        ? await listEventRequests(eventId)
+        : await listMyEventRequests(eventId);
     set({ eventRequests: data, requestsLoading: false });
   },
   createMemberEventRequest: async (payload) => {

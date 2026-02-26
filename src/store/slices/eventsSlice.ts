@@ -1,6 +1,6 @@
 import type { StateCreator } from "zustand";
 import type { Event } from "@/lib/types";
-import { createEvent, deleteEvent, listEvents, updateEvent } from "@/lib/mock/api";
+import { createEvent, deleteEvent, listEvents, updateEvent } from "@/lib/data";
 
 export type EventsSlice = {
   events: Event[];

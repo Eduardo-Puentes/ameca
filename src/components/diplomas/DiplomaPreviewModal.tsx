@@ -28,7 +28,7 @@ export function DiplomaPreviewModal({
 
   return (
     <Modal open={open} onClose={onClose} title={title} className="max-w-4xl">
-      <DiplomaPreviewCanvas template={template} data={data} height={480} />
+      <DiplomaPreviewCanvas template={template} data={data} />
     </Modal>
   );
 }

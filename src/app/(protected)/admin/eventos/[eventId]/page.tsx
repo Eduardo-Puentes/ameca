@@ -43,7 +43,7 @@ export default function AdminEventoDetallePage() {
 
   if (!event) {
     return (
-      <div>
+      <div className="space-y-6">
         <PageHeader title="Evento" subtitle="No encontrado" breadcrumb={["Admin", "Eventos"]} />
         <Card>Evento no encontrado.</Card>
       </div>
@@ -51,7 +51,7 @@ export default function AdminEventoDetallePage() {
   }
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
         title={event.name}
         subtitle="Panel operativo del evento"

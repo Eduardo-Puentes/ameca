@@ -113,7 +113,7 @@ export default function AdminDiplomasPage() {
 
   if (!event) {
     return (
-      <div>
+      <div className="space-y-6">
         <PageHeader title="Diplomas" subtitle="Evento no encontrado" breadcrumb={["Admin", "Eventos"]} />
         <Card>Evento no encontrado.</Card>
       </div>
@@ -121,7 +121,7 @@ export default function AdminDiplomasPage() {
   }
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
         title="Diplomas"
         subtitle="Configura plantillas, genera y envía certificados"

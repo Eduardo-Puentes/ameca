@@ -57,7 +57,7 @@ export default function MemberDashboardPage() {
   };
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
         title="Panel de miembro"
         subtitle="Resumen de tu perfil y registros"

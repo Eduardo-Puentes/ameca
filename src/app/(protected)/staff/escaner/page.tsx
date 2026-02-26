@@ -29,7 +29,7 @@ export default function StaffEscanerPage() {
   };
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
         title="Escáner"
         subtitle="Registro rápido de asistencia"

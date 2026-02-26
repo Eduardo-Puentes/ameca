@@ -27,7 +27,7 @@ export default function MemberSeccionesPage() {
   ];
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
         title="Secciones"
         subtitle="Información de tu sección y cupos"

@@ -30,18 +30,23 @@ export default function AdminBulkPage() {
 
   const handleCreate = async () => {
     if (!eventId || !form.orgName.trim()) return;
+    const allowedEmails = form.emails
+      .split("\n")
+      .map((item) => item.trim())
+      .filter(Boolean);
     const link = await createLink(eventId, {
       orgName: form.orgName,
       maxUses: form.maxUses,
       expiresAt: form.expiresAt,
       tiers: bulkTiers,
+      allowedEmails,
     });
     setGeneratedLink(`https://ameca.org/bulk/${link.token}`);
     pushToast({ title: "Enlace bulk creado", tone: "success" });
   };
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
         title="Bulk del evento"
         subtitle="Configura rangos, descuentos y enlaces"

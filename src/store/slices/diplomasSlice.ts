@@ -9,7 +9,7 @@ import {
   saveDiplomaTemplate,
   sendDiplomaRecord,
   sendDiplomas,
-} from "@/lib/mock/api";
+} from "@/lib/data";
 
 export type AttendanceSummary = {
   attendedDaysByMember: Record<string, number>;
@@ -23,7 +23,7 @@ export type DiplomasSlice = {
   attendanceSummaryByEvent: Record<string, AttendanceSummary>;
   diplomasLoading: boolean;
   loadTemplate: (eventId: string) => Promise<void>;
-  saveTemplate: (eventId: string, template: DiplomaTemplate) => Promise<void>;
+  saveTemplate: (eventId: string, template: DiplomaTemplate, assetFile?: File | null) => Promise<void>;
   loadAttendanceSummary: (eventId: string) => Promise<void>;
   loadEventDiplomas: (eventId: string) => Promise<void>;
   generateForEvent: (eventId: string, minRequiredDays: number) => Promise<void>;
@@ -49,9 +49,9 @@ export const createDiplomasSlice: StateCreator<DiplomasSlice, [], [], DiplomasSl
       diplomasLoading: false,
     }));
   },
-  saveTemplate: async (eventId, template) => {
+  saveTemplate: async (eventId, template, assetFile) => {
     set({ diplomasLoading: true });
-    const saved = await saveDiplomaTemplate(eventId, template);
+    const saved = await saveDiplomaTemplate(eventId, template, assetFile);
     set((state) => ({
       templateByEvent: { ...state.templateByEvent, [eventId]: saved },
       diplomasLoading: false,

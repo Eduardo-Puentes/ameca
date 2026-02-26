@@ -7,11 +7,9 @@ import { resolveFieldValue } from "@/lib/diplomaUtils";
 export function DiplomaPreviewCanvas({
   template,
   data,
-  height = 420,
 }: {
   template: DiplomaTemplate;
   data: DiplomaPreviewContext;
-  height?: number;
 }) {
   const isPdf = template.templateAssetType === "pdf";
   const hasAsset = Boolean(template.templateAssetUrl);
@@ -19,21 +17,20 @@ export function DiplomaPreviewCanvas({
   return (
     <div
       className="relative w-full overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface-2)]"
-      style={{ minHeight: height }}
     >
       {!hasAsset ? (
-        <div className="flex h-full min-h-[320px] items-center justify-center text-sm text-[var(--muted)]">
+        <div className="flex items-center justify-center py-16 text-sm text-[var(--muted)]">
           Sin plantilla cargada.
         </div>
       ) : isPdf ? (
-        <div className="flex h-full min-h-[320px] items-center justify-center text-sm text-[var(--muted)]">
+        <div className="flex items-center justify-center py-16 text-sm text-[var(--muted)]">
           Vista previa PDF no disponible en el MVP.
         </div>
       ) : (
         <img
           src={template.templateAssetUrl}
           alt="Plantilla de diploma"
-          className="h-full w-full object-cover"
+          className="block w-full select-none object-contain"
         />
       )}
       {template.fields.map((field) => (

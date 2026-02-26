@@ -118,7 +118,7 @@ export default function MemberDiplomasPage() {
     : null;
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
         title="Diplomas"
         subtitle="Consulta y descarga tus certificados"

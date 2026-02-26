@@ -15,7 +15,7 @@ export default function MemberEventosPage() {
   }, [loadEvents]);
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
         title="Eventos"
         subtitle="Explora eventos disponibles y solicita registro"

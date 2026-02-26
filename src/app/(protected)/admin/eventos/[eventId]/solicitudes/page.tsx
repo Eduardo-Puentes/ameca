@@ -82,7 +82,7 @@ export default function AdminEventRequestsPage() {
   };
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
         title="Solicitudes del evento"
         subtitle="Aprobación y validación de comprobantes"
