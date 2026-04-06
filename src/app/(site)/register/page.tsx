@@ -22,6 +22,7 @@ export default function RegisterPage() {
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [role, setRole] = useState<"member" | "representative">("member");
@@ -67,9 +68,15 @@ export default function RegisterPage() {
           fullName: fullName.trim(),
           email: email.trim(),
           password,
+          phoneNumber: phoneNumber.trim() || undefined,
           organizationId: selectedOrg?.id,
         });
-        router.push("/member/dashboard");
+        pushToast({
+          title: "Registro exitoso",
+          message: "Revisa tu correo para verificar tu cuenta antes de iniciar sesión.",
+          tone: "success",
+        });
+        router.push("/login");
       } else {
         if (!organizationName.trim()) {
           pushToast({ title: "Indica la organización", tone: "warning" });
@@ -79,14 +86,15 @@ export default function RegisterPage() {
           fullName: fullName.trim(),
           email: email.trim(),
           password,
+          phoneNumber: phoneNumber.trim() || undefined,
           organizationName: organizationName.trim(),
         });
         pushToast({
           title: "Solicitud enviada",
-          message: "Un administrador validará tu organización.",
+          message: "Revisa tu correo para verificar tu cuenta.",
           tone: "info",
         });
-        router.push("/member/dashboard");
+        router.push("/login");
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : "No se pudo crear la cuenta.";
@@ -142,6 +150,13 @@ export default function RegisterPage() {
                 placeholder="correo@organizacion.org"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
+              />
+            </FormField>
+            <FormField label="Teléfono (opcional)">
+              <Input
+                placeholder="+52 55 0000 0000"
+                value={phoneNumber}
+                onChange={(event) => setPhoneNumber(event.target.value)}
               />
             </FormField>
             {role === "member" ? (

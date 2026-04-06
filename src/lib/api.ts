@@ -13,9 +13,10 @@ import type {
   OrganizationInvitation,
   Presentation,
   Section,
+  SectionInvite,
   SectionRequest,
 } from "@/lib/types";
-import type { Role } from "@/lib/types";
+import type { ProfileType, Role } from "@/lib/types";
 import { tokenStorage } from "@/lib/authStorage";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
@@ -43,6 +44,7 @@ const humanizeError = (message: string, status: number) => {
   const normalized = message.toLowerCase();
   const mappings: Array<[string, string]> = [
     ["invalid credentials", "Correo o contraseña inválidos."],
+    ["email not verified", "Debes verificar tu correo antes de iniciar sesión."],
     ["email already registered", "El correo ya está registrado."],
     ["event not found", "Evento no encontrado."],
     ["request not found", "Solicitud no encontrada."],
@@ -158,6 +160,7 @@ export async function authRegister(payload: {
   fullName: string;
   email: string;
   password: string;
+  phoneNumber?: string;
   organizationId?: string;
 }) {
   const response = await request<AuthResponse>(
@@ -168,6 +171,7 @@ export async function authRegister(payload: {
         email: payload.email,
         password: payload.password,
         full_name: payload.fullName,
+        phone_number: payload.phoneNumber ?? null,
         organization_id: payload.organizationId ?? null,
       }),
     },
@@ -180,6 +184,7 @@ export async function authRegisterRepresentative(payload: {
   fullName: string;
   email: string;
   password: string;
+  phoneNumber?: string;
   organizationName: string;
 }) {
   const response = await request<AuthResponse>(
@@ -190,6 +195,7 @@ export async function authRegisterRepresentative(payload: {
         email: payload.email,
         password: payload.password,
         full_name: payload.fullName,
+        phone_number: payload.phoneNumber ?? null,
         organization_name: payload.organizationName,
       }),
     },
@@ -203,6 +209,11 @@ export async function authMe() {
     "/auth/me"
   );
   return { ...response, role: normalizeRole(response.role) };
+}
+
+export async function verifyEmail(token: string) {
+  const q = encodeURIComponent(token);
+  return request<{ ok: boolean }>(`/auth/verify-email?token=${q}`, { method: "POST" }, false);
 }
 
 export async function listEvents(): Promise<Event[]> {
@@ -425,6 +436,21 @@ export async function updateSection(id: string, payload: Partial<Section>) {
   });
 }
 
+export async function listSectionInvites(sectionId: string): Promise<SectionInvite[]> {
+  return request<SectionInvite[]>(`/sections/${sectionId}/invites`);
+}
+
+export async function createSectionInvite(sectionId: string, email: string): Promise<SectionInvite> {
+  return request<SectionInvite>(`/sections/${sectionId}/invites`, {
+    method: "POST",
+    body: JSON.stringify({ email }),
+  });
+}
+
+export async function acceptSectionInvite(token: string): Promise<SectionInvite> {
+  return request<SectionInvite>(`/section-invites/${token}/accept`, { method: "POST" });
+}
+
 export async function listBulkLinks(eventId?: string): Promise<BulkLink[]> {
   if (!eventId) {
     return [];
@@ -542,13 +568,17 @@ export async function saveBulkTiers(eventId: string, tiers: BulkTier[]) {
 }
 
 export async function createMembershipUpgradeRequest(
-  profileType: string,
-  paymentProof?: File | null
+  profileType: ProfileType | string,
+  paymentProof?: File | null,
+  schoolIdentification?: File | null
 ) {
   const form = new FormData();
   form.append("profile_type", profileType);
   if (paymentProof) {
     form.append("payment_proof", paymentProof);
+  }
+  if (schoolIdentification) {
+    form.append("school_identification", schoolIdentification);
   }
   return request<MembershipRequest>("/members/me/upgrade-requests", {
     method: "POST",
@@ -581,9 +611,15 @@ export async function listMyPresentations(eventId: string) {
   return request<Presentation[]>(`/events/${eventId}/presentations/me`);
 }
 
-export async function uploadPresentation(eventId: string, file: File) {
+export async function uploadPresentation(
+  eventId: string,
+  file: File,
+  payload?: { name?: string; description?: string }
+) {
   const form = new FormData();
   form.append("file", file);
+  if (payload?.name) form.append("name", payload.name);
+  if (payload?.description) form.append("description", payload.description);
   return request<Presentation>(`/events/${eventId}/presentations`, {
     method: "POST",
     body: form,

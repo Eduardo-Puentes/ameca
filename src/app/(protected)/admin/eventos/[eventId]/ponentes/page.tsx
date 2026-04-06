@@ -44,13 +44,16 @@ export default function AdminSpeakersPage() {
               <div
                 key={item.id}
                 className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--border)] bg-white/70 p-4 text-sm"
-              >
-                <div>
-                  <div className="font-semibold text-[var(--ink)]">{item.fileName}</div>
-                  <div className="text-xs text-[var(--muted)]">
-                    {item.memberName} • {item.memberEmail}
+                >
+                  <div>
+                    <div className="font-semibold text-[var(--ink)]">{item.name || item.fileName}</div>
+                    {item.description ? (
+                      <div className="text-xs text-[var(--muted)]">{item.description}</div>
+                    ) : null}
+                    <div className="text-xs text-[var(--muted)]">
+                      {item.memberName} • {item.memberEmail}
+                    </div>
                   </div>
-                </div>
                 <Button
                   size="sm"
                   onClick={() =>

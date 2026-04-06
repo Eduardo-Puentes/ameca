@@ -19,7 +19,11 @@ export type RequestsSlice = {
   eventRequests: EventRequest[];
   requestsLoading: boolean;
   loadMembershipRequests: () => Promise<void>;
-  createMembershipRequest: (profileType: string, paymentProof?: File | null) => Promise<void>;
+  createMembershipRequest: (
+    profileType: string,
+    paymentProof?: File | null,
+    schoolIdentification?: File | null
+  ) => Promise<void>;
   loadEventRequests: (eventId: string) => Promise<void>;
   createMemberEventRequest: (
     payload: Partial<EventRequest> & { paymentProofFile?: File | null }
@@ -46,9 +50,9 @@ export const createRequestsSlice: StateCreator<AuthSlice & RequestsSlice, [], []
         : await listMembershipUpgradeRequests();
     set({ membershipRequests: data, requestsLoading: false });
   },
-  createMembershipRequest: async (profileType, paymentProof) => {
+  createMembershipRequest: async (profileType, paymentProof, schoolIdentification) => {
     set({ requestsLoading: true });
-    await createMembershipUpgradeRequest(profileType, paymentProof);
+    await createMembershipUpgradeRequest(profileType, paymentProof, schoolIdentification);
     const data = await listMembershipUpgradeRequests();
     set({ membershipRequests: data, requestsLoading: false });
   },

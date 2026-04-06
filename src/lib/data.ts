@@ -23,6 +23,7 @@ export const authRegisterRepresentative = pick(
   api.authRegisterRepresentative,
   mock.authRegisterRepresentative
 );
+export const verifyEmail = pick(api.verifyEmail);
 export const authMe: typeof api.authMe = () => {
   if (!useMock) return api.authMe();
   return mock.authLogin("member").then(
@@ -106,6 +107,9 @@ export const approveSectionRequest = pick(
 export const denySectionRequest = pick(api.denySectionRequest, mock.denySectionRequest);
 export const listSections = pick(api.listSections, mock.listSections);
 export const updateSection = pick(api.updateSection, mock.updateSection);
+export const listSectionInvites = pick(api.listSectionInvites);
+export const createSectionInvite = pick(api.createSectionInvite);
+export const acceptSectionInvite = pick(api.acceptSectionInvite);
 export const listBulkLinks = pick(api.listBulkLinks, mock.listBulkLinks);
 export const createBulkLink = pick(api.createBulkLink, mock.createBulkLink);
 export const sendBulkInvites = pick(api.sendBulkInvites, mock.sendBulkInvites);

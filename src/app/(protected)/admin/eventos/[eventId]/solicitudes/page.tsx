@@ -111,6 +111,12 @@ export default function AdminEventRequestsPage() {
     { header: "Miembro", accessor: "memberName" },
     { header: "Email", accessor: "memberEmail" },
     {
+      header: "Costo",
+      accessor: "calculatedCost",
+      render: (req: EventRequest) =>
+        typeof req.calculatedCost === "number" ? `${req.calculatedCost}` : "--",
+    },
+    {
       header: "Ponente",
       accessor: "isSpeaker",
       render: (req: EventRequest) => (req.isSpeaker ? "Sí" : "No"),
@@ -214,6 +220,9 @@ export default function AdminEventRequestsPage() {
                     </span>
                   ) : null}
                 </div>
+                {typeof modal.calculatedCost === "number" ? (
+                  <div className="text-xs">Costo calculado: {modal.calculatedCost}</div>
+                ) : null}
               </div>
             </div>
 

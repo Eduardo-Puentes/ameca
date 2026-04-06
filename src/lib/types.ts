@@ -39,6 +39,11 @@ export type Event = {
 };
 
 export type RequestStatus = "pending" | "approved" | "rejected";
+export type ProfileType =
+  | "professional"
+  | "student"
+  | "associated_professional"
+  | "associated_student";
 
 export type EventRequest = {
   id: string;
@@ -48,6 +53,7 @@ export type EventRequest = {
   memberEmail: string;
   sectionName: string;
   status: RequestStatus;
+  calculatedCost?: number;
   paymentProofUrl?: string;
   comments?: string;
   createdAt: string;
@@ -72,6 +78,7 @@ export type SectionRequest = {
   representativeName: string;
   pCount: number;
   status: SectionRequestStatus;
+  comments?: string;
   createdAt: string;
 };
 
@@ -79,8 +86,11 @@ export type MembershipRequest = {
   id: string;
   memberId: string;
   memberName: string;
+  currentProfileType?: ProfileType | string;
   profileType: string;
   status: RequestStatus;
+  schoolIdentificationUrl?: string;
+  upgradeCost?: number;
   paymentProofUrl?: string;
   comments?: string;
   createdAt: string;
@@ -111,7 +121,7 @@ export type MemberProfile = {
   id: string;
   fullName: string;
   email: string;
-  profileType: string;
+  profileType: ProfileType | string;
   verified: boolean;
   expirationDate: string;
 };
@@ -120,7 +130,8 @@ export type Member = {
   id: string;
   fullName: string;
   email: string;
-  profileType: string;
+  phoneNumber?: string;
+  profileType: ProfileType | string;
   verified: boolean;
   expirationDate: string;
   role: Role;
@@ -161,10 +172,26 @@ export type OrganizationInvitation = {
   acceptedAt?: string;
 };
 
+export type SectionInvite = {
+  id: string;
+  sectionId: string;
+  eventId: string;
+  sectionName?: string;
+  invitedEmail: string;
+  status: "pending" | "accepted" | "expired" | "cancelled";
+  token?: string;
+  expiresAt: string;
+  createdAt: string;
+  acceptedAt?: string;
+};
+
 export type Presentation = {
   id: string;
+  eventMemberId?: string;
   eventId: string;
   memberId: string;
+  name?: string;
+  description?: string;
   fileName: string;
   fileUrl: string;
   uploadedAt: string;

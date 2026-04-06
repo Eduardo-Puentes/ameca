@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { FileUpload } from "@/components/ui/FileUpload";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { Input } from "@/components/ui/Input";
 import { useToastStore } from "@/components/ui/Toast";
 import { useAppStore } from "@/store";
 import {
@@ -34,6 +35,8 @@ export default function MemberEventoDetallePage() {
   const [isSpeaker, setIsSpeaker] = useState(false);
   const [presentations, setPresentations] = useState<Presentation[]>([]);
   const [presentationFile, setPresentationFile] = useState<File | null>(null);
+  const [presentationName, setPresentationName] = useState("");
+  const [presentationDescription, setPresentationDescription] = useState("");
 
   useEffect(() => {
     loadEvents();
@@ -80,9 +83,14 @@ export default function MemberEventoDetallePage() {
 
   const handleUploadPresentation = async () => {
     if (!eventId || !presentationFile) return;
-    const created = await uploadPresentation(eventId, presentationFile);
+    const created = await uploadPresentation(eventId, presentationFile, {
+      name: presentationName.trim() || presentationFile.name,
+      description: presentationDescription.trim(),
+    });
     setPresentations((prev) => [created, ...prev]);
     setPresentationFile(null);
+    setPresentationName("");
+    setPresentationDescription("");
     pushToast({ title: "Presentación cargada", tone: "success" });
   };
 
@@ -131,6 +139,11 @@ export default function MemberEventoDetallePage() {
           {existingRequest ? (
             <div className="space-y-2">
               <StatusBadge status={existingRequest.status} />
+              {typeof existingRequest.calculatedCost === "number" ? (
+                <div className="text-sm text-[var(--muted)]">
+                  Costo calculado: {existingRequest.calculatedCost}
+                </div>
+              ) : null}
               <div className="text-sm text-[var(--muted)]">
                 Comentario: {existingRequest.comments || "Sin comentarios"}
               </div>
@@ -166,6 +179,16 @@ export default function MemberEventoDetallePage() {
               accept=".pdf,.ppt,.pptx"
               onChange={setPresentationFile}
             />
+            <Input
+              placeholder="Nombre de la presentación"
+              value={presentationName}
+              onChange={(event) => setPresentationName(event.target.value)}
+            />
+            <Input
+              placeholder="Descripción (opcional)"
+              value={presentationDescription}
+              onChange={(event) => setPresentationDescription(event.target.value)}
+            />
             <Button onClick={handleUploadPresentation} disabled={!presentationFile}>
               Subir presentación
             </Button>
@@ -179,7 +202,12 @@ export default function MemberEventoDetallePage() {
                   key={item.id}
                   className="flex items-center justify-between rounded-lg border border-[var(--border)] bg-white/70 px-3 py-2 text-sm"
                 >
-                  <span className="text-[var(--ink)]">{item.fileName}</span>
+                  <div>
+                    <div className="text-[var(--ink)]">{item.name || item.fileName}</div>
+                    {item.description ? (
+                      <div className="text-xs text-[var(--muted)]">{item.description}</div>
+                    ) : null}
+                  </div>
                   <div className="flex items-center gap-2">
                     {item.fileUrl ? (
                       <a

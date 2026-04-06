@@ -9,13 +9,21 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Select } from "@/components/ui/Select";
 import { useToastStore } from "@/components/ui/Toast";
 import { useAppStore } from "@/store";
+import type { ProfileType } from "@/lib/types";
+
+const PROFILE_OPTIONS: Array<{ value: ProfileType; label: string }> = [
+  { value: "student", label: "Estudiante" },
+  { value: "associated_professional", label: "Asociado profesional" },
+  { value: "associated_student", label: "Asociado estudiante" },
+];
 
 export default function MemberMembresiaPage() {
   const { members, loadMembers, createMembershipRequest } = useAppStore();
   const user = useAppStore((state) => state.user);
   const pushToast = useToastStore((state) => state.pushToast);
-  const [requestedType, setRequestedType] = useState("Profesional");
+  const [requestedType, setRequestedType] = useState<ProfileType>("student");
   const [proofFile, setProofFile] = useState<File | null>(null);
+  const [schoolIdFile, setSchoolIdFile] = useState<File | null>(null);
 
   useEffect(() => {
     loadMembers();
@@ -55,33 +63,42 @@ export default function MemberMembresiaPage() {
         <Card className="space-y-4">
           <div>
             <div className="text-lg font-semibold text-[var(--ink)]">Solicitar upgrade</div>
-            <div className="text-sm text-[var(--muted)]">
-              Sube tu comprobante y selecciona el nuevo tipo de membresía.
+              <div className="text-sm text-[var(--muted)]">
+                Sube tu comprobante y selecciona el nuevo tipo de membresía.
+              </div>
             </div>
-          </div>
           <div className="space-y-2">
             <label className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">
               Tipo solicitado
             </label>
             <Select
               value={requestedType}
-              onChange={(event) => setRequestedType(event.target.value)}
+              onChange={(event) => setRequestedType(event.target.value as ProfileType)}
             >
-              {["Profesional", "Estudiante", "Representante"].map((item) => (
-                <option key={item} value={item}>
-                  {item}
+              {PROFILE_OPTIONS.map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.label}
                 </option>
               ))}
             </Select>
           </div>
-          <FileUpload
-            label="Comprobante de pago"
-            accept=".pdf,.png,.jpg"
-            onChange={setProofFile}
-          />
+          {requestedType === "associated_professional" || requestedType === "associated_student" ? (
+            <FileUpload
+              label="Comprobante de pago"
+              accept=".pdf,.png,.jpg"
+              onChange={setProofFile}
+            />
+          ) : null}
+          {requestedType === "student" || requestedType === "associated_student" ? (
+            <FileUpload
+              label="Identificación escolar"
+              accept=".pdf,.png,.jpg"
+              onChange={setSchoolIdFile}
+            />
+          ) : null}
           <Button
             onClick={async () => {
-              await createMembershipRequest(requestedType, proofFile);
+              await createMembershipRequest(requestedType, proofFile, schoolIdFile);
               pushToast({
                 title: "Solicitud enviada",
                 message: "Un administrador revisará tu comprobante.",

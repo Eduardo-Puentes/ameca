@@ -21,12 +21,14 @@ export type AuthSlice = {
     fullName: string;
     email: string;
     password: string;
+    phoneNumber?: string;
     organizationId?: string;
   }) => Promise<User>;
   registerRepresentative: (payload: {
     fullName: string;
     email: string;
     password: string;
+    phoneNumber?: string;
     organizationName: string;
   }) => Promise<User>;
   hydrateSession: () => Promise<void>;

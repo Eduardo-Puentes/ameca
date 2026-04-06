@@ -32,6 +32,7 @@ export default function AdminSolicitudesMembresiaPage() {
 
   const columns = [
     { header: "Miembro", accessor: "memberName" },
+    { header: "Perfil actual", accessor: "currentProfileType" },
     { header: "Perfil", accessor: "profileType" },
     { header: "Fecha", accessor: "createdAt" },
     {
