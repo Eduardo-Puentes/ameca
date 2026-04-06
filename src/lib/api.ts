@@ -10,6 +10,8 @@ import type {
   MembershipRequest,
   Organization,
   OrganizationRequest,
+  OrganizationInvitation,
+  Presentation,
   Section,
   SectionRequest,
 } from "@/lib/types";
@@ -58,6 +60,8 @@ const humanizeError = (message: string, status: number) => {
     ["organization not found", "Organización no encontrada."],
     ["organization already exists", "La organización ya está registrada."],
     ["already a member", "Ya perteneces a esa organización."],
+    ["rejection comment required", "El comentario es obligatorio para rechazar."],
+    ["rejection comment locked", "El comentario del rechazo ya fue enviado y no puede cambiarse."],
   ];
 
   const mapped = mappings.find(([key]) => normalized.includes(key));
@@ -209,10 +213,23 @@ export async function getEvent(id: string): Promise<Event | null> {
   return request<Event>(`/events/${id}`, {}, false);
 }
 
+export async function getMyTicket(eventId: string) {
+  return request<{ token: string; event_id: string }>(`/events/${eventId}/ticket/me`);
+}
+
 export async function createEvent(payload: Partial<Event>): Promise<Event> {
   return request<Event>("/admin/events", {
     method: "POST",
     body: JSON.stringify(payload),
+  });
+}
+
+export async function uploadEventBanner(eventId: string, banner: File): Promise<Event> {
+  const form = new FormData();
+  form.append("banner", banner);
+  return request<Event>(`/admin/events/${eventId}/banner`, {
+    method: "POST",
+    body: form,
   });
 }
 
@@ -313,8 +330,12 @@ export async function denyMemberRequest(id: string, comments?: string) {
   });
 }
 
-export async function listEventRequests(eventId: string): Promise<EventRequest[]> {
-  return request<EventRequest[]>(`/admin/events/${eventId}/requests`);
+export async function listEventRequests(
+  eventId: string,
+  status?: "pending" | "approved" | "rejected"
+): Promise<EventRequest[]> {
+  const query = status ? `?status=${status}` : "";
+  return request<EventRequest[]>(`/admin/events/${eventId}/requests${query}`);
 }
 
 export async function listMyEventRequests(eventId?: string): Promise<EventRequest[]> {
@@ -337,7 +358,12 @@ export async function denyEventRequest(id: string, comments?: string) {
 }
 
 export async function createEventRequest(
-  payload: Partial<EventRequest> & { paymentProofFile?: File | null; sectionId?: string | null; bulkToken?: string | null }
+  payload: Partial<EventRequest> & {
+    paymentProofFile?: File | null;
+    sectionId?: string | null;
+    bulkToken?: string | null;
+    isSpeaker?: boolean;
+  }
 ) {
   if (!payload.eventId) {
     throw new Error("eventId required");
@@ -350,6 +376,10 @@ export async function createEventRequest(
   }
   if (payload.bulkToken) {
     form.append("bulk_token", payload.bulkToken);
+    hasField = true;
+  }
+  if (payload.isSpeaker) {
+    form.append("is_speaker", "true");
     hasField = true;
   }
   if (payload.paymentProofFile) {
@@ -446,6 +476,10 @@ export async function listMyDiplomas(memberId: string): Promise<DiplomaRecord[]>
   return request<DiplomaRecord[]>("/members/me/diplomas");
 }
 
+export async function downloadMyDiploma(recordId: string) {
+  return request<{ url: string }>(`/members/me/diplomas/${recordId}/download`);
+}
+
 export async function getDiplomaTemplate(eventId: string): Promise<DiplomaTemplate | null> {
   return request<DiplomaTemplate | null>(`/admin/events/${eventId}/diploma-template`);
 }
@@ -496,12 +530,12 @@ export async function searchAttendance(query?: string) {
   return request<AttendanceRecord[]>(`/attendance/search${q}`);
 }
 
-export async function listBulkTiers() {
-  return request<BulkTier[]>("/admin/bulk/tiers");
+export async function listBulkTiers(eventId: string) {
+  return request<BulkTier[]>(`/admin/events/${eventId}/bulk-tiers`);
 }
 
-export async function saveBulkTiers(tiers: BulkTier[]) {
-  return request<BulkTier[]>("/admin/bulk/tiers", {
+export async function saveBulkTiers(eventId: string, tiers: BulkTier[]) {
+  return request<BulkTier[]>(`/admin/events/${eventId}/bulk-tiers`, {
     method: "PUT",
     body: JSON.stringify(tiers),
   });
@@ -524,4 +558,46 @@ export async function createMembershipUpgradeRequest(
 
 export async function listMembershipUpgradeRequests() {
   return request<MembershipRequest[]>("/members/me/upgrade-requests");
+}
+
+export async function listOrganizationInvites(): Promise<OrganizationInvitation[]> {
+  return request<OrganizationInvitation[]>("/organizations/me/invites");
+}
+
+export async function acceptOrganizationInvite(token: string) {
+  return request<OrganizationInvitation>(`/organizations/invites/${token}/accept`, {
+    method: "POST",
+  });
+}
+
+export async function inviteOrganizationMembers(orgId: string, emails: string[]) {
+  return request<OrganizationInvitation[]>(`/organizations/${orgId}/invites`, {
+    method: "POST",
+    body: JSON.stringify({ emails }),
+  });
+}
+
+export async function listMyPresentations(eventId: string) {
+  return request<Presentation[]>(`/events/${eventId}/presentations/me`);
+}
+
+export async function uploadPresentation(eventId: string, file: File) {
+  const form = new FormData();
+  form.append("file", file);
+  return request<Presentation>(`/events/${eventId}/presentations`, {
+    method: "POST",
+    body: form,
+  });
+}
+
+export async function deletePresentation(id: string) {
+  return request<{ ok: boolean }>(`/presentations/${id}`, { method: "DELETE" });
+}
+
+export async function listEventSpeakers(eventId: string) {
+  return request<Presentation[]>(`/admin/events/${eventId}/speakers`);
+}
+
+export async function downloadPresentation(presentationId: string) {
+  return request<{ url: string }>(`/admin/presentations/${presentationId}/download`);
 }

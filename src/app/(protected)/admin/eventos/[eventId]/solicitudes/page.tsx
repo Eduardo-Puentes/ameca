@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { PageHeader } from "@/components/layout/PageMetaContext";
 import { Card } from "@/components/ui/Card";
@@ -13,18 +13,25 @@ import { useToastStore } from "@/components/ui/Toast";
 import { useAppStore } from "@/store";
 import type { EventRequest } from "@/lib/types";
 
+const sortByDateDesc = (items: EventRequest[]) =>
+  [...items].sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+
 export default function AdminEventRequestsPage() {
   const params = useParams();
   const eventId = params?.eventId as string;
-  const { eventRequests, loadEventRequests, approveEventRegistration, rejectEventRegistration } =
-    useAppStore();
+  const {
+    events,
+    eventRequests,
+    loadEventRequests,
+    loadEvents,
+    approveEventRegistration,
+    rejectEventRegistration,
+  } = useAppStore();
   const pushToast = useToastStore((state) => state.pushToast);
-  const [modal, setModal] = useState<{
-    request: EventRequest;
-    action: "approved" | "rejected";
-  } | null>(null);
+  const [modal, setModal] = useState<EventRequest | null>(null);
+  const [decision, setDecision] = useState<"reject" | null>(null);
   const [comment, setComment] = useState("");
-  const [emailLog, setEmailLog] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (eventId) {
@@ -32,10 +39,82 @@ export default function AdminEventRequestsPage() {
     }
   }, [eventId, loadEventRequests]);
 
+  useEffect(() => {
+    loadEvents();
+  }, [loadEvents]);
+
+  const event = events.find((item) => item.id === eventId);
+  const pendingRequests = useMemo(
+    () => sortByDateDesc(eventRequests.filter((req) => req.status === "pending")),
+    [eventRequests]
+  );
+  const approvedRequests = useMemo(
+    () => sortByDateDesc(eventRequests.filter((req) => req.status === "approved")),
+    [eventRequests]
+  );
+  const rejectedRequests = useMemo(
+    () => sortByDateDesc(eventRequests.filter((req) => req.status === "rejected")),
+    [eventRequests]
+  );
+
+  const openModal = (req: EventRequest) => {
+    setModal(req);
+    setDecision(null);
+    setComment(req.status === "rejected" ? req.comments ?? "" : "");
+  };
+
+  const closeModal = () => {
+    setModal(null);
+    setDecision(null);
+    setComment("");
+  };
+
+  const handleApprove = async () => {
+    if (!modal) return;
+    try {
+      setSaving(true);
+      await approveEventRegistration(modal.id);
+      pushToast({ title: "Solicitud aprobada", tone: "success" });
+      closeModal();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "No se pudo aprobar.";
+      pushToast({ title: "Error", message, tone: "danger" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!modal) return;
+    if (!comment.trim()) {
+      pushToast({
+        title: "Comentario requerido",
+        message: "Indica el motivo del rechazo.",
+        tone: "warning",
+      });
+      return;
+    }
+    try {
+      setSaving(true);
+      await rejectEventRegistration(modal.id, comment.trim());
+      pushToast({ title: "Solicitud rechazada", tone: "danger" });
+      closeModal();
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "No se pudo rechazar.";
+      pushToast({ title: "Error", message, tone: "danger" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const columns = [
     { header: "Miembro", accessor: "memberName" },
     { header: "Email", accessor: "memberEmail" },
-    { header: "Sección", accessor: "sectionName" },
+    {
+      header: "Ponente",
+      accessor: "isSpeaker",
+      render: (req: EventRequest) => (req.isSpeaker ? "Sí" : "No"),
+    },
     {
       header: "Estado",
       accessor: "status",
@@ -45,41 +124,15 @@ export default function AdminEventRequestsPage() {
       header: "Acciones",
       accessor: "actions",
       render: (req: EventRequest) => (
-        <div className="flex gap-2">
-          <Button size="sm" onClick={() => setModal({ request: req, action: "approved" })}>
-            Aprobar
-          </Button>
-          <Button
-            size="sm"
-            variant="danger"
-            onClick={() => setModal({ request: req, action: "rejected" })}
-          >
-            Rechazar
-          </Button>
-        </div>
+        <Button size="sm" variant="secondary" onClick={() => openModal(req)}>
+          Revisar
+        </Button>
       ),
     },
   ];
 
-  const confirm = async () => {
-    if (!modal) return;
-    if (modal.action === "approved") {
-      await approveEventRegistration(modal.request.id, comment);
-      pushToast({ title: "Solicitud aprobada", tone: "success" });
-      setEmailLog((prev) => [
-        `Correo enviado a ${modal.request.memberEmail}: aprobación confirmada.`,
-        ...prev,
-      ]);
-    } else {
-      await rejectEventRegistration(modal.request.id, comment);
-      pushToast({ title: "Solicitud rechazada", tone: "danger" });
-      setEmailLog((prev) => [
-        `Correo enviado a ${modal.request.memberEmail}: solicitud rechazada.`,
-        ...prev,
-      ]);
-    }
-    setModal(null);
-  };
+  const proofUrl = modal?.paymentProofUrl ?? "";
+  const isImage = /\.(png|jpe?g|webp)$/i.test(proofUrl);
 
   return (
     <div className="space-y-6">
@@ -89,47 +142,177 @@ export default function AdminEventRequestsPage() {
         breadcrumb={["Admin", "Eventos", "Solicitudes"]}
       />
 
+      <div className="grid gap-4 md:grid-cols-3">
+        <Card className="space-y-2">
+          <div className="text-xs uppercase tracking-[0.3em] text-[var(--muted)]">Pendientes</div>
+          <div className="text-2xl font-semibold text-[var(--ink)]">{pendingRequests.length}</div>
+        </Card>
+        <Card className="space-y-2">
+          <div className="text-xs uppercase tracking-[0.3em] text-[var(--muted)]">Aprobadas</div>
+          <div className="text-2xl font-semibold text-[var(--ink)]">{approvedRequests.length}</div>
+        </Card>
+        <Card className="space-y-2">
+          <div className="text-xs uppercase tracking-[0.3em] text-[var(--muted)]">Rechazadas</div>
+          <div className="text-2xl font-semibold text-[var(--ink)]">{rejectedRequests.length}</div>
+        </Card>
+      </div>
+
       <Card className="space-y-4">
-        <div className="text-sm text-[var(--muted)]">
-          Revisa cada solicitud y agrega comentarios cuando sea necesario.
-        </div>
-        <DataTable columns={columns} data={eventRequests} />
+        <div className="text-lg font-semibold text-[var(--ink)]">Pendientes</div>
+        {pendingRequests.length === 0 ? (
+          <div className="text-sm text-[var(--muted)]">No hay solicitudes pendientes.</div>
+        ) : (
+          <DataTable columns={columns} data={pendingRequests} />
+        )}
       </Card>
 
-      <Card className="space-y-3">
-        <div className="text-lg font-semibold text-[var(--ink)]">Registro de notificaciones</div>
-        {emailLog.length === 0 ? (
-          <div className="text-sm text-[var(--muted)]">
-            Aún no se han enviado notificaciones.
-          </div>
+      <Card className="space-y-4">
+        <div className="text-lg font-semibold text-[var(--ink)]">Aprobadas</div>
+        {approvedRequests.length === 0 ? (
+          <div className="text-sm text-[var(--muted)]">Sin aprobaciones registradas.</div>
         ) : (
-          <ul className="space-y-2 text-sm text-[var(--muted)]">
-            {emailLog.map((entry, index) => (
-              <li key={`${entry}-${index}`}>{entry}</li>
-            ))}
-          </ul>
+          <DataTable columns={columns} data={approvedRequests} />
+        )}
+      </Card>
+
+      <Card className="space-y-4">
+        <div className="text-lg font-semibold text-[var(--ink)]">Rechazadas</div>
+        {rejectedRequests.length === 0 ? (
+          <div className="text-sm text-[var(--muted)]">Sin rechazos registrados.</div>
+        ) : (
+          <DataTable columns={columns} data={rejectedRequests} />
         )}
       </Card>
 
       <Modal
         open={!!modal}
-        onClose={() => setModal(null)}
-        title={modal?.action === "approved" ? "Aprobar solicitud" : "Rechazar solicitud"}
+        onClose={closeModal}
+        title={modal?.status === "pending" ? "Revisar solicitud" : "Detalle de solicitud"}
       >
-        <div className="space-y-3 text-sm text-[var(--muted)]">
-          <div>Comentario opcional para el solicitante.</div>
-          <Input
-            placeholder="Comentario"
-            value={comment}
-            onChange={(event) => setComment(event.target.value)}
-          />
-          <div className="flex justify-end gap-2">
-            <Button variant="secondary" onClick={() => setModal(null)}>
-              Cancelar
-            </Button>
-            <Button onClick={confirm}>Confirmar</Button>
+        {modal ? (
+          <div className="space-y-4 text-sm text-[var(--muted)]">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <div className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">Miembro</div>
+                <div className="text-base font-semibold text-[var(--ink)]">{modal.memberName}</div>
+                <div>{modal.memberEmail}</div>
+                <div className="text-xs">Sección: {modal.sectionName}</div>
+              </div>
+              <div className="space-y-2">
+                <div className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">Evento</div>
+                <div className="text-base font-semibold text-[var(--ink)]">{modal.eventName}</div>
+                {event ? (
+                  <div className="text-xs">
+                    {event.location} • {event.startDate} • {event.duration} día(s)
+                  </div>
+                ) : null}
+                <div className="flex items-center gap-2">
+                  <StatusBadge status={modal.status} />
+                  {modal.isSpeaker ? (
+                    <span className="rounded-full bg-[var(--surface-2)] px-2 py-1 text-xs">
+                      Ponente
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <div className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">
+                Comprobante
+              </div>
+              {proofUrl ? (
+                <div className="space-y-2">
+                  {isImage ? (
+                    <img
+                      src={proofUrl}
+                      alt="Comprobante"
+                      className="max-h-64 w-full rounded-xl border border-[var(--border)] object-contain"
+                    />
+                  ) : (
+                    <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface-2)] p-4">
+                      Archivo disponible para revisión.
+                    </div>
+                  )}
+                  <a
+                    className="text-[var(--accent)]"
+                    href={proofUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Abrir comprobante
+                  </a>
+                </div>
+              ) : (
+                <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface-2)] p-4">
+                  No se adjuntó comprobante.
+                </div>
+              )}
+            </div>
+
+            {modal.status === "rejected" ? (
+              <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-3">
+                <div className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">
+                  Comentario enviado
+                </div>
+                <div className="text-sm text-[var(--ink)]">
+                  {modal.comments || "Sin comentario"}
+                </div>
+              </div>
+            ) : decision === "reject" ? (
+              <div className="space-y-2">
+                <div className="text-sm text-[var(--muted)]">
+                  El comentario es obligatorio y se enviará al correo del solicitante.
+                </div>
+                <Input
+                  placeholder="Motivo del rechazo"
+                  value={comment}
+                  onChange={(event) => setComment(event.target.value)}
+                />
+              </div>
+            ) : null}
+
+            <div className="flex flex-wrap justify-end gap-2">
+              {decision === "reject" ? (
+                <>
+                  <Button variant="secondary" onClick={() => setDecision(null)} disabled={saving}>
+                    Cancelar
+                  </Button>
+                  <Button
+                    variant="danger"
+                    onClick={handleReject}
+                    disabled={saving || !comment.trim()}
+                  >
+                    Confirmar rechazo
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button variant="secondary" onClick={closeModal} disabled={saving}>
+                    Cerrar
+                  </Button>
+                  {modal.status !== "approved" ? (
+                    <Button onClick={handleApprove} disabled={saving}>
+                      Aprobar
+                    </Button>
+                  ) : null}
+                  {modal.status !== "rejected" ? (
+                    <Button
+                      variant="danger"
+                      onClick={() => {
+                        setDecision("reject");
+                        setComment("");
+                      }}
+                      disabled={saving}
+                    >
+                      Rechazar
+                    </Button>
+                  ) : null}
+                </>
+              )}
+            </div>
           </div>
-        </div>
+        ) : null}
       </Modal>
     </div>
   );

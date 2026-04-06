@@ -33,6 +33,9 @@ export type Event = {
   description: string;
   capacity: number;
   status: "open" | "closed";
+  bannerUrl?: string;
+  bannerName?: string;
+  bannerType?: string;
 };
 
 export type RequestStatus = "pending" | "approved" | "rejected";
@@ -48,6 +51,7 @@ export type EventRequest = {
   paymentProofUrl?: string;
   comments?: string;
   createdAt: string;
+  isSpeaker?: boolean;
 };
 
 export type SectionRequestStatus = RequestStatus;
@@ -144,6 +148,28 @@ export type OrganizationRequest = {
   status: RequestStatus;
   comments?: string;
   createdAt: string;
+};
+
+export type OrganizationInvitation = {
+  id: string;
+  organizationId: string;
+  organizationName: string;
+  email: string;
+  status: "pending" | "accepted" | "rejected";
+  token: string;
+  invitedAt: string;
+  acceptedAt?: string;
+};
+
+export type Presentation = {
+  id: string;
+  eventId: string;
+  memberId: string;
+  fileName: string;
+  fileUrl: string;
+  uploadedAt: string;
+  memberName?: string;
+  memberEmail?: string;
 };
 
 export type RegistrationStatus = {

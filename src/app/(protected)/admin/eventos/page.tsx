@@ -12,7 +12,7 @@ import { useToastStore } from "@/components/ui/Toast";
 import { useAppStore } from "@/store";
 
 export default function AdminEventosPage() {
-  const { events, loadEvents, addEvent, removeEvent } = useAppStore();
+  const { events, loadEvents, addEvent, removeEvent, uploadEventBanner } = useAppStore();
   const pushToast = useToastStore((state) => state.pushToast);
   const [open, setOpen] = useState(false);
 
@@ -21,7 +21,11 @@ export default function AdminEventosPage() {
   }, [loadEvents]);
 
   const handleCreate = async (payload: any) => {
-    await addEvent(payload);
+    const { bannerFile, ...eventPayload } = payload ?? {};
+    const created = await addEvent(eventPayload);
+    if (bannerFile) {
+      await uploadEventBanner(created.id, bannerFile);
+    }
     setOpen(false);
     pushToast({ title: "Evento creado", tone: "success" });
   };
@@ -44,6 +48,15 @@ export default function AdminEventosPage() {
       <div className="grid gap-4 md:grid-cols-2">
         {events.map((event) => (
           <Card key={event.id} className="space-y-3">
+            {event.bannerUrl ? (
+              <div className="overflow-hidden rounded-xl border border-[var(--border)]">
+                <img
+                  src={event.bannerUrl}
+                  alt={`Banner ${event.name}`}
+                  className="h-32 w-full object-cover"
+                />
+              </div>
+            ) : null}
             <div className="flex items-center justify-between">
               <div className="text-lg font-semibold text-[var(--ink)]">{event.name}</div>
               <StatusBadge status={event.status} />

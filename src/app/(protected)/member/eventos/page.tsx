@@ -25,6 +25,15 @@ export default function MemberEventosPage() {
       <div className="grid gap-4 md:grid-cols-2">
         {events.map((event) => (
           <Card key={event.id} className="space-y-3">
+            {event.bannerUrl ? (
+              <div className="overflow-hidden rounded-xl border border-[var(--border)]">
+                <img
+                  src={event.bannerUrl}
+                  alt={`Banner ${event.name}`}
+                  className="h-32 w-full object-cover"
+                />
+              </div>
+            ) : null}
             <div className="flex items-center justify-between">
               <div className="text-lg font-semibold text-[var(--ink)]">{event.name}</div>
               <StatusBadge status={event.status} />

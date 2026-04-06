@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { FormField } from "@/components/ui/FormField";
@@ -22,6 +22,7 @@ const routeForRole: Record<Role, string> = {
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const loginWithCredentials = useAppStore((state) => state.loginWithCredentials);
   const loading = useAppStore((state) => state.authLoading);
   const pushToast = useToastStore((state) => state.pushToast);
@@ -31,7 +32,10 @@ export default function LoginPage() {
   const handleLogin = async () => {
     try {
       const user = await loginWithCredentials(email.trim(), password);
-      const nextRoute = routeForRole[user.role] ?? "/member/dashboard";
+      const nextParam = searchParams.get("next");
+      const safeNext =
+        nextParam && nextParam.startsWith("/") ? nextParam : routeForRole[user.role];
+      const nextRoute = safeNext ?? "/member/dashboard";
       router.push(nextRoute);
     } catch (error) {
       const message = error instanceof Error ? error.message : "No se pudo iniciar sesión.";

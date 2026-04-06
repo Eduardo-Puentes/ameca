@@ -12,6 +12,7 @@ import { DiplomaPreviewModal } from "@/components/diplomas/DiplomaPreviewModal";
 import { useToastStore } from "@/components/ui/Toast";
 import { useAppStore } from "@/store";
 import type { DiplomaRecord, Member } from "@/lib/types";
+import { downloadMyDiploma } from "@/lib/data";
 import { buildPreviewContext, createEmptyTemplate } from "@/lib/diplomaUtils";
 
 export default function MemberDiplomasPage() {
@@ -74,13 +75,26 @@ export default function MemberDiplomasPage() {
           </Button>
           <Button
             size="sm"
-            onClick={() =>
-              pushToast({
-                title: "Descarga simulada",
-                message: "La descarga real estará disponible en la siguiente fase.",
-                tone: "info",
-              })
-            }
+            onClick={async () => {
+              try {
+                const response = await downloadMyDiploma(item.id);
+                if (response?.url) {
+                  window.open(response.url, "_blank", "noopener,noreferrer");
+                } else {
+                  pushToast({
+                    title: "Sin archivo disponible",
+                    message: "Este diploma aún no está listo para descargar.",
+                    tone: "warning",
+                  });
+                }
+              } catch (error) {
+                const message =
+                  error instanceof Error
+                    ? error.message
+                    : "No se pudo descargar el diploma.";
+                pushToast({ title: "Error", message, tone: "danger" });
+              }
+            }}
           >
             Descargar
           </Button>

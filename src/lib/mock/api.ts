@@ -150,6 +150,11 @@ export async function getEvent(id: string) {
   return events.find((event) => event.id === id) ?? null;
 }
 
+export async function getMyTicket(eventId: string) {
+  await wait(150);
+  return { token: `TCK-${eventId}-member`, event_id: eventId };
+}
+
 export async function createEvent(payload: Partial<Event>) {
   await wait(300);
   const newEvent: Event = {
@@ -165,6 +170,17 @@ export async function createEvent(payload: Partial<Event>) {
   };
   events = [newEvent, ...events];
   return newEvent;
+}
+
+export async function uploadEventBanner(eventId: string, banner: File) {
+  await wait(200);
+  const bannerUrl = typeof URL !== "undefined" ? URL.createObjectURL(banner) : "";
+  events = events.map((event) =>
+    event.id === eventId
+      ? { ...event, bannerUrl, bannerName: banner.name, bannerType: banner.type }
+      : event
+  );
+  return events.find((event) => event.id === eventId) ?? null;
 }
 
 export async function updateEvent(id: string, payload: Partial<Event>) {
@@ -305,9 +321,14 @@ export async function denyMemberRequest(id: string, comments?: string) {
   return membershipRequests.find((req) => req.id === id) ?? null;
 }
 
-export async function listEventRequests(eventId: string) {
+export async function listEventRequests(
+  eventId: string,
+  status?: "pending" | "approved" | "rejected"
+) {
   await wait(200);
-  return eventRequests.filter((req) => req.eventId === eventId);
+  const scoped = eventRequests.filter((req) => req.eventId === eventId);
+  if (!status) return scoped;
+  return scoped.filter((req) => req.status === status);
 }
 
 export async function approveEventRequest(id: string, comments?: string) {
@@ -341,6 +362,7 @@ export async function createEventRequest(
     paymentProofUrl: payload.paymentProofUrl,
     comments: "",
     createdAt: new Date().toISOString().split("T")[0],
+    isSpeaker: payload.isSpeaker ?? false,
   };
   eventRequests = [newRequest, ...eventRequests];
   return newRequest;
@@ -622,12 +644,81 @@ export async function listAttendance(eventId?: string) {
   return attendanceRecords.filter((record) => record.eventId === eventId);
 }
 
-export async function listBulkTiers() {
+export async function listBulkTiers(_eventId: string) {
   await wait(150);
   return [...mockBulkTiers];
 }
 
-export async function saveBulkTiers(tiers: BulkTier[]) {
+export async function saveBulkTiers(_eventId: string, tiers: BulkTier[]) {
   await wait(200);
   return tiers;
+}
+
+export async function listOrganizationInvites() {
+  await wait(200);
+  return [];
+}
+
+export async function acceptOrganizationInvite(token: string) {
+  await wait(200);
+  return {
+    id: generateId("invite"),
+    organizationId: organizations[0]?.id ?? "",
+    organizationName: organizations[0]?.name ?? "",
+    email: "member@example.com",
+    status: "accepted",
+    token,
+    invitedAt: "2026-02-15",
+    acceptedAt: "2026-02-20",
+  };
+}
+
+export async function inviteOrganizationMembers(_orgId: string, emails: string[]) {
+  await wait(200);
+  return emails.map((email) => ({
+    id: generateId("invite"),
+    organizationId: organizations[0]?.id ?? "",
+    organizationName: organizations[0]?.name ?? "",
+    email,
+    status: "pending",
+    token: generateId("token"),
+    invitedAt: "2026-02-15",
+  }));
+}
+
+export async function listMyPresentations(_eventId: string) {
+  await wait(200);
+  return [];
+}
+
+export async function uploadPresentation(_eventId: string, file: File) {
+  await wait(200);
+  return {
+    id: generateId("pres"),
+    eventId: _eventId,
+    memberId: "member-1",
+    fileName: file.name,
+    fileUrl: "#",
+    uploadedAt: new Date().toISOString(),
+  };
+}
+
+export async function deletePresentation(_id: string) {
+  await wait(150);
+  return { ok: true };
+}
+
+export async function listEventSpeakers(_eventId: string) {
+  await wait(200);
+  return [];
+}
+
+export async function downloadPresentation(_presentationId: string) {
+  await wait(150);
+  return { url: "#" };
+}
+
+export async function downloadMyDiploma(_recordId: string) {
+  await wait(150);
+  return { url: "#" };
 }

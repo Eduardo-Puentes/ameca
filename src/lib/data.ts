@@ -34,8 +34,16 @@ export const listEvents = (...args: Parameters<typeof mock.listEvents>) =>
 export const getEvent = (...args: Parameters<typeof mock.getEvent>) =>
   useMock ? mock.getEvent(...args) : api.getEvent(...(args as any));
 
+export const getMyTicket = (...args: Parameters<typeof api.getMyTicket>) =>
+  useMock ? (mock.getMyTicket as any)(...args) : api.getMyTicket(...(args as any));
+
 export const createEvent = (...args: Parameters<typeof mock.createEvent>) =>
   useMock ? mock.createEvent(...args) : api.createEvent(...(args as any));
+
+export const uploadEventBanner = (...args: Parameters<typeof api.uploadEventBanner>) =>
+  useMock
+    ? (mock.uploadEventBanner as any)(...args)
+    : api.uploadEventBanner(...(args as any));
 
 export const updateEvent = (...args: Parameters<typeof mock.updateEvent>) =>
   useMock ? mock.updateEvent(...args) : api.updateEvent(...(args as any));
@@ -93,6 +101,45 @@ export const updateOrganizationStatus = (
   useMock
     ? mock.updateOrganizationStatus(...args)
     : api.updateOrganizationStatus(...(args as any));
+
+export const listOrganizationInvites = (
+  ...args: Parameters<typeof api.listOrganizationInvites>
+) =>
+  useMock ? (mock.listOrganizationInvites as any)(...args) : api.listOrganizationInvites(...(args as any));
+
+export const acceptOrganizationInvite = (
+  ...args: Parameters<typeof api.acceptOrganizationInvite>
+) =>
+  useMock
+    ? (mock.acceptOrganizationInvite as any)(...args)
+    : api.acceptOrganizationInvite(...(args as any));
+
+export const inviteOrganizationMembers = (
+  ...args: Parameters<typeof api.inviteOrganizationMembers>
+) =>
+  useMock
+    ? (mock.inviteOrganizationMembers as any)(...args)
+    : api.inviteOrganizationMembers(...(args as any));
+
+export const listMyPresentations = (...args: Parameters<typeof api.listMyPresentations>) =>
+  useMock ? (mock.listMyPresentations as any)(...args) : api.listMyPresentations(...(args as any));
+
+export const uploadPresentation = (...args: Parameters<typeof api.uploadPresentation>) =>
+  useMock ? (mock.uploadPresentation as any)(...args) : api.uploadPresentation(...(args as any));
+
+export const deletePresentation = (...args: Parameters<typeof api.deletePresentation>) =>
+  useMock ? (mock.deletePresentation as any)(...args) : api.deletePresentation(...(args as any));
+
+export const listEventSpeakers = (...args: Parameters<typeof api.listEventSpeakers>) =>
+  useMock ? (mock.listEventSpeakers as any)(...args) : api.listEventSpeakers(...(args as any));
+
+export const downloadPresentation = (...args: Parameters<typeof api.downloadPresentation>) =>
+  useMock
+    ? (mock.downloadPresentation as any)(...args)
+    : api.downloadPresentation(...(args as any));
+
+export const downloadMyDiploma = (...args: Parameters<typeof api.downloadMyDiploma>) =>
+  useMock ? (mock.downloadMyDiploma as any)(...args) : api.downloadMyDiploma(...(args as any));
 
 export const getMemberMe = (...args: Parameters<typeof api.getMemberMe>) =>
   useMock ? mock.listMembers().then((items) => items[0]) : api.getMemberMe(...(args as any));
@@ -189,11 +236,11 @@ export const searchAttendance = (...args: Parameters<typeof mock.searchAttendanc
 export const listAttendance = (...args: Parameters<typeof mock.listAttendance>) =>
   useMock ? mock.listAttendance(...args) : api.listAttendance(...(args as any));
 
-export const listBulkTiers = (...args: Parameters<typeof mock.listBulkTiers>) =>
-  useMock ? mock.listBulkTiers(...args) : api.listBulkTiers(...(args as any));
+export const listBulkTiers = (...args: Parameters<typeof api.listBulkTiers>) =>
+  useMock ? (mock.listBulkTiers as any)(...args) : api.listBulkTiers(...(args as any));
 
-export const saveBulkTiers = (...args: Parameters<typeof mock.saveBulkTiers>) =>
-  useMock ? mock.saveBulkTiers(...args) : api.saveBulkTiers(...(args as any));
+export const saveBulkTiers = (...args: Parameters<typeof api.saveBulkTiers>) =>
+  useMock ? (mock.saveBulkTiers as any)(...args) : api.saveBulkTiers(...(args as any));
 
 export const createMembershipUpgradeRequest = (
   ...args: Parameters<typeof api.createMembershipUpgradeRequest>

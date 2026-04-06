@@ -33,6 +33,15 @@ export default function EventoDetallePage() {
   return (
     <div className="mx-auto max-w-4xl px-6 py-12">
       <div className="rounded-2xl bg-white p-8 shadow-sm">
+        {event.bannerUrl ? (
+          <div className="mb-6 overflow-hidden rounded-xl border border-[var(--border)]">
+            <img
+              src={event.bannerUrl}
+              alt={`Banner ${event.name}`}
+              className="h-48 w-full object-cover"
+            />
+          </div>
+        ) : null}
         <div className="text-xs uppercase tracking-[0.3em] text-[var(--muted)]">Evento</div>
         <h1 className="text-3xl font-semibold text-[var(--ink)]">{event.name}</h1>
         <p className="mt-3 text-sm text-[var(--muted)]">{event.description}</p>

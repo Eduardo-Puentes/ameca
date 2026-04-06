@@ -22,8 +22,10 @@ export default function AdminBulkPage() {
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
 
   useEffect(() => {
-    loadBulkTiers();
-    if (eventId) loadBulkLinks(eventId);
+    if (eventId) {
+      loadBulkTiers(eventId);
+      loadBulkLinks(eventId);
+    }
   }, [eventId, loadBulkLinks, loadBulkTiers]);
 
   const eventLinks = bulkLinks.filter((link) => link.eventId === eventId);
@@ -62,7 +64,7 @@ export default function AdminBulkPage() {
         </div>
         <BulkTierEditor
           tiers={bulkTiers}
-          onChange={(tiers) => saveTiers(tiers)}
+          onChange={(tiers) => eventId && saveTiers(eventId, tiers)}
         />
       </Card>
 

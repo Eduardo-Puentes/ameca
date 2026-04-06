@@ -24,6 +24,15 @@ export default function EventosPage() {
       <div className="grid gap-6 md:grid-cols-2">
         {events.map((event) => (
           <div key={event.id} className="rounded-2xl bg-white p-6 shadow-sm">
+            {event.bannerUrl ? (
+              <div className="mb-4 overflow-hidden rounded-xl border border-[var(--border)]">
+                <img
+                  src={event.bannerUrl}
+                  alt={`Banner ${event.name}`}
+                  className="h-32 w-full object-cover"
+                />
+              </div>
+            ) : null}
             <div className="text-lg font-semibold text-[var(--ink)]">{event.name}</div>
             <div className="mt-2 text-sm text-[var(--muted)]">{event.description}</div>
             <div className="mt-4 text-xs text-[var(--muted)]">

@@ -15,7 +15,13 @@ export type NavItem = {
   badge?: string;
 };
 
-export function Sidebar({ items }: { items: NavItem[] }) {
+export function Sidebar({
+  items,
+  onNavigate,
+}: {
+  items: NavItem[];
+  onNavigate?: () => void;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const logout = useAppStore((state) => state.logout);
@@ -52,6 +58,7 @@ export function Sidebar({ items }: { items: NavItem[] }) {
             <Link
               key={item.label}
               href={item.href}
+              onClick={() => onNavigate?.()}
               className={cn(
                 "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition",
                 active
@@ -75,6 +82,7 @@ export function Sidebar({ items }: { items: NavItem[] }) {
         variant="secondary"
         onClick={() => {
           logout();
+          onNavigate?.();
           router.push("/login");
         }}
       >

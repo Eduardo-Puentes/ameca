@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/layout/PageMetaContext";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
@@ -8,6 +8,12 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { QRCodeBlock } from "@/components/ui/QRCodeBlock";
 import { useToastStore } from "@/components/ui/Toast";
 import { useAppStore } from "@/store";
+import {
+  acceptOrganizationInvite,
+  getMyTicket,
+  listOrganizationInvites,
+} from "@/lib/data";
+import type { OrganizationInvitation } from "@/lib/types";
 
 export default function MemberDashboardPage() {
   const {
@@ -22,11 +28,22 @@ export default function MemberDashboardPage() {
   } = useAppStore();
   const user = useAppStore((state) => state.user);
   const pushToast = useToastStore((state) => state.pushToast);
+  const [invites, setInvites] = useState<OrganizationInvitation[]>([]);
+  const [invitesLoading, setInvitesLoading] = useState(false);
 
   useEffect(() => {
     loadMembers();
     loadEvents();
   }, [loadMembers, loadEvents]);
+
+  useEffect(() => {
+    if (!user) return;
+    setInvitesLoading(true);
+    listOrganizationInvites()
+      .then((items) => setInvites(items))
+      .catch(() => setInvites([]))
+      .finally(() => setInvitesLoading(false));
+  }, [user]);
 
   useEffect(() => {
     if (selectedEventId) {
@@ -42,6 +59,17 @@ export default function MemberDashboardPage() {
   const myRequest = eventRequests.find(
     (req) => req.memberEmail === (member?.email ?? "") && req.eventId === selectedEventId
   );
+  const [ticketToken, setTicketToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!event || !myRequest || myRequest.status !== "approved") {
+      setTicketToken(null);
+      return;
+    }
+    getMyTicket(event.id)
+      .then((data) => setTicketToken(data.token))
+      .catch(() => setTicketToken(null));
+  }, [event, myRequest]);
 
   const handleRequest = async () => {
     if (!event || !member) return;
@@ -56,6 +84,20 @@ export default function MemberDashboardPage() {
     pushToast({ title: "Solicitud enviada", tone: "success" });
   };
 
+  const handleAcceptInvite = async (token: string) => {
+    try {
+      const updated = await acceptOrganizationInvite(token);
+      setInvites((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
+      await loadMembers();
+      pushToast({ title: "Invitación aceptada", tone: "success" });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "No se pudo aceptar la invitación.";
+      pushToast({ title: "Error", message, tone: "danger" });
+    }
+  };
+
+  const pendingInvites = invites.filter((invite) => invite.status === "pending");
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -63,6 +105,37 @@ export default function MemberDashboardPage() {
         subtitle="Resumen de tu perfil y registros"
         breadcrumb={["Miembro", "Panel"]}
       />
+
+      {invitesLoading ? (
+        <Card className="text-sm text-[var(--muted)]">Cargando invitaciones...</Card>
+      ) : pendingInvites.length > 0 ? (
+        <Card className="space-y-4 border border-[var(--accent)]/40 bg-[var(--surface-2)]">
+          <div>
+            <div className="text-lg font-semibold text-[var(--ink)]">
+              Invitación de organización
+            </div>
+            <div className="text-sm text-[var(--muted)]">
+              Tienes invitaciones pendientes para unirte a una organización institucional.
+            </div>
+          </div>
+          <div className="space-y-3">
+            {pendingInvites.map((invite) => (
+              <div
+                key={invite.id}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-[var(--border)] bg-white/80 p-3 text-sm"
+              >
+                <div>
+                  <div className="font-semibold text-[var(--ink)]">{invite.organizationName}</div>
+                  <div className="text-xs text-[var(--muted)]">{invite.email}</div>
+                </div>
+                <Button onClick={() => handleAcceptInvite(invite.token)}>
+                  Aceptar invitación
+                </Button>
+              </div>
+            ))}
+          </div>
+        </Card>
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
         <Card className="space-y-4">
@@ -125,7 +198,7 @@ export default function MemberDashboardPage() {
         </div>
         {myRequest?.status === "approved" ? (
           <QRCodeBlock
-            token={`QR-${member?.id ?? "000"}`}
+            token={ticketToken ?? "Cargando..."}
             helper="Escanea cada día del evento para validar asistencia."
           />
         ) : (

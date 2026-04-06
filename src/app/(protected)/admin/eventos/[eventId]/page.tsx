@@ -1,12 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { PageHeader } from "@/components/layout/PageMetaContext";
 import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { FileUpload } from "@/components/ui/FileUpload";
 import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { useToastStore } from "@/components/ui/Toast";
 import { useAppStore } from "@/store";
 
 export default function AdminEventoDetallePage() {
@@ -16,6 +19,9 @@ export default function AdminEventoDetallePage() {
   const loadEventRequests = useAppStore((state) => state.loadEventRequests);
   const loadBulkLinks = useAppStore((state) => state.loadBulkLinks);
   const loadAttendance = useAppStore((state) => state.loadAttendance);
+  const uploadEventBanner = useAppStore((state) => state.uploadEventBanner);
+  const pushToast = useToastStore((state) => state.pushToast);
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (eventId) {
@@ -59,6 +65,15 @@ export default function AdminEventoDetallePage() {
       />
 
       <Card className="space-y-3">
+        {event.bannerUrl ? (
+          <div className="overflow-hidden rounded-xl border border-[var(--border)]">
+            <img
+              src={event.bannerUrl}
+              alt={`Banner ${event.name}`}
+              className="h-40 w-full object-cover"
+            />
+          </div>
+        ) : null}
         <div className="flex items-center justify-between">
           <div>
             <div className="text-xs uppercase tracking-[0.3em] text-[var(--muted)]">Estado</div>
@@ -69,6 +84,22 @@ export default function AdminEventoDetallePage() {
         <div className="text-sm text-[var(--muted)]">{event.description}</div>
         <div className="text-xs text-[var(--muted)]">
           {event.startDate} • {event.duration} día(s) • Capacidad {event.capacity}
+        </div>
+        <div className="space-y-2 rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface-2)] p-3">
+          <FileUpload label="Actualizar banner" accept="image/*" onChange={setBannerFile} />
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={async () => {
+              if (!bannerFile || !eventId) return;
+              await uploadEventBanner(eventId, bannerFile);
+              setBannerFile(null);
+              pushToast({ title: "Banner actualizado", tone: "success" });
+            }}
+            disabled={!bannerFile}
+          >
+            Subir banner
+          </Button>
         </div>
       </Card>
 
@@ -109,6 +140,16 @@ export default function AdminEventoDetallePage() {
           <div className="text-sm text-[var(--muted)]">Generación y envío simulado.</div>
           <Link href={`/admin/eventos/${event.id}/diplomas`} className="text-sm text-[var(--accent)]">
             Abrir diplomas
+          </Link>
+        </Card>
+        <Card className="space-y-2">
+          <div className="text-lg font-semibold text-[var(--ink)]">Ponentes</div>
+          <div className="text-sm text-[var(--muted)]">Archivos y descargas.</div>
+          <Link
+            href={`/admin/eventos/${event.id}/ponentes`}
+            className="text-sm text-[var(--accent)]"
+          >
+            Abrir ponentes
           </Link>
         </Card>
       </div>

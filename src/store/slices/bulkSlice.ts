@@ -21,8 +21,8 @@ export type BulkSlice = {
   } | null;
   bulkLoading: boolean;
   loadBulkLinks: (eventId?: string) => Promise<void>;
-  loadBulkTiers: () => Promise<void>;
-  saveTiers: (tiers: BulkTier[]) => Promise<void>;
+  loadBulkTiers: (eventId: string) => Promise<void>;
+  saveTiers: (eventId: string, tiers: BulkTier[]) => Promise<void>;
   createLink: (
     eventId: string,
     payload: Partial<BulkLink> & { allowedEmails?: string[] }
@@ -42,12 +42,12 @@ export const createBulkSlice: StateCreator<BulkSlice, [], [], BulkSlice> = (set,
     const data = await listBulkLinks(eventId);
     set({ bulkLinks: data, bulkLoading: false });
   },
-  loadBulkTiers: async () => {
-    const data = await listBulkTiers();
+  loadBulkTiers: async (eventId) => {
+    const data = await listBulkTiers(eventId);
     set({ bulkTiers: data });
   },
-  saveTiers: async (tiers) => {
-    const saved = await saveBulkTiers(tiers);
+  saveTiers: async (eventId, tiers) => {
+    const saved = await saveBulkTiers(eventId, tiers);
     set({ bulkTiers: saved });
   },
   createLink: async (eventId, payload) => {
