@@ -1,6 +1,7 @@
 import type { StateCreator } from "zustand";
 import type { Member } from "@/lib/types";
 import { getMemberMe, listMembers, updateMember } from "@/lib/data";
+import type { AuthSlice } from "./authSlice";
 
 export type MembersSlice = {
   members: Member[];
@@ -9,7 +10,10 @@ export type MembersSlice = {
   updateMemberProfile: (id: string, payload: Partial<Member>) => Promise<void>;
 };
 
-export const createMembersSlice: StateCreator<MembersSlice, [], [], MembersSlice> = (set, get) => ({
+export const createMembersSlice: StateCreator<AuthSlice & MembersSlice, [], [], MembersSlice> = (
+  set,
+  get
+) => ({
   members: [],
   membersLoading: false,
   loadMembers: async () => {

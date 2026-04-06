@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
@@ -20,7 +20,7 @@ const routeForRole: Record<Role, string> = {
   representative: "/member/dashboard",
 };
 
-export default function LoginPage() {
+function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const loginWithCredentials = useAppStore((state) => state.loginWithCredentials);
@@ -101,5 +101,29 @@ export default function LoginPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+function LoginPageFallback() {
+  return (
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(1,153,39,0.18),_transparent_45%),_var(--bg)]">
+      <div className="mx-auto flex min-h-screen max-w-5xl flex-col items-center justify-center px-6">
+        <Card className="w-full max-w-3xl space-y-2">
+          <div className="text-xs uppercase tracking-[0.3em] text-[var(--muted)]">
+            Acceso a {brand.brandName}
+          </div>
+          <h1 className="text-3xl font-semibold text-[var(--ink)]">Inicio de sesión</h1>
+          <p className="text-sm text-[var(--muted)]">Cargando...</p>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginPageFallback />}>
+      <LoginPageContent />
+    </Suspense>
   );
 }

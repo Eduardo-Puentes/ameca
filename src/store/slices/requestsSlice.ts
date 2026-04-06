@@ -1,5 +1,6 @@
 import type { StateCreator } from "zustand";
 import type { EventRequest, MembershipRequest } from "@/lib/types";
+import type { AuthSlice } from "./authSlice";
 import {
   approveEventRequest,
   approveMemberRequest,
@@ -29,7 +30,10 @@ export type RequestsSlice = {
   rejectEventRegistration: (id: string, comments?: string) => Promise<void>;
 };
 
-export const createRequestsSlice: StateCreator<RequestsSlice, [], [], RequestsSlice> = (set, get) => ({
+export const createRequestsSlice: StateCreator<AuthSlice & RequestsSlice, [], [], RequestsSlice> = (
+  set,
+  get
+) => ({
   membershipRequests: [],
   eventRequests: [],
   requestsLoading: false,
