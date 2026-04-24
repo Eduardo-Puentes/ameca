@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { PageHeader } from "@/components/layout/PageMetaContext";
 import { Card } from "@/components/ui/Card";
@@ -8,7 +8,6 @@ import { DataTable } from "@/components/ui/DataTable";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Select } from "@/components/ui/Select";
 import { useToastStore } from "@/components/ui/Toast";
 import { useAppStore } from "@/store";
 import type { AttendanceRecord } from "@/lib/types";
@@ -19,7 +18,6 @@ export default function AdminAsistenciaPage() {
   const { events, attendanceRecords, loadAttendance, scanToken } = useAppStore();
   const pushToast = useToastStore((state) => state.pushToast);
   const [token, setToken] = useState("");
-  const [day, setDay] = useState(1);
 
   useEffect(() => {
     if (eventId) {
@@ -28,11 +26,10 @@ export default function AdminAsistenciaPage() {
   }, [eventId, loadAttendance]);
 
   const event = events.find((item) => item.id === eventId);
-  const days = useMemo(() => Array.from({ length: event?.duration ?? 1 }, (_, i) => i + 1), [event]);
 
   const handleScan = async () => {
     if (!eventId || !token.trim()) return;
-    const record = await scanToken(eventId, token.trim(), day);
+    const record = await scanToken(eventId, token.trim());
     if (record.status === "duplicate") {
       pushToast({ title: "Escaneo duplicado", tone: "danger" });
     } else {
@@ -43,13 +40,12 @@ export default function AdminAsistenciaPage() {
 
   const columns = [
     { header: "Miembro", accessor: "memberName" },
-    { header: "Día", accessor: "day" },
-    { header: "Hora", accessor: "scannedAt" },
+    { header: "Correo", accessor: "memberEmail" },
     {
       header: "Estado",
       accessor: "status",
       render: (record: AttendanceRecord) => (
-        <StatusBadge status={record.status === "ok" ? "approved" : "rejected"} />
+        <StatusBadge status={record.attended || record.status === "ok" ? "approved" : "rejected"} />
       ),
     },
   ];
@@ -72,18 +68,11 @@ export default function AdminAsistenciaPage() {
               onChange={(event) => setToken(event.target.value)}
             />
           </div>
-          <div className="w-32">
-            <div className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">Día</div>
-            <Select value={day} onChange={(event) => setDay(Number(event.target.value))}>
-              {days.map((value) => (
-                <option key={value} value={value}>
-                  Día {value}
-                </option>
-              ))}
-            </Select>
-          </div>
           <Button onClick={handleScan}>Registrar escaneo</Button>
           <Button variant="secondary">Exportar reporte</Button>
+        </div>
+        <div className="text-sm text-[var(--muted)]">
+          Evento: {event?.name ?? "Sin cargar"} · El backend registra un check-in único por boleto.
         </div>
       </Card>
 

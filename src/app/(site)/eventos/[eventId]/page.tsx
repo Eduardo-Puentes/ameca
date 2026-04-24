@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo } from "react";
 import { useParams } from "next/navigation";
 import { useAppStore } from "@/store";
+import { formatDate } from "@/lib/utils";
 
 export default function EventoDetallePage() {
   const params = useParams();
@@ -23,7 +24,7 @@ export default function EventoDetallePage() {
   if (!event) {
     return (
       <div className="mx-auto max-w-4xl px-6 py-12">
-        <div className="rounded-2xl bg-white p-6 text-sm text-[var(--muted)]">
+        <div className="rounded-2xl bg-[var(--surface)] p-6 text-sm text-[var(--muted)]">
           Evento no encontrado.
         </div>
       </div>
@@ -32,21 +33,12 @@ export default function EventoDetallePage() {
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-12">
-      <div className="rounded-2xl bg-white p-8 shadow-sm">
-        {event.bannerUrl ? (
-          <div className="mb-6 overflow-hidden rounded-xl border border-[var(--border)]">
-            <img
-              src={event.bannerUrl}
-              alt={`Banner ${event.name}`}
-              className="h-48 w-full object-cover"
-            />
-          </div>
-        ) : null}
+      <div className="rounded-2xl bg-[var(--surface)] p-8 shadow-[0_18px_40px_-28px_rgba(27,29,27,0.4)]">
         <div className="text-xs uppercase tracking-[0.3em] text-[var(--muted)]">Evento</div>
         <h1 className="text-3xl font-semibold text-[var(--ink)]">{event.name}</h1>
         <p className="mt-3 text-sm text-[var(--muted)]">{event.description}</p>
         <div className="mt-4 text-sm text-[var(--muted)]">
-          {event.location} • {event.startDate} • {event.duration} día(s)
+          {event.location} • {formatDate(event.startDate)} • {event.duration} día(s)
         </div>
         <div className="mt-6 flex flex-wrap gap-3">
           <Link

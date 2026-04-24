@@ -15,6 +15,7 @@ import { DiplomaPreviewModal } from "@/components/diplomas/DiplomaPreviewModal";
 import { useAppStore } from "@/store";
 import type { DiplomaRecord, Member } from "@/lib/types";
 import { buildPreviewContext, createEmptyTemplate } from "@/lib/diplomaUtils";
+import { formatDate } from "@/lib/utils";
 
 export default function AdminDiplomasPage() {
   const params = useParams();
@@ -97,6 +98,7 @@ export default function AdminDiplomasPage() {
         id: previewRecord.memberId,
         fullName: previewRecord.memberName,
         email: previewRecord.memberEmail,
+        phoneNumber: "",
         profileType: "Miembro",
         verified: true,
         expirationDate: "",
@@ -134,7 +136,7 @@ export default function AdminDiplomasPage() {
             <div className="text-xs uppercase tracking-[0.3em] text-[var(--muted)]">Evento</div>
             <div className="text-lg font-semibold text-[var(--ink)]">{event.name}</div>
             <div className="text-sm text-[var(--muted)]">
-              {event.startDate} • {event.duration} día(s) • {event.location}
+              {formatDate(event.startDate)} • {event.duration} día(s) • {event.location}
             </div>
           </div>
           <StatusBadge status={event.status} />
@@ -149,9 +151,8 @@ export default function AdminDiplomasPage() {
           <Button
             variant="secondary"
             onClick={() => setCloseOpen(true)}
-            disabled={event.status === "closed"}
           >
-            Cerrar evento
+            {event.open ? "Cerrar registro" : "Abrir registro"}
           </Button>
         </div>
       </Card>
@@ -269,11 +270,13 @@ export default function AdminDiplomasPage() {
       <Modal
         open={closeOpen}
         onClose={() => setCloseOpen(false)}
-        title="Cerrar evento"
+        title={event.open ? "Cerrar registro" : "Abrir registro"}
       >
         <div className="space-y-3 text-sm text-[var(--muted)]">
           <div>
-            Antes de cerrar, asegúrate de generar y enviar diplomas. Esta acción quedará registrada.
+            {event.open
+              ? "Antes de cerrar el registro, asegúrate de que el evento ya no deba aceptar solicitudes nuevas."
+              : "Si vuelves a abrir el registro, el evento volverá a aceptar solicitudes nuevas."}
           </div>
           <div className="flex justify-end gap-2">
             <Button variant="secondary" onClick={() => setCloseOpen(false)}>
@@ -281,12 +284,16 @@ export default function AdminDiplomasPage() {
             </Button>
             <Button
               onClick={async () => {
-                await editEvent(eventId, { status: "closed", open: false });
-                pushToast({ title: "Evento cerrado", tone: "info" });
+                const nextOpen = !event.open;
+                await editEvent(eventId, { open: nextOpen });
+                pushToast({
+                  title: nextOpen ? "Registro habilitado" : "Registro cerrado",
+                  tone: "info",
+                });
                 setCloseOpen(false);
               }}
             >
-              Confirmar cierre
+              {event.open ? "Confirmar cierre" : "Confirmar apertura"}
             </Button>
           </div>
         </div>

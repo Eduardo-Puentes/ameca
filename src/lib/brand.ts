@@ -1,7 +1,7 @@
 export const brand = {
   brandName: "AMECA",
   tagline: "Plataforma integral para asociaciones y gestión de eventos",
-  logoUrl: "/logo-placeholder.svg",
+  logoUrl: "/logo-ameca.jpg",
   colors: {
     // TODO: completar paleta final
     primary: "",

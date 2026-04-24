@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { useAppStore } from "@/store";
+import { formatDate } from "@/lib/utils";
 
 export default function EventosPage() {
   const events = useAppStore((state) => state.events);
@@ -23,20 +24,14 @@ export default function EventosPage() {
       </div>
       <div className="grid gap-6 md:grid-cols-2">
         {events.map((event) => (
-          <div key={event.id} className="rounded-2xl bg-white p-6 shadow-sm">
-            {event.bannerUrl ? (
-              <div className="mb-4 overflow-hidden rounded-xl border border-[var(--border)]">
-                <img
-                  src={event.bannerUrl}
-                  alt={`Banner ${event.name}`}
-                  className="h-32 w-full object-cover"
-                />
-              </div>
-            ) : null}
+          <div
+            key={event.id}
+            className="rounded-2xl bg-[var(--surface)] p-6 shadow-[0_18px_40px_-28px_rgba(27,29,27,0.4)]"
+          >
             <div className="text-lg font-semibold text-[var(--ink)]">{event.name}</div>
             <div className="mt-2 text-sm text-[var(--muted)]">{event.description}</div>
             <div className="mt-4 text-xs text-[var(--muted)]">
-              {event.location} • {event.startDate} • {event.duration} día(s)
+              {event.location} • {formatDate(event.startDate)} • {event.duration} día(s)
             </div>
             <Link
               href={`/eventos/${event.id}`}

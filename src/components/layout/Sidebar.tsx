@@ -33,13 +33,13 @@ export function Sidebar({
   }, "");
 
   return (
-    <aside className="flex h-full w-full flex-col rounded-3xl bg-[var(--surface)] p-6 shadow-lg">
+    <aside className="flex h-full w-full flex-col rounded-3xl bg-[var(--surface)] p-6 shadow-[0_28px_56px_-36px_rgba(27,29,27,0.55)]">
       <div className="mb-8">
         <div className="flex items-center gap-3">
           <img
             src={brand.logoUrl}
             alt={`Logo ${brand.brandName}`}
-            className="h-10 w-10 rounded-xl bg-[var(--surface-2)] object-cover"
+            className="h-12 w-12 object-contain"
           />
           <div>
             <div className="text-xs uppercase tracking-[0.25em] text-[var(--muted)]">

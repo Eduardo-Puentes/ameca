@@ -14,12 +14,11 @@ export default function StaffEscanerPage() {
   const { events, selectedEventId, selectEvent, scanToken } = useAppStore();
   const pushToast = useToastStore((state) => state.pushToast);
   const [token, setToken] = useState("");
-  const [day, setDay] = useState(1);
   const event = events.find((item) => item.id === selectedEventId);
 
   const handleScan = async () => {
     if (!selectedEventId || !token.trim()) return;
-    const record = await scanToken(selectedEventId, token.trim(), day);
+    const record = await scanToken(selectedEventId, token.trim());
     if (record.status === "duplicate") {
       pushToast({ title: "Escaneo duplicado", tone: "danger" });
     } else {
@@ -37,7 +36,7 @@ export default function StaffEscanerPage() {
       />
 
       <Card className="space-y-4">
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
             <label className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">
               Evento
@@ -49,18 +48,6 @@ export default function StaffEscanerPage() {
               {events.map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.name}
-                </option>
-              ))}
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <label className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">
-              Día
-            </label>
-            <Select value={day} onChange={(event) => setDay(Number(event.target.value))}>
-              {Array.from({ length: event?.duration ?? 1 }, (_, i) => i + 1).map((value) => (
-                <option key={value} value={value}>
-                  Día {value}
                 </option>
               ))}
             </Select>
@@ -85,7 +72,7 @@ export default function StaffEscanerPage() {
       <Card className="flex items-center justify-between">
         <div>
           <div className="text-lg font-semibold text-[var(--ink)]">Estado del escaneo</div>
-          <div className="text-sm text-[var(--muted)]">Asegura un escaneo por día.</div>
+          <div className="text-sm text-[var(--muted)]">Asegura un solo check-in por evento.</div>
         </div>
         <StatusBadge status="open" />
       </Card>

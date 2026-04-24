@@ -12,7 +12,7 @@ export function EmptyState({
   onAction?: () => void;
 }) {
   return (
-    <div className="rounded-2xl border border-dashed border-[var(--border)] bg-white/60 p-6 text-center">
+    <div className="rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface-2)]/75 p-6 text-center">
       <div className="text-lg font-semibold text-[var(--ink)]">{title}</div>
       <div className="mt-2 text-sm text-[var(--muted)]">{description}</div>
       {actionLabel && onAction ? (

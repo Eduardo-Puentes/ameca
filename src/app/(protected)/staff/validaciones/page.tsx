@@ -19,13 +19,13 @@ export default function StaffValidacionesPage() {
 
   const columns = [
     { header: "Miembro", accessor: "memberName" },
+    { header: "Correo", accessor: "memberEmail" },
     { header: "Evento", accessor: "eventId" },
-    { header: "Día", accessor: "day" },
     {
       header: "Estado",
       accessor: "status",
       render: (record: AttendanceRecord) => (
-        <StatusBadge status={record.status === "ok" ? "approved" : "rejected"} />
+        <StatusBadge status={record.attended || record.status === "ok" ? "approved" : "rejected"} />
       ),
     },
   ];

@@ -1,6 +1,6 @@
 import type { StateCreator } from "zustand";
 import type { Member } from "@/lib/types";
-import { getMemberMe, listMembers, updateMember } from "@/lib/data";
+import { deleteMember, getMemberMe, listMembers, updateMember, updateMemberMe } from "@/lib/data";
 import type { AuthSlice } from "./authSlice";
 
 export type MembersSlice = {
@@ -8,6 +8,7 @@ export type MembersSlice = {
   membersLoading: boolean;
   loadMembers: () => Promise<void>;
   updateMemberProfile: (id: string, payload: Partial<Member>) => Promise<void>;
+  removeMember: (id: string) => Promise<void>;
 };
 
 export const createMembersSlice: StateCreator<AuthSlice & MembersSlice, [], [], MembersSlice> = (
@@ -24,10 +25,18 @@ export const createMembersSlice: StateCreator<AuthSlice & MembersSlice, [], [], 
     set({ members: data, membersLoading: false });
   },
   updateMemberProfile: async (id, payload) => {
-    const updated = await updateMember(id, payload);
+    const role = get().role;
+    const updated =
+      role === "admin" || role === "superadmin"
+        ? await updateMember(id, payload)
+        : await updateMemberMe(payload);
     if (!updated) return;
     set({
       members: get().members.map((member) => (member.id === id ? updated : member)),
     });
+  },
+  removeMember: async (id) => {
+    await deleteMember(id);
+    set({ members: get().members.filter((member) => member.id !== id) });
   },
 });

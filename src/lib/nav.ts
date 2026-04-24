@@ -3,7 +3,6 @@ import {
   Users,
   CalendarDays,
   Building2,
-  Link2,
   Settings,
   FileCheck,
   ShieldCheck,
@@ -20,7 +19,6 @@ export const adminNav: NavItem[] = [
   { label: "Solicitudes", href: "/admin/miembros/solicitudes", icon: ClipboardList },
   { label: "Eventos", href: "/admin/eventos", icon: CalendarDays },
   { label: "Secciones", href: "/admin/secciones", icon: Building2 },
-  { label: "Organizaciones", href: "/admin/organizaciones", icon: Building2 },
   { label: "Administradores", href: "/admin/administradores", icon: ShieldCheck },
   { label: "Configuración", href: "/admin/configuracion", icon: Settings },
 ];
@@ -32,8 +30,6 @@ export const memberNav: NavItem[] = [
   { label: "Eventos", href: "/member/eventos", icon: CalendarDays },
   { label: "Solicitudes", href: "/member/solicitudes", icon: ClipboardList },
   { label: "Secciones", href: "/member/secciones", icon: Building2 },
-  { label: "Organización", href: "/member/organizacion", icon: Building2 },
-  { label: "Bulk", href: "/member/bulk", icon: Link2 },
   { label: "Diplomas", href: "/member/diplomas", icon: Award },
 ];
 

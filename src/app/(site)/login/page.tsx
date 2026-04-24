@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/Button";
@@ -25,9 +25,20 @@ function LoginPageContent() {
   const searchParams = useSearchParams();
   const loginWithCredentials = useAppStore((state) => state.loginWithCredentials);
   const loading = useAppStore((state) => state.authLoading);
+  const user = useAppStore((state) => state.user);
+  const authReady = useAppStore((state) => state.authReady);
   const pushToast = useToastStore((state) => state.pushToast);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  useEffect(() => {
+    if (!authReady || !user) {
+      return;
+    }
+    const nextParam = searchParams.get("next");
+    const safeNext = nextParam && nextParam.startsWith("/") ? nextParam : routeForRole[user.role];
+    router.replace(safeNext ?? "/member/dashboard");
+  }, [authReady, router, searchParams, user]);
 
   const handleLogin = async () => {
     try {

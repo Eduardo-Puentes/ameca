@@ -1,14 +1,17 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/layout/PageMetaContext";
 import { Card } from "@/components/ui/Card";
-import { useState } from "react";
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { useToastStore } from "@/components/ui/Toast";
-import { createAdminUser } from "@/lib/data";
+import { DataTable } from "@/components/ui/DataTable";
+import { Pagination } from "@/components/ui/Pagination";
+import { createAdminUser, listAdminUsers } from "@/lib/data";
+import type { AdminUser } from "@/lib/types";
 
 export default function AdminAdministradoresPage() {
   const pushToast = useToastStore((state) => state.pushToast);
@@ -16,6 +19,51 @@ export default function AdminAdministradoresPage() {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<"admin" | "staff">("admin");
   const [loading, setLoading] = useState(false);
+  const [admins, setAdmins] = useState<AdminUser[]>([]);
+  const [adminsLoading, setAdminsLoading] = useState(false);
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+
+  useEffect(() => {
+    const loadAdminUsers = async () => {
+      try {
+        setAdminsLoading(true);
+        const data = await listAdminUsers();
+        setAdmins(data);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "No se pudo cargar la lista.";
+        pushToast({ title: "Error al cargar", message, tone: "danger" });
+      } finally {
+        setAdminsLoading(false);
+      }
+    };
+
+    loadAdminUsers();
+  }, [pushToast]);
+
+  const paginatedAdmins = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return admins.slice(start, start + pageSize);
+  }, [admins, page]);
+
+  const columns = [
+    {
+      header: "Administrador",
+      accessor: "fullName",
+      render: (admin: AdminUser) => (
+        <div>
+          <div className="font-semibold text-[var(--ink)]">{admin.fullName}</div>
+          <div className="text-xs text-[var(--muted)]">{admin.email}</div>
+        </div>
+      ),
+    },
+    { header: "Rol", accessor: "role" },
+    {
+      header: "Verificación",
+      accessor: "verified",
+      render: (admin: AdminUser) => (admin.verified ? "Verificado" : "Pendiente"),
+    },
+  ];
 
   const handleCreate = async () => {
     if (!fullName.trim() || !email.trim()) {
@@ -39,6 +87,8 @@ export default function AdminAdministradoresPage() {
       setFullName("");
       setEmail("");
       setRole("admin");
+      const data = await listAdminUsers();
+      setAdmins(data);
     } catch (error) {
       const message = error instanceof Error ? error.message : "No se pudo crear la cuenta.";
       pushToast({ title: "Error al crear", message, tone: "danger" });
@@ -82,6 +132,26 @@ export default function AdminAdministradoresPage() {
         <Button onClick={handleCreate} disabled={loading}>
           {loading ? "Creando..." : "Crear cuenta"}
         </Button>
+      </Card>
+
+      <Card className="space-y-4">
+        <div>
+          <div className="text-lg font-semibold text-[var(--ink)]">Administradores existentes</div>
+          <div className="text-sm text-[var(--muted)]">
+            Recorre las cuentas activas de administración y staff.
+          </div>
+        </div>
+        {adminsLoading ? (
+          <div className="text-sm text-[var(--muted)]">Cargando administradores...</div>
+        ) : (
+          <DataTable columns={columns} data={paginatedAdmins} />
+        )}
+        <Pagination
+          page={page}
+          pageSize={pageSize}
+          total={admins.length}
+          onPageChange={setPage}
+        />
       </Card>
     </div>
   );

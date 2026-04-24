@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/layout/PageMetaContext";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -10,8 +10,15 @@ import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useToastStore } from "@/components/ui/Toast";
-import { acceptSectionInvite, createSectionInvite, listSectionInvites } from "@/lib/data";
+import {
+  acceptSectionInvite,
+  createSectionInvite,
+  declineSectionInvite,
+  listMySectionInvites,
+  listSectionInvites,
+} from "@/lib/data";
 import type { SectionInvite } from "@/lib/types";
+import { formatDateTime } from "@/lib/utils";
 import { useAppStore } from "@/store";
 import type { Section } from "@/lib/types";
 
@@ -22,8 +29,8 @@ function toBadge(inviteStatus: SectionInvite["status"]) {
   if (inviteStatus === "pending") {
     return <Badge tone="warning">Pendiente</Badge>;
   }
-  if (inviteStatus === "expired") {
-    return <Badge tone="danger">Expirada</Badge>;
+  if (inviteStatus === "declined") {
+    return <Badge tone="danger">Declinada</Badge>;
   }
   return <Badge tone="neutral">Cancelada</Badge>;
 }
@@ -32,11 +39,11 @@ export default function MemberSeccionesPage() {
   const { sections, loadSections, selectedEventId, user } = useAppStore();
   const pushToast = useToastStore((state) => state.pushToast);
   const [selectedSectionId, setSelectedSectionId] = useState("");
-  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteMemberId, setInviteMemberId] = useState("");
   const [invitesLoading, setInvitesLoading] = useState(false);
   const [inviteActionLoading, setInviteActionLoading] = useState(false);
   const [sectionInvites, setSectionInvites] = useState<SectionInvite[]>([]);
-  const handledTokenRef = useRef(false);
+  const [myInvites, setMyInvites] = useState<SectionInvite[]>([]);
 
   useEffect(() => {
     loadSections(selectedEventId ?? undefined);
@@ -73,45 +80,22 @@ export default function MemberSeccionesPage() {
   }, [selectedSectionId]);
 
   useEffect(() => {
-    if (handledTokenRef.current || typeof window === "undefined") return;
-
-    const params = new URLSearchParams(window.location.search);
-    const inviteToken = params.get("section_invite_token");
-    if (!inviteToken) return;
-
-    handledTokenRef.current = true;
-
-    acceptSectionInvite(inviteToken)
-      .then(() => {
-        params.delete("section_invite_token");
-        const search = params.toString();
-        const nextUrl = search ? `${window.location.pathname}?${search}` : window.location.pathname;
-        window.history.replaceState({}, "", nextUrl);
-        pushToast({
-          title: "Invitación aceptada",
-          message: "Ya perteneces a la sección del evento.",
-          tone: "success",
-        });
-        loadSections(selectedEventId ?? undefined);
-      })
-      .catch((error) => {
-        const message =
-          error instanceof Error ? error.message : "No se pudo aceptar la invitación.";
-        pushToast({ title: "Invitación inválida", message, tone: "danger" });
-      });
-  }, [loadSections, pushToast, selectedEventId]);
+    listMySectionInvites()
+      .then((data) => setMyInvites(data))
+      .catch(() => setMyInvites([]));
+  }, []);
 
   const sendInvite = async () => {
-    if (!selectedSectionId || !inviteEmail.trim()) return;
+    if (!selectedSectionId || !inviteMemberId.trim()) return;
     setInviteActionLoading(true);
     try {
-      await createSectionInvite(selectedSectionId, inviteEmail.trim().toLowerCase());
+      await createSectionInvite(selectedSectionId, inviteMemberId.trim());
       const updatedInvites = await listSectionInvites(selectedSectionId);
       setSectionInvites(updatedInvites);
-      setInviteEmail("");
+      setInviteMemberId("");
       pushToast({
         title: "Invitación enviada",
-        message: "Se envió la invitación por correo.",
+        message: "La invitación quedó pendiente para el miembro.",
         tone: "success",
       });
     } catch (error) {
@@ -123,6 +107,24 @@ export default function MemberSeccionesPage() {
       });
     } finally {
       setInviteActionLoading(false);
+    }
+  };
+
+  const respondToInvite = async (inviteId: string, response: "accept" | "decline") => {
+    try {
+      const updated =
+        response === "accept"
+          ? await acceptSectionInvite(inviteId)
+          : await declineSectionInvite(inviteId);
+      setMyInvites((prev) => prev.map((invite) => (invite.id === inviteId ? updated : invite)));
+      pushToast({
+        title: response === "accept" ? "Invitación aceptada" : "Invitación declinada",
+        tone: response === "accept" ? "success" : "info",
+      });
+      loadSections(selectedEventId ?? undefined);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "No se pudo responder la invitación.";
+      pushToast({ title: "Error", message, tone: "danger" });
     }
   };
 
@@ -138,13 +140,39 @@ export default function MemberSeccionesPage() {
   ];
 
   const inviteColumns = [
-    { header: "Correo", accessor: "invitedEmail" },
+    { header: "Miembro", accessor: "invitedMemberName" },
+    { header: "Correo", accessor: "invitedMemberEmail" },
     { header: "Estado", accessor: "status", render: (invite: SectionInvite) => toBadge(invite.status) },
     {
-      header: "Expira",
-      accessor: "expiresAt",
+      header: "Respondida",
+      accessor: "respondedAt",
       render: (invite: SectionInvite) =>
-        invite.expiresAt ? new Date(invite.expiresAt).toLocaleString("es-MX") : "-",
+        invite.respondedAt
+          ? formatDateTime(invite.respondedAt)
+          : "-",
+    },
+  ];
+
+  const myInviteColumns = [
+    { header: "Sección", accessor: "sectionName" },
+    { header: "Invita", accessor: "createdByMemberName" },
+    { header: "Estado", accessor: "status", render: (invite: SectionInvite) => toBadge(invite.status) },
+    {
+      header: "Acciones",
+      accessor: "id",
+      render: (invite: SectionInvite) =>
+        invite.status === "pending" ? (
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" onClick={() => respondToInvite(invite.id, "accept")}>
+              Aceptar
+            </Button>
+            <Button size="sm" variant="secondary" onClick={() => respondToInvite(invite.id, "decline")}>
+              Declinar
+            </Button>
+          </div>
+        ) : (
+          "-"
+        ),
     },
   ];
 
@@ -158,6 +186,11 @@ export default function MemberSeccionesPage() {
 
       <Card>
         <DataTable columns={columns} data={sections} />
+      </Card>
+
+      <Card className="space-y-4">
+        <div className="text-lg font-semibold text-[var(--ink)]">Mis invitaciones</div>
+        <DataTable columns={myInviteColumns} data={myInvites} />
       </Card>
 
       {myManagedSections.length ? (
@@ -182,17 +215,16 @@ export default function MemberSeccionesPage() {
                 ))}
               </select>
             </FormField>
-            <FormField label="Correo del miembro">
+            <FormField label="ID del miembro">
               <Input
-                type="email"
-                placeholder="miembro@ameca.org"
-                value={inviteEmail}
-                onChange={(event) => setInviteEmail(event.target.value)}
+                placeholder="ID del miembro invitado"
+                value={inviteMemberId}
+                onChange={(event) => setInviteMemberId(event.target.value)}
               />
             </FormField>
           </div>
           <div className="flex justify-end">
-            <Button onClick={sendInvite} disabled={inviteActionLoading || !inviteEmail.trim()}>
+            <Button onClick={sendInvite} disabled={inviteActionLoading || !inviteMemberId.trim()}>
               Enviar invitación
             </Button>
           </div>

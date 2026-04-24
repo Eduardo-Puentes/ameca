@@ -7,6 +7,7 @@ import { DataTable } from "@/components/ui/DataTable";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useAppStore } from "@/store";
 import type { EventRequest, MembershipRequest } from "@/lib/types";
+import { formatDate } from "@/lib/utils";
 
 export default function MemberSolicitudesPage() {
   const {
@@ -40,7 +41,11 @@ export default function MemberSolicitudesPage() {
 
   const membershipColumns = [
     { header: "Tipo", accessor: "profileType" },
-    { header: "Fecha", accessor: "createdAt" },
+    {
+      header: "Fecha",
+      accessor: "createdAt",
+      render: (req: MembershipRequest) => formatDate(req.createdAt),
+    },
     {
       header: "Estado",
       accessor: "status",

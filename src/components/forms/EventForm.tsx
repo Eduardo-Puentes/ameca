@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
-import { FileUpload } from "@/components/ui/FileUpload";
 
 export function EventForm({
   initial,
@@ -14,7 +13,7 @@ export function EventForm({
   submitLabel = "Guardar",
 }: {
   initial?: Partial<Event>;
-  onSubmit: (payload: Partial<Event> & { bannerFile?: File | null }) => void;
+  onSubmit: (payload: Partial<Event>) => void;
   submitLabel?: string;
 }) {
   const [form, setForm] = useState({
@@ -25,8 +24,6 @@ export function EventForm({
     capacity: initial?.capacity ?? 100,
     description: initial?.description ?? "",
   });
-  const [bannerFile, setBannerFile] = useState<File | null>(null);
-
   return (
     <div className="space-y-4">
       <div className="grid gap-4 md:grid-cols-2">
@@ -77,8 +74,7 @@ export function EventForm({
           placeholder="Descripción breve del evento"
         />
       </FormField>
-      <FileUpload label="Banner del evento" accept="image/*" onChange={setBannerFile} />
-      <Button onClick={() => onSubmit({ ...form, bannerFile })}>{submitLabel}</Button>
+      <Button onClick={() => onSubmit(form)}>{submitLabel}</Button>
     </div>
   );
 }

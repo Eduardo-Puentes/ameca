@@ -11,12 +11,14 @@ export type Column<T> = {
 export function DataTable<T>({
   columns,
   data,
+  tableContainerClassName,
 }: {
   columns: Column<T>[];
   data: T[];
+  tableContainerClassName?: string;
 }) {
   return (
-    <Table>
+    <Table containerClassName={tableContainerClassName}>
       <thead>
         <tr className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">
           {columns.map((col) => (
@@ -31,7 +33,9 @@ export function DataTable<T>({
           <tr key={idx} className="rounded-xl bg-[var(--surface-2)]">
             {columns.map((col) => (
               <td key={String(col.accessor)} className={col.className ?? "px-3 py-4"}>
-                {col.render ? col.render(item) : String((item as any)[col.accessor] ?? "")}
+                {col.render
+                  ? col.render(item)
+                  : String((item as Record<string, unknown>)[String(col.accessor)] ?? "")}
               </td>
             ))}
           </tr>

@@ -1,23 +1,22 @@
 import type {
+  AdminUserCreatePayload,
+  AdminUserCreateResult,
   AttendanceRecord,
-  BulkLink,
-  BulkTier,
   DiplomaRecord,
   DiplomaTemplate,
   Event,
+  EventUpsertPayload,
   EventRequest,
-  Member,
+  MemberUpdatePayload,
   MembershipRequest,
   Organization,
   OrganizationRequest,
+  PaginatedResponse,
   RequestStatus,
   Section,
-  SectionRequest,
 } from "@/lib/types";
 import {
   mockAttendanceRecords,
-  mockBulkLinks,
-  mockBulkTiers,
   mockDiplomaRecords,
   mockDiplomaTemplates,
   mockEventRequests,
@@ -34,7 +33,6 @@ let membershipRequests = [...mockMembershipRequests];
 let eventRequests = [...mockEventRequests];
 let sectionRequests = [...mockSectionRequests];
 let sections = [...mockSections];
-let bulkLinks = [...mockBulkLinks];
 let diplomaTemplates = [...mockDiplomaTemplates];
 let diplomaRecords = [...mockDiplomaRecords];
 let attendanceRecords = [...mockAttendanceRecords];
@@ -76,7 +74,7 @@ export async function authLogin(role: string) {
       id: `user-${role}`,
       name:
         roleLabel === "superadmin"
-          ? "Directora General"
+          ? "Director General"
           : roleLabel === "admin"
           ? "Ariana Torres"
           : roleLabel === "staff"
@@ -85,7 +83,9 @@ export async function authLogin(role: string) {
           ? "Dra. Riley Shaw"
           : "Jordan Lee",
       email:
-        roleLabel === "member"
+        roleLabel === "superadmin"
+          ? "superuser@ameca.org"
+          : roleLabel === "member"
           ? "jordan.lee@uni.edu"
           : roleLabel === "representative"
           ? "riley.shaw@lab.org"
@@ -110,6 +110,7 @@ export async function authRegister(payload: { fullName: string; email: string })
       id: generateId("member"),
       fullName: payload.fullName,
       email: payload.email,
+      phoneNumber: "",
       profileType: "standard",
       verified: false,
       expirationDate: "",
@@ -155,37 +156,36 @@ export async function getMyTicket(eventId: string) {
   return { token: `TCK-${eventId}-member`, event_id: eventId };
 }
 
-export async function createEvent(payload: Partial<Event>) {
+export async function createEvent(payload: EventUpsertPayload) {
   await wait(300);
+  const resolvedOpen = payload.open ?? (payload.status ? payload.status === "open" : true);
   const newEvent: Event = {
     id: generateId("event"),
     name: payload.name ?? "Nuevo evento",
     startDate: payload.startDate ?? "2026-06-10",
     duration: payload.duration ?? 1,
-    open: true,
+    open: resolvedOpen,
     location: payload.location ?? "Por definir",
     description: payload.description ?? "Descripción pendiente.",
     capacity: payload.capacity ?? 100,
-    status: "open",
+    status: resolvedOpen ? "open" : "closed",
   };
   events = [newEvent, ...events];
   return newEvent;
 }
 
-export async function uploadEventBanner(eventId: string, banner: File) {
-  await wait(200);
-  const bannerUrl = typeof URL !== "undefined" ? URL.createObjectURL(banner) : "";
-  events = events.map((event) =>
-    event.id === eventId
-      ? { ...event, bannerUrl, bannerName: banner.name, bannerType: banner.type }
-      : event
-  );
-  return events.find((event) => event.id === eventId) ?? null;
-}
-
-export async function updateEvent(id: string, payload: Partial<Event>) {
+export async function updateEvent(id: string, payload: EventUpsertPayload) {
   await wait(250);
-  events = events.map((event) => (event.id === id ? { ...event, ...payload } : event));
+  events = events.map((event) => {
+    if (event.id !== id) return event;
+    const nextOpen = payload.open ?? (payload.status ? payload.status === "open" : event.open);
+    return {
+      ...event,
+      ...payload,
+      open: nextOpen,
+      status: nextOpen ? "open" : "closed",
+    };
+  });
   return events.find((event) => event.id === id) ?? null;
 }
 
@@ -200,11 +200,7 @@ export async function listMembers() {
   return [...members];
 }
 
-export async function createAdminUser(payload: {
-  fullName: string;
-  email: string;
-  role: "admin" | "staff";
-}) {
+export async function createAdminUser(payload: AdminUserCreatePayload): Promise<AdminUserCreateResult> {
   await wait(300);
   return {
     id: generateId("admin"),
@@ -214,10 +210,16 @@ export async function createAdminUser(payload: {
   };
 }
 
-export async function updateMember(id: string, payload: Partial<Member>) {
+export async function updateMember(id: string, payload: MemberUpdatePayload) {
   await wait(200);
   members = members.map((member) => (member.id === id ? { ...member, ...payload } : member));
   return members.find((member) => member.id === id) ?? null;
+}
+
+export async function deleteMember(id: string) {
+  await wait(200);
+  members = members.filter((member) => member.id !== id);
+  return { ok: true };
 }
 
 export async function listOrganizations() {
@@ -276,9 +278,51 @@ export async function updateOrganizationStatus(id: string, status: "approved" | 
   return organizations.find((org) => org.id === id)!;
 }
 
-export async function listMemberRequests() {
+export async function listMemberRequests(
+  query = "",
+  page = 1,
+  pageSize = 20
+): Promise<PaginatedResponse<MembershipRequest>> {
   await wait(220);
-  return [...membershipRequests];
+  const search = query.trim().toLowerCase();
+  const filtered = search
+    ? membershipRequests.filter((req) =>
+        [
+          req.memberName,
+          req.memberEmail,
+          req.memberPhoneNumber,
+          req.currentProfileType,
+          req.profileType,
+          req.comments,
+        ]
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase().includes(search))
+      )
+    : membershipRequests;
+  const start = (page - 1) * pageSize;
+  const items = filtered.slice(start, start + pageSize);
+  const statusCounts = {
+    pending: membershipRequests.filter((req) => req.status === "pending").length,
+    approved: membershipRequests.filter((req) => req.status === "approved").length,
+    rejected: membershipRequests.filter((req) => req.status === "rejected").length,
+  };
+  return {
+    items,
+    total: filtered.length,
+    page,
+    pageSize,
+    statusCounts,
+    unfilteredTotal: membershipRequests.length,
+  };
+}
+
+export async function getMemberRequest(id: string) {
+  await wait(180);
+  const request = membershipRequests.find((item) => item.id === id);
+  if (!request) {
+    throw new Error("Request not found");
+  }
+  return request;
 }
 
 export async function createMembershipUpgradeRequest(
@@ -290,6 +334,9 @@ export async function createMembershipUpgradeRequest(
     id: generateId("mem"),
     memberId: members[0]?.id ?? "member-000",
     memberName: members[0]?.fullName ?? "Miembro",
+    memberEmail: members[0]?.email ?? "",
+    memberPhoneNumber: members[0]?.phoneNumber ?? "",
+    currentProfileType: members[0]?.profileType ?? "",
     profileType,
     status: "pending",
     paymentProofUrl: "#",
@@ -308,7 +355,15 @@ export async function listMembershipUpgradeRequests() {
 export async function approveMemberRequest(id: string, comments?: string) {
   await wait(220);
   membershipRequests = membershipRequests.map((req) =>
-    req.id === id ? { ...req, status: "approved", comments: comments ?? "Aprobado." } : req
+    req.id === id
+      ? {
+          ...req,
+          status: "approved",
+          comments: comments ?? "Aprobado.",
+          decidedAt: new Date().toISOString(),
+          decidedByName: "Administración AMECA",
+        }
+      : req
   );
   return membershipRequests.find((req) => req.id === id) ?? null;
 }
@@ -316,25 +371,128 @@ export async function approveMemberRequest(id: string, comments?: string) {
 export async function denyMemberRequest(id: string, comments?: string) {
   await wait(220);
   membershipRequests = membershipRequests.map((req) =>
-    req.id === id ? { ...req, status: "rejected", comments: comments ?? "Rechazado." } : req
+    req.id === id
+      ? {
+          ...req,
+          status: "rejected",
+          comments: comments ?? "Rechazado.",
+          decidedAt: new Date().toISOString(),
+          decidedByName: "Administración AMECA",
+        }
+      : req
   );
   return membershipRequests.find((req) => req.id === id) ?? null;
 }
 
 export async function listEventRequests(
   eventId: string,
-  status?: "pending" | "approved" | "rejected"
+  status?: "pending" | "approved" | "rejected",
+  query = "",
+  page = 1,
+  pageSize = 20
 ) {
   await wait(200);
   const scoped = eventRequests.filter((req) => req.eventId === eventId);
-  if (!status) return scoped;
-  return scoped.filter((req) => req.status === status);
+  const statusCounts = {
+    pending: scoped.filter((req) => req.status === "pending").length,
+    approved: scoped.filter((req) => req.status === "approved").length,
+    rejected: scoped.filter((req) => req.status === "rejected").length,
+  };
+  const searched = query.trim()
+    ? scoped.filter((req) =>
+        [
+          req.memberName,
+          req.memberEmail,
+          req.memberPhoneNumber,
+          req.sectionName,
+          req.eventName,
+          req.comments,
+        ]
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase().includes(query.trim().toLowerCase()))
+      )
+    : scoped;
+  const filtered = status ? searched.filter((req) => req.status === status) : searched;
+  const start = (page - 1) * pageSize;
+  const items = filtered.slice(start, start + pageSize);
+  return {
+    items,
+    total: filtered.length,
+    page,
+    pageSize,
+    statusCounts,
+    unfilteredTotal: scoped.length,
+  };
+}
+
+export async function listMyEventRequests(eventId?: string) {
+  await wait(200);
+  const scoped = eventId
+    ? eventRequests.filter((req) => req.eventId === eventId)
+    : eventRequests;
+  return [...scoped].sort((a, b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+}
+
+export async function listAdminEventRequests(
+  status?: "pending" | "approved" | "rejected",
+  query = "",
+  page = 1,
+  pageSize = 20
+) {
+  await wait(200);
+  const statusCounts = {
+    pending: eventRequests.filter((req) => req.status === "pending").length,
+    approved: eventRequests.filter((req) => req.status === "approved").length,
+    rejected: eventRequests.filter((req) => req.status === "rejected").length,
+  };
+  const searched = query.trim()
+    ? eventRequests.filter((req) =>
+        [
+          req.memberName,
+          req.memberEmail,
+          req.memberPhoneNumber,
+          req.sectionName,
+          req.eventName,
+          req.comments,
+        ]
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase().includes(query.trim().toLowerCase()))
+      )
+    : eventRequests;
+  const filtered = status ? searched.filter((req) => req.status === status) : searched;
+  const start = (page - 1) * pageSize;
+  const items = filtered.slice(start, start + pageSize);
+  return {
+    items,
+    total: filtered.length,
+    page,
+    pageSize,
+    statusCounts,
+    unfilteredTotal: eventRequests.length,
+  };
+}
+
+export async function getEventRequest(id: string) {
+  await wait(180);
+  const request = eventRequests.find((item) => item.id === id);
+  if (!request) {
+    throw new Error("Request not found");
+  }
+  return request;
 }
 
 export async function approveEventRequest(id: string, comments?: string) {
   await wait(200);
   eventRequests = eventRequests.map((req) =>
-    req.id === id ? { ...req, status: "approved", comments: comments ?? "Aprobado." } : req
+    req.id === id
+      ? {
+          ...req,
+          status: "approved",
+          comments: comments ?? "Aprobado.",
+          decidedAt: new Date().toISOString(),
+          decidedByName: "Administración AMECA",
+        }
+      : req
   );
   return eventRequests.find((req) => req.id === id) ?? null;
 }
@@ -342,7 +500,15 @@ export async function approveEventRequest(id: string, comments?: string) {
 export async function denyEventRequest(id: string, comments?: string) {
   await wait(200);
   eventRequests = eventRequests.map((req) =>
-    req.id === id ? { ...req, status: "rejected", comments: comments ?? "Rechazado." } : req
+    req.id === id
+      ? {
+          ...req,
+          status: "rejected",
+          comments: comments ?? "Rechazado.",
+          decidedAt: new Date().toISOString(),
+          decidedByName: "Administración AMECA",
+        }
+      : req
   );
   return eventRequests.find((req) => req.id === id) ?? null;
 }
@@ -355,8 +521,10 @@ export async function createEventRequest(
     id: generateId("req"),
     eventId: payload.eventId ?? "",
     eventName: payload.eventName ?? "Evento",
+    memberId: payload.memberId ?? members[0]?.id ?? "",
     memberName: payload.memberName ?? "Miembro",
     memberEmail: payload.memberEmail ?? "",
+    memberPhoneNumber: payload.memberPhoneNumber ?? members[0]?.phoneNumber ?? "",
     sectionName: payload.sectionName ?? "General",
     status: "pending",
     paymentProofUrl: payload.paymentProofUrl,
@@ -399,66 +567,6 @@ export async function updateSection(id: string, payload: Partial<Section>) {
   await wait(200);
   sections = sections.map((section) => (section.id === id ? { ...section, ...payload } : section));
   return sections.find((section) => section.id === id) ?? null;
-}
-
-export async function listBulkLinks(eventId?: string) {
-  await wait(200);
-  if (!eventId) return [...bulkLinks];
-  return bulkLinks.filter((link) => link.eventId === eventId);
-}
-
-export async function createBulkLink(
-  eventId: string,
-  payload: Partial<BulkLink> & { allowedEmails?: string[] }
-) {
-  await wait(260);
-  const link: BulkLink = {
-    id: generateId("bulk"),
-    eventId,
-    orgName: payload.orgName ?? "Organización",
-    token: `BULK-${Math.random().toString(36).slice(2, 6).toUpperCase()}`,
-    maxUses: payload.maxUses ?? 10,
-    usedCount: 0,
-    expiresAt: payload.expiresAt ?? "2026-05-01",
-    createdByAdmin: payload.createdByAdmin ?? "Equipo AMECA",
-    status: "active",
-    tiers: payload.tiers ?? mockBulkTiers,
-  };
-  bulkLinks = [link, ...bulkLinks];
-  return link;
-}
-
-export async function sendBulkInvites(_bulkId: string) {
-  await wait(300);
-  return { ok: true };
-}
-
-export async function validateBulkToken(token: string) {
-  await wait(200);
-  const link = bulkLinks.find((item) => item.token === token);
-  if (!link) {
-    return { valid: false, message: "Token inválido o expirado." } as const;
-  }
-  const discountPercent = link.tiers?.[0]?.discountPercent ?? 5;
-  return {
-    valid: true,
-    message: "Token válido. Descuento aplicado.",
-    orgName: link.orgName,
-    discountPercent,
-  } as const;
-}
-
-export async function registerViaBulk(token: string) {
-  await wait(250);
-  const link = bulkLinks.find((item) => item.token === token);
-  if (!link || link.status !== "active") {
-    return { status: "rejected" as RequestStatus, message: "Token inválido." };
-  }
-  if (link.usedCount >= link.maxUses) {
-    return { status: "rejected" as RequestStatus, message: "Cupo agotado." };
-  }
-  link.usedCount += 1;
-  return { status: "pending" as RequestStatus, message: "Registro enviado." };
 }
 
 export async function getDiplomaTemplate(eventId: string) {
@@ -642,16 +750,6 @@ export async function listAttendance(eventId?: string) {
   await wait(150);
   if (!eventId) return [...attendanceRecords];
   return attendanceRecords.filter((record) => record.eventId === eventId);
-}
-
-export async function listBulkTiers(_eventId: string) {
-  await wait(150);
-  return [...mockBulkTiers];
-}
-
-export async function saveBulkTiers(_eventId: string, tiers: BulkTier[]) {
-  await wait(200);
-  return tiers;
 }
 
 export async function listOrganizationInvites() {
