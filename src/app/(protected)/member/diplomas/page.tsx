@@ -113,6 +113,7 @@ export default function MemberDiplomasPage() {
         id: previewRecord.memberId,
         fullName: previewRecord.memberName,
         email: previewRecord.memberEmail,
+        phoneNumber: "",
         profileType: "Miembro",
         verified: true,
         expirationDate: "",

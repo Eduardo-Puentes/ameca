@@ -7,7 +7,7 @@ export type AttendanceSlice = {
   attendanceLoading: boolean;
   loadAttendance: (eventId?: string) => Promise<void>;
   searchRecords: (query: string) => Promise<void>;
-  scanToken: (eventId: string, token: string, day: number) => Promise<AttendanceRecord>;
+  scanToken: (eventId: string, token: string) => Promise<AttendanceRecord>;
 };
 
 export const createAttendanceSlice: StateCreator<AttendanceSlice, [], [], AttendanceSlice> = (
@@ -26,8 +26,8 @@ export const createAttendanceSlice: StateCreator<AttendanceSlice, [], [], Attend
     const data = await searchAttendance(query);
     set({ attendanceRecords: data, attendanceLoading: false });
   },
-  scanToken: async (eventId, token, day) => {
-    const record = await recordAttendanceScan(eventId, token, day);
+  scanToken: async (eventId, token) => {
+    const record = await recordAttendanceScan(eventId, token);
     set({ attendanceRecords: [record, ...get().attendanceRecords] });
     return record;
   },

@@ -1,3 +1,5 @@
+export type BackendRole = "superuser" | "admin" | "staff" | "member";
+
 export type Role =
   | "superadmin"
   | "admin"
@@ -16,6 +18,21 @@ export type Status =
   | "sent"
   | "failed";
 
+export type RequestStatusCounts = {
+  pending: number;
+  approved: number;
+  rejected: number;
+};
+
+export type PaginatedResponse<T> = {
+  items: T[];
+  total: number;
+  page: number;
+  pageSize: number;
+  statusCounts?: RequestStatusCounts;
+  unfilteredTotal?: number;
+};
+
 export type User = {
   id: string;
   name: string;
@@ -23,19 +40,18 @@ export type User = {
   role: Role;
 };
 
+export type AdminRole = Extract<BackendRole, "admin" | "staff">;
+
 export type Event = {
   id: string;
   name: string;
-  startDate: string;
+  startDate: number | string;
   duration: number;
   open: boolean;
   location: string;
   description: string;
   capacity: number;
   status: "open" | "closed";
-  bannerUrl?: string;
-  bannerName?: string;
-  bannerType?: string;
 };
 
 export type RequestStatus = "pending" | "approved" | "rejected";
@@ -49,15 +65,21 @@ export type EventRequest = {
   id: string;
   eventId: string;
   eventName: string;
+  memberId?: string;
   memberName: string;
   memberEmail: string;
+  memberPhoneNumber?: string;
+  sectionId?: string | null;
   sectionName: string;
   status: RequestStatus;
   calculatedCost?: number;
   paymentProofUrl?: string;
   comments?: string;
-  createdAt: string;
+  createdAt: number | string;
   isSpeaker?: boolean;
+  decidedAt?: number | string | null;
+  decidedById?: string | null;
+  decidedByName?: string;
 };
 
 export type SectionRequestStatus = RequestStatus;
@@ -79,13 +101,15 @@ export type SectionRequest = {
   pCount: number;
   status: SectionRequestStatus;
   comments?: string;
-  createdAt: string;
+  createdAt: number | string;
 };
 
 export type MembershipRequest = {
   id: string;
   memberId: string;
   memberName: string;
+  memberEmail?: string;
+  memberPhoneNumber?: string;
   currentProfileType?: ProfileType | string;
   profileType: string;
   status: RequestStatus;
@@ -93,7 +117,10 @@ export type MembershipRequest = {
   upgradeCost?: number;
   paymentProofUrl?: string;
   comments?: string;
-  createdAt: string;
+  createdAt: number | string;
+  decidedAt?: number | string | null;
+  decidedById?: string | null;
+  decidedByName?: string;
 };
 
 export type BulkTier = {
@@ -123,21 +150,57 @@ export type MemberProfile = {
   email: string;
   profileType: ProfileType | string;
   verified: boolean;
-  expirationDate: string;
+  phoneNumber: string;
+  expirationDate?: number | string | null;
 };
 
 export type Member = {
   id: string;
   fullName: string;
   email: string;
-  phoneNumber?: string;
+  phoneNumber: string;
   profileType: ProfileType | string;
   verified: boolean;
-  expirationDate: string;
+  expirationDate?: number | string | null;
   role: Role;
   organization?: string;
   organizationId?: string;
 };
+
+export type MemberUpdatePayload = Partial<
+  Pick<Member, "fullName" | "phoneNumber" | "profileType" | "expirationDate" | "verified">
+>;
+
+export type AdminUser = {
+  id: string;
+  name: string;
+  fullName: string;
+  email: string;
+  phoneNumber: string;
+  role: AdminRole;
+  profileType: ProfileType | string;
+  expirationDate?: number | string | null;
+  verified: boolean;
+};
+
+export type AdminUserCreatePayload = {
+  fullName: string;
+  email: string;
+  role: AdminRole;
+};
+
+export type AdminUserCreateResult = {
+  id: string;
+  email: string;
+  role: AdminRole;
+  tempPassword?: string;
+};
+
+export type AdminUserUpdatePayload = Partial<AdminUserCreatePayload>;
+
+export type EventUpsertPayload = Partial<
+  Pick<Event, "name" | "startDate" | "duration" | "open" | "location" | "description" | "capacity" | "status">
+>;
 
 export type OrganizationStatus = "pending" | "approved" | "rejected";
 
@@ -177,12 +240,15 @@ export type SectionInvite = {
   sectionId: string;
   eventId: string;
   sectionName?: string;
-  invitedEmail: string;
-  status: "pending" | "accepted" | "expired" | "cancelled";
-  token?: string;
-  expiresAt: string;
-  createdAt: string;
-  acceptedAt?: string;
+  invitedMemberId: string;
+  invitedMemberName?: string;
+  invitedMemberEmail?: string;
+  createdByMemberId?: string;
+  createdByMemberName?: string;
+  status: "pending" | "accepted" | "declined" | "cancelled";
+  createdAt: number | string;
+  acceptedAt?: number | string | null;
+  respondedAt?: number | string | null;
 };
 
 export type Presentation = {
@@ -194,7 +260,7 @@ export type Presentation = {
   description?: string;
   fileName: string;
   fileUrl: string;
-  uploadedAt: string;
+  uploadedAt: number | string;
   memberName?: string;
   memberEmail?: string;
 };
@@ -264,8 +330,8 @@ export type DiplomaRecord = {
   attendedDays: number;
   minRequiredDays: number;
   status: DiplomaRecordStatus;
-  issuedAt: string;
-  sentAt?: string;
+  issuedAt?: number | string | null;
+  sentAt?: number | string | null;
   previewData?: Record<string, string>;
 };
 
@@ -275,9 +341,10 @@ export type AttendanceRecord = {
   memberId: string;
   memberName: string;
   memberEmail?: string;
-  day: number;
+  attended?: boolean;
+  status?: "ok" | "duplicate";
+  day?: number;
   eventDay?: string;
-  scannedAt: string;
-  scannedBy: string;
-  status: "ok" | "duplicate";
+  scannedAt?: string;
+  scannedBy?: string;
 };

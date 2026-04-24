@@ -18,7 +18,7 @@ const amecaMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sistema AMECA MVP",
+  title: "Plataforma AMECA",
   description: "Experiencia de administración y miembros para eventos AMECA",
 };
 

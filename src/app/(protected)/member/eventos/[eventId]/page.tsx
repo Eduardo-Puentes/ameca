@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { PageHeader } from "@/components/layout/PageMetaContext";
 import { Card } from "@/components/ui/Card";
@@ -16,6 +16,7 @@ import {
   uploadPresentation,
 } from "@/lib/data";
 import type { Presentation } from "@/lib/types";
+import { formatDate } from "@/lib/utils";
 
 export default function MemberEventoDetallePage() {
   const params = useParams();
@@ -52,16 +53,17 @@ export default function MemberEventoDetallePage() {
   const existingRequest = eventRequests.find(
     (req) => req.eventId === eventId && req.memberEmail === member?.email
   );
+  const canManagePresentations =
+    existingRequest?.status === "approved" && Boolean(existingRequest.isSpeaker);
 
   useEffect(() => {
-    if (!eventId || !existingRequest || existingRequest.status !== "approved" || !existingRequest.isSpeaker) {
-      setPresentations([]);
+    if (!eventId || !canManagePresentations) {
       return;
     }
     listMyPresentations(eventId)
       .then((items) => setPresentations(items))
       .catch(() => setPresentations([]));
-  }, [eventId, existingRequest]);
+  }, [canManagePresentations, eventId]);
 
   const submitRequest = async () => {
     if (!event || !member) return;
@@ -119,18 +121,9 @@ export default function MemberEventoDetallePage() {
 
       <div className="grid gap-6 lg:grid-cols-[1.3fr_1fr]">
         <Card className="space-y-4">
-          {event.bannerUrl ? (
-            <div className="overflow-hidden rounded-xl border border-[var(--border)]">
-              <img
-                src={event.bannerUrl}
-                alt={`Banner ${event.name}`}
-                className="h-40 w-full object-cover"
-              />
-            </div>
-          ) : null}
           <div className="text-sm text-[var(--muted)]">{event.description}</div>
           <div className="text-xs text-[var(--muted)]">
-            {event.location} • {event.startDate} • {event.duration} día(s)
+            {event.location} • {formatDate(event.startDate)} • {event.duration} día(s)
           </div>
         </Card>
 
@@ -165,7 +158,7 @@ export default function MemberEventoDetallePage() {
         </Card>
       </div>
 
-      {existingRequest?.status === "approved" && existingRequest.isSpeaker ? (
+      {canManagePresentations ? (
         <Card className="space-y-4">
           <div>
             <div className="text-lg font-semibold text-[var(--ink)]">Presentaciones</div>

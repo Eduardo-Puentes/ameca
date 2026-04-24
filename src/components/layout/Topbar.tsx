@@ -1,8 +1,7 @@
 "use client";
 
-import { Bell, Search } from "lucide-react";
+import { Bell } from "lucide-react";
 import { useAppStore } from "@/store";
-import { Input } from "@/components/ui/Input";
 import { Badge } from "@/components/ui/Badge";
 
 export function Topbar({
@@ -29,7 +28,7 @@ export function Topbar({
       : user?.role ?? "ninguno";
 
   return (
-    <div className="flex flex-col gap-4 rounded-3xl bg-[var(--surface)] px-4 py-4 shadow-sm md:px-6 md:py-5">
+    <div className="flex flex-col gap-4 rounded-3xl bg-[var(--surface)] px-4 py-4 shadow-[0_22px_44px_-32px_rgba(27,29,27,0.42)] md:px-6 md:py-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
           {breadcrumb && breadcrumb.length > 0 ? (
@@ -55,13 +54,6 @@ export function Topbar({
             <Bell className="h-4 w-4" />
           </button>
         </div>
-      </div>
-      <div className="hidden items-center gap-3 md:flex">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-3 h-4 w-4 text-[var(--muted)]" />
-          <Input placeholder="Buscar solicitudes, miembros o eventos" className="pl-9" />
-        </div>
-        <div className="text-sm text-[var(--muted)]">Actualizado ahora</div>
       </div>
     </div>
   );

@@ -1,16 +1,19 @@
 import type {
+  AdminUser,
+  AdminUserCreatePayload,
+  AdminUserCreateResult,
+  AdminUserUpdatePayload,
   AttendanceRecord,
-  BulkLink,
-  BulkTier,
+  BackendRole,
   DiplomaRecord,
   DiplomaTemplate,
   Event,
+  EventUpsertPayload,
   EventRequest,
   Member,
+  MemberUpdatePayload,
   MembershipRequest,
-  Organization,
-  OrganizationRequest,
-  OrganizationInvitation,
+  PaginatedResponse,
   Presentation,
   Section,
   SectionInvite,
@@ -29,15 +32,27 @@ const ROLE_CREDENTIALS: Record<Role, { email: string; password: string }> = {
   representative: { email: "member@ameca.org", password: "ChangeMe123!" },
 };
 
-type AuthUser = { id: string; name: string; email: string; role: string };
+type AuthUser = { id: string; name: string; email: string; role: BackendRole };
 type AuthResponse = { token: string; user: AuthUser };
 
-const normalizeRole = (role: string): Role =>
+const normalizeRole = (role: BackendRole): Role =>
   role === "superuser" ? "superadmin" : (role as Role);
 
 const normalizeAuthResponse = (response: AuthResponse) => ({
   ...response,
   user: { ...response.user, role: normalizeRole(response.user.role) },
+});
+
+const toEpochDay = (value: Event["startDate"] | undefined) => {
+  if (typeof value === "number") return value;
+  if (!value) return value;
+  const parsed = new Date(`${value}T00:00:00Z`).getTime();
+  return Number.isNaN(parsed) ? value : Math.floor(parsed / 1000);
+};
+
+const normalizeEventPayload = (payload: EventUpsertPayload) => ({
+  ...payload,
+  startDate: toEpochDay(payload.startDate),
 });
 
 const humanizeError = (message: string, status: number) => {
@@ -50,17 +65,24 @@ const humanizeError = (message: string, status: number) => {
     ["request not found", "Solicitud no encontrada."],
     ["member not found", "Miembro no encontrado."],
     ["section not found", "Sección no encontrada."],
-    ["bulk link not found", "Enlace masivo no encontrado."],
     ["invalid token", "El enlace no es válido."],
     ["token expired", "El enlace ha expirado."],
     ["missing fields", "Faltan datos obligatorios."],
-    ["invalid date", "La fecha no es válida."],
     ["duplicate scan", "Escaneo duplicado."],
+    ["ticket not found", "El boleto no es válido para este evento."],
+    ["payment proof is required", "Debes subir tu comprobante de pago."],
+    ["event registration is closed", "El registro del evento está cerrado."],
+    ["already registered", "Ya estás registrado en este evento."],
+    ["resolve registered event members before deleting this event", "No puedes eliminar un evento con usuarios registrados."],
+    ["email verification cannot be revoked by admins", "La verificación por correo no puede retirarse desde administración."],
+    ["profile type must be changed", "El tipo de membresía se cambia desde una solicitud de upgrade."],
+    ["member must accept the section invite", "Debes aceptar la invitación antes de usar esta sección."],
+    ["member already belongs to another section", "Ya perteneces a otra sección de este evento."],
+    ["same profile", "El perfil solicitado debe ser distinto al actual."],
+    ["upgrade requirements", "Faltan documentos requeridos para este upgrade."],
     ["error parsing the body", "No se pudo procesar la solicitud."],
     ["token invalido", "Token inválido."],
     ["email no autorizado", "El correo no está autorizado."],
-    ["organization not found", "Organización no encontrada."],
-    ["organization already exists", "La organización ya está registrada."],
     ["already a member", "Ya perteneces a esa organización."],
     ["rejection comment required", "El comentario es obligatorio para rechazar."],
     ["rejection comment locked", "El comentario del rechazo ya fue enviado y no puede cambiarse."],
@@ -109,6 +131,7 @@ async function request<T>(
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
     headers,
+    credentials: "include",
   });
 
   if (!response.ok) {
@@ -119,7 +142,17 @@ async function request<T>(
       if (typeof parsed?.detail === "string") {
         message = parsed.detail;
       } else if (Array.isArray(parsed?.detail)) {
-        message = parsed.detail.map((item: any) => item?.msg).filter(Boolean).join(", ");
+        message = parsed.detail
+          .map((item: unknown) =>
+            typeof item === "object" &&
+            item !== null &&
+            "msg" in item &&
+            typeof item.msg === "string"
+              ? item.msg
+              : ""
+          )
+          .filter(Boolean)
+          .join(", ");
       } else if (typeof parsed?.message === "string") {
         message = parsed.message;
       }
@@ -161,7 +194,6 @@ export async function authRegister(payload: {
   email: string;
   password: string;
   phoneNumber?: string;
-  organizationId?: string;
 }) {
   const response = await request<AuthResponse>(
     "/auth/register",
@@ -172,31 +204,6 @@ export async function authRegister(payload: {
         password: payload.password,
         full_name: payload.fullName,
         phone_number: payload.phoneNumber ?? null,
-        organization_id: payload.organizationId ?? null,
-      }),
-    },
-    false
-  );
-  return normalizeAuthResponse(response);
-}
-
-export async function authRegisterRepresentative(payload: {
-  fullName: string;
-  email: string;
-  password: string;
-  phoneNumber?: string;
-  organizationName: string;
-}) {
-  const response = await request<AuthResponse>(
-    "/auth/register-representative",
-    {
-      method: "POST",
-      body: JSON.stringify({
-        email: payload.email,
-        password: payload.password,
-        full_name: payload.fullName,
-        phone_number: payload.phoneNumber ?? null,
-        organization_name: payload.organizationName,
       }),
     },
     false
@@ -205,10 +212,14 @@ export async function authRegisterRepresentative(payload: {
 }
 
 export async function authMe() {
-  const response = await request<{ id: string; name: string; email: string; role: string }>(
+  const response = await request<{ id: string; name: string; email: string; role: BackendRole }>(
     "/auth/me"
   );
   return { ...response, role: normalizeRole(response.role) };
+}
+
+export async function authLogout() {
+  return request<{ ok: boolean }>("/auth/logout", { method: "POST" }, false);
 }
 
 export async function verifyEmail(token: string) {
@@ -228,26 +239,17 @@ export async function getMyTicket(eventId: string) {
   return request<{ token: string; event_id: string }>(`/events/${eventId}/ticket/me`);
 }
 
-export async function createEvent(payload: Partial<Event>): Promise<Event> {
+export async function createEvent(payload: EventUpsertPayload): Promise<Event> {
   return request<Event>("/admin/events", {
     method: "POST",
-    body: JSON.stringify(payload),
+    body: JSON.stringify(normalizeEventPayload(payload)),
   });
 }
 
-export async function uploadEventBanner(eventId: string, banner: File): Promise<Event> {
-  const form = new FormData();
-  form.append("banner", banner);
-  return request<Event>(`/admin/events/${eventId}/banner`, {
-    method: "POST",
-    body: form,
-  });
-}
-
-export async function updateEvent(id: string, payload: Partial<Event>): Promise<Event | null> {
+export async function updateEvent(id: string, payload: EventUpsertPayload): Promise<Event | null> {
   return request<Event>(`/admin/events/${id}`, {
     method: "PATCH",
-    body: JSON.stringify(payload),
+    body: JSON.stringify(normalizeEventPayload(payload)),
   });
 }
 
@@ -259,12 +261,12 @@ export async function listMembers(): Promise<Member[]> {
   return request<Member[]>("/members");
 }
 
-export async function createAdminUser(payload: {
-  fullName: string;
-  email: string;
-  role: "admin" | "staff";
-}) {
-  return request<{ id: string; email: string; role: Role; tempPassword?: string }>(
+export async function listAdminUsers(): Promise<AdminUser[]> {
+  return request<AdminUser[]>("/admin/users");
+}
+
+export async function createAdminUser(payload: AdminUserCreatePayload) {
+  return request<AdminUserCreateResult>(
     "/admin/users",
     {
       method: "POST",
@@ -277,54 +279,70 @@ export async function createAdminUser(payload: {
   );
 }
 
-export async function listOrganizations(): Promise<Organization[]> {
-  return request<Organization[]>("/organizations", {}, false);
+export async function updateAdminUser(
+  id: string,
+  payload: AdminUserUpdatePayload
+): Promise<AdminUser> {
+  return request<AdminUser>(`/admin/users/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      full_name: payload.fullName,
+      email: payload.email,
+      role: payload.role,
+    }),
+  });
 }
 
-export async function listMyOrganizationRequests(): Promise<OrganizationRequest[]> {
-  return request<OrganizationRequest[]>("/organizations/me/requests");
-}
-
-export async function createOrganizationJoinRequest(orgId: string) {
-  return request<OrganizationRequest>(`/organizations/${orgId}/join-requests`, {
+export async function resetAdminUserPassword(id: string) {
+  return request<{ ok: boolean; tempPassword?: string }>(`/admin/users/${id}/reset-password`, {
     method: "POST",
   });
 }
 
-export async function listOrganizationJoinRequests(orgId: string) {
-  return request<OrganizationRequest[]>(`/organizations/${orgId}/join-requests`);
+export async function deleteAdminUser(id: string) {
+  return request<{ ok: boolean }>(`/admin/users/${id}`, { method: "DELETE" });
 }
 
-export async function updateOrganizationJoinRequest(id: string, status: "approved" | "rejected") {
-  return request<OrganizationRequest>(`/organizations/join-requests/${id}`, {
-    method: "PATCH",
-    body: JSON.stringify({ status }),
-  });
-}
-
-export async function listPendingOrganizations(): Promise<Organization[]> {
-  return request<Organization[]>("/admin/organizations/requests");
-}
-
-export async function updateOrganizationStatus(orgId: string, status: "approved" | "rejected") {
-  return request<Organization>(`/admin/organizations/${orgId}`, {
-    method: "PATCH",
-    body: JSON.stringify({ status }),
-  });
-}
 export async function getMemberMe(): Promise<Member> {
   return request<Member>("/members/me");
 }
 
-export async function updateMember(id: string, payload: Partial<Member>): Promise<Member | null> {
+export async function updateMemberMe(payload: MemberUpdatePayload): Promise<Member> {
+  return request<Member>("/members/me", {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function updateMember(id: string, payload: MemberUpdatePayload): Promise<Member | null> {
   return request<Member>(`/members/${id}`, {
     method: "PATCH",
     body: JSON.stringify(payload),
   });
 }
 
-export async function listMemberRequests(): Promise<MembershipRequest[]> {
-  return request<MembershipRequest[]>("/admin/membership-requests");
+export async function deleteMember(id: string) {
+  return request<{ ok: boolean }>(`/members/${id}`, { method: "DELETE" });
+}
+
+export async function listMemberRequests(
+  query = "",
+  page = 1,
+  pageSize = 20
+): Promise<PaginatedResponse<MembershipRequest>> {
+  const params = new URLSearchParams();
+  params.set("page", String(page));
+  params.set("pageSize", String(pageSize));
+  if (query.trim()) {
+    params.set("query", query.trim());
+  }
+  return request<PaginatedResponse<MembershipRequest>>(
+    `/admin/membership-requests?${params.toString()}`
+  );
+}
+
+export async function getMemberRequest(id: string): Promise<MembershipRequest> {
+  return request<MembershipRequest>(`/admin/membership-requests/${id}`);
 }
 
 export async function approveMemberRequest(id: string, comments?: string) {
@@ -343,10 +361,37 @@ export async function denyMemberRequest(id: string, comments?: string) {
 
 export async function listEventRequests(
   eventId: string,
-  status?: "pending" | "approved" | "rejected"
-): Promise<EventRequest[]> {
-  const query = status ? `?status=${status}` : "";
-  return request<EventRequest[]>(`/admin/events/${eventId}/requests${query}`);
+  status?: "pending" | "approved" | "rejected",
+  query = "",
+  page = 1,
+  pageSize = 20
+): Promise<PaginatedResponse<EventRequest>> {
+  const params = new URLSearchParams();
+  if (status) params.set("status", status);
+  if (query.trim()) params.set("query", query.trim());
+  params.set("page", String(page));
+  params.set("pageSize", String(pageSize));
+  return request<PaginatedResponse<EventRequest>>(
+    `/admin/events/${eventId}/requests?${params.toString()}`
+  );
+}
+
+export async function listAdminEventRequests(
+  status?: "pending" | "approved" | "rejected",
+  query = "",
+  page = 1,
+  pageSize = 20
+): Promise<PaginatedResponse<EventRequest>> {
+  const params = new URLSearchParams();
+  if (status) params.set("status", status);
+  if (query.trim()) params.set("query", query.trim());
+  params.set("page", String(page));
+  params.set("pageSize", String(pageSize));
+  return request<PaginatedResponse<EventRequest>>(`/admin/event-requests?${params.toString()}`);
+}
+
+export async function getEventRequest(id: string): Promise<EventRequest> {
+  return request<EventRequest>(`/admin/event-requests/${id}`);
 }
 
 export async function listMyEventRequests(eventId?: string): Promise<EventRequest[]> {
@@ -372,7 +417,6 @@ export async function createEventRequest(
   payload: Partial<EventRequest> & {
     paymentProofFile?: File | null;
     sectionId?: string | null;
-    bulkToken?: string | null;
     isSpeaker?: boolean;
   }
 ) {
@@ -380,29 +424,33 @@ export async function createEventRequest(
     throw new Error("eventId required");
   }
   const form = new FormData();
-  let hasField = false;
   if (payload.sectionId) {
     form.append("section_id", payload.sectionId);
-    hasField = true;
-  }
-  if (payload.bulkToken) {
-    form.append("bulk_token", payload.bulkToken);
-    hasField = true;
   }
   if (payload.isSpeaker) {
     form.append("is_speaker", "true");
-    hasField = true;
   }
   if (payload.paymentProofFile) {
     form.append("payment_proof", payload.paymentProofFile);
-    hasField = true;
-  }
-  if (!hasField) {
-    form.append("bulk_token", "");
   }
   return request<EventRequest>(`/events/${payload.eventId}/requests`, {
     method: "POST",
     body: form,
+  });
+}
+
+export async function createSectionRequest(payload: {
+  eventId: string;
+  name: string;
+  requestedPCount?: number;
+}) {
+  return request<SectionRequest>("/section-requests", {
+    method: "POST",
+    body: JSON.stringify({
+      event_id: payload.eventId,
+      name: payload.name,
+      requested_p_count: payload.requestedPCount ?? 0,
+    }),
   });
 }
 
@@ -440,50 +488,34 @@ export async function listSectionInvites(sectionId: string): Promise<SectionInvi
   return request<SectionInvite[]>(`/sections/${sectionId}/invites`);
 }
 
-export async function createSectionInvite(sectionId: string, email: string): Promise<SectionInvite> {
+export async function createSectionInvite(sectionId: string, memberId: string): Promise<SectionInvite> {
   return request<SectionInvite>(`/sections/${sectionId}/invites`, {
     method: "POST",
-    body: JSON.stringify({ email }),
+    body: JSON.stringify({ invitedMemberId: memberId }),
   });
 }
 
-export async function acceptSectionInvite(token: string): Promise<SectionInvite> {
-  return request<SectionInvite>(`/section-invites/${token}/accept`, { method: "POST" });
+export async function listMySectionInvites(): Promise<SectionInvite[]> {
+  return request<SectionInvite[]>("/members/me/section-invites");
 }
 
-export async function listBulkLinks(eventId?: string): Promise<BulkLink[]> {
-  if (!eventId) {
-    return [];
-  }
-  return request<BulkLink[]>(`/admin/events/${eventId}/bulk-links`);
+export async function acceptSectionInvite(inviteId: string): Promise<SectionInvite> {
+  return request<SectionInvite>(`/section-invites/${inviteId}/accept`, { method: "POST" });
 }
 
-export async function createBulkLink(
-  eventId: string,
-  payload: Partial<BulkLink> & { allowedEmails?: string[] }
-) {
-  return request<BulkLink>(`/admin/events/${eventId}/bulk-links`, {
-    method: "POST",
-    body: JSON.stringify(payload),
+export async function declineSectionInvite(inviteId: string): Promise<SectionInvite> {
+  return request<SectionInvite>(`/section-invites/${inviteId}/decline`, { method: "POST" });
+}
+
+export async function cancelSectionInvite(inviteId: string): Promise<SectionInvite> {
+  return request<SectionInvite>(`/section-invites/${inviteId}/cancel`, { method: "POST" });
+}
+
+export async function transferSectionRepresentative(sectionId: string, memberId: string) {
+  return request<Section>(`/sections/${sectionId}/representative`, {
+    method: "PATCH",
+    body: JSON.stringify({ newRepresentativeMemberId: memberId }),
   });
-}
-
-export async function sendBulkInvites(bulkId: string) {
-  return request<{ ok: boolean }>(`/admin/bulk-links/${bulkId}/send-invites`, {
-    method: "POST",
-  });
-}
-
-export async function validateBulkToken(token: string) {
-  return request<{ valid: boolean; message: string; orgName?: string; discountPercent?: number }>(
-    `/bulk/${token}/validate`,
-    {},
-    true
-  );
-}
-
-export async function registerViaBulk(token: string) {
-  return request<{ status: string; message: string }>(`/bulk/${token}/register`, { method: "POST" });
 }
 
 export async function listDiplomasByEvent(eventId: string): Promise<DiplomaRecord[]> {
@@ -499,6 +531,7 @@ export async function sendDiplomaRecord(recordId: string): Promise<DiplomaRecord
 }
 
 export async function listMyDiplomas(memberId: string): Promise<DiplomaRecord[]> {
+  void memberId;
   return request<DiplomaRecord[]>("/members/me/diplomas");
 }
 
@@ -527,22 +560,31 @@ export async function saveDiplomaTemplate(
 }
 
 export async function computeAttendanceSummary(eventId: string) {
-  return request<{ attendedDaysByMember: Record<string, number>; totalAttendees: number }>(
-    `/admin/events/${eventId}/attendance-summary`
+  const response = await request<{
+    attendedMemberIds?: string[];
+    attendedDaysByMember?: Record<string, number>;
+    totalAttendees: number;
+  }>(`/admin/events/${eventId}/attendance-summary`);
+  if (response.attendedDaysByMember) {
+    return response as { attendedDaysByMember: Record<string, number>; totalAttendees: number };
+  }
+  const attendedDaysByMember = Object.fromEntries(
+    (response.attendedMemberIds ?? []).map((memberId) => [memberId, 1])
   );
+  return { attendedDaysByMember, totalAttendees: response.totalAttendees };
 }
 
-export async function generateDiplomas(eventId: string, minRequiredDays: number) {
+export async function generateDiplomas(eventId: string, _minRequiredDays?: number) {
+  void _minRequiredDays;
   return request<DiplomaRecord[]>(`/admin/events/${eventId}/diplomas/generate`, {
     method: "POST",
-    body: JSON.stringify({ minRequiredDays }),
   });
 }
 
-export async function recordAttendanceScan(eventId: string, token: string, day: number) {
+export async function recordAttendanceScan(eventId: string, token: string) {
   return request<AttendanceRecord>("/staff/attendance/scan", {
     method: "POST",
-    body: JSON.stringify({ event_id: eventId, qr_token: token, day }),
+    body: JSON.stringify({ event_id: eventId, qr_token: token }),
   });
 }
 
@@ -554,17 +596,6 @@ export async function listAttendance(eventId?: string) {
 export async function searchAttendance(query?: string) {
   const q = query ? `?query=${encodeURIComponent(query)}` : "";
   return request<AttendanceRecord[]>(`/attendance/search${q}`);
-}
-
-export async function listBulkTiers(eventId: string) {
-  return request<BulkTier[]>(`/admin/events/${eventId}/bulk-tiers`);
-}
-
-export async function saveBulkTiers(eventId: string, tiers: BulkTier[]) {
-  return request<BulkTier[]>(`/admin/events/${eventId}/bulk-tiers`, {
-    method: "PUT",
-    body: JSON.stringify(tiers),
-  });
 }
 
 export async function createMembershipUpgradeRequest(
@@ -588,23 +619,6 @@ export async function createMembershipUpgradeRequest(
 
 export async function listMembershipUpgradeRequests() {
   return request<MembershipRequest[]>("/members/me/upgrade-requests");
-}
-
-export async function listOrganizationInvites(): Promise<OrganizationInvitation[]> {
-  return request<OrganizationInvitation[]>("/organizations/me/invites");
-}
-
-export async function acceptOrganizationInvite(token: string) {
-  return request<OrganizationInvitation>(`/organizations/invites/${token}/accept`, {
-    method: "POST",
-  });
-}
-
-export async function inviteOrganizationMembers(orgId: string, emails: string[]) {
-  return request<OrganizationInvitation[]>(`/organizations/${orgId}/invites`, {
-    method: "POST",
-    body: JSON.stringify({ emails }),
-  });
 }
 
 export async function listMyPresentations(eventId: string) {

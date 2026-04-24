@@ -50,7 +50,10 @@ export default function HomePage() {
               "Escaneo QR por día y generación automática de diplomas con envío simulado.",
           },
         ].map((item) => (
-          <div key={item.title} className="rounded-2xl bg-white p-6 shadow-sm">
+          <div
+            key={item.title}
+            className="rounded-2xl bg-[var(--surface)] p-6 shadow-[0_18px_40px_-28px_rgba(27,29,27,0.4)]"
+          >
             <div className="text-lg font-semibold text-[var(--ink)]">{item.title}</div>
             <div className="mt-2 text-sm text-[var(--muted)]">{item.description}</div>
           </div>

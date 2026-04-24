@@ -1,93 +1,68 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useDeferredValue, useEffect, useState } from "react";
 import { PageHeader } from "@/components/layout/PageMetaContext";
 import { Card } from "@/components/ui/Card";
 import { StatCard } from "@/components/ui/StatCard";
 import { Select } from "@/components/ui/Select";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
 import { DataTable } from "@/components/ui/DataTable";
-import { Modal } from "@/components/ui/Modal";
+import { Input } from "@/components/ui/Input";
+import { Pagination } from "@/components/ui/Pagination";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { useToastStore } from "@/components/ui/Toast";
 import { useAppStore } from "@/store";
 import type { EventRequest, MembershipRequest } from "@/lib/types";
 
 export default function AdminDashboardPage() {
   const {
     events,
-    selectedEventId,
-    selectEvent,
     membershipRequests,
-    eventRequests,
+    membershipRequestsPage,
+    membershipRequestsTotal,
+    membershipRequestStatusCounts,
+    membershipRequestsQuery,
+    dashboardEventRequests,
+    dashboardEventRequestsPage,
+    dashboardEventRequestsTotal,
+    dashboardEventRequestStatusCounts,
+    dashboardEventRequestsQuery,
+    dashboardEventRequestsEventId,
+    requestPageSize,
     sectionRequests,
-    bulkLinks,
     loadMembershipRequests,
-    loadEventRequests,
+    loadDashboardEventRequests,
     loadSectionRequests,
-    loadBulkLinks,
-    approveMembershipRequest,
-    rejectMembershipRequest,
-    approveEventRegistration,
-    rejectEventRegistration,
   } = useAppStore();
-  const pushToast = useToastStore((state) => state.pushToast);
-  const [modal, setModal] = useState<{
-    type: "membership" | "event";
-    request: MembershipRequest | EventRequest;
-    action: "approved" | "rejected";
-  } | null>(null);
-  const [comment, setComment] = useState("");
+  const [membershipSearch, setMembershipSearch] = useState(membershipRequestsQuery);
+  const [eventSearch, setEventSearch] = useState(dashboardEventRequestsQuery);
+  const [eventFilterId, setEventFilterId] = useState<string>(dashboardEventRequestsEventId ?? "all");
+  const deferredMembershipSearch = useDeferredValue(membershipSearch);
+  const deferredEventSearch = useDeferredValue(eventSearch);
 
   useEffect(() => {
-    loadMembershipRequests();
+    loadMembershipRequests(1);
+    loadDashboardEventRequests(null, 1);
     loadSectionRequests();
-  }, [loadMembershipRequests, loadSectionRequests]);
+  }, [loadDashboardEventRequests, loadMembershipRequests, loadSectionRequests]);
 
   useEffect(() => {
-    if (selectedEventId) {
-      loadEventRequests(selectedEventId);
-      loadBulkLinks(selectedEventId);
-    }
-  }, [selectedEventId, loadEventRequests, loadBulkLinks]);
+    loadMembershipRequests(1, deferredMembershipSearch);
+  }, [deferredMembershipSearch, loadMembershipRequests]);
 
-  const pendingMembership = membershipRequests.filter((req) => req.status === "pending");
-  const pendingEvent = eventRequests.filter((req) => req.status === "pending");
+  useEffect(() => {
+    loadDashboardEventRequests(
+      eventFilterId === "all" ? null : eventFilterId,
+      1,
+      deferredEventSearch
+    );
+  }, [deferredEventSearch, eventFilterId, loadDashboardEventRequests]);
+
+  const pendingMembership = membershipRequestStatusCounts.pending;
+  const pendingEvent = dashboardEventRequestStatusCounts.pending;
   const pendingSections = sectionRequests.filter((req) => req.status === "pending");
 
-  const selectedEvent = events.find((event) => event.id === selectedEventId);
-
-  const openModal = (
-    type: "membership" | "event",
-    request: MembershipRequest | EventRequest,
-    action: "approved" | "rejected"
-  ) => {
-    setComment("");
-    setModal({ type, request, action });
-  };
-
-  const confirmModal = async () => {
-    if (!modal) return;
-    if (modal.type === "membership") {
-      if (modal.action === "approved") {
-        await approveMembershipRequest(modal.request.id, comment);
-        pushToast({ title: "Membresía aprobada", tone: "success" });
-      } else {
-        await rejectMembershipRequest(modal.request.id, comment);
-        pushToast({ title: "Membresía rechazada", tone: "danger" });
-      }
-    } else {
-      if (modal.action === "approved") {
-        await approveEventRegistration(modal.request.id, comment);
-        pushToast({ title: "Solicitud aprobada", tone: "success" });
-      } else {
-        await rejectEventRegistration(modal.request.id, comment);
-        pushToast({ title: "Solicitud rechazada", tone: "danger" });
-      }
-    }
-    setModal(null);
-  };
+  const viewActionClassName =
+    "flex h-10 w-full items-center justify-center rounded-xl bg-[var(--accent-soft)] px-4 text-sm font-semibold text-[var(--accent-strong)] shadow-[0_16px_30px_-18px_rgba(1,122,31,0.55)] transition duration-150 hover:bg-[var(--accent)] hover:text-white hover:shadow-[0_18px_32px_-16px_rgba(1,122,31,0.65)] active:scale-[0.985] active:translate-y-px";
 
   const membershipColumns = [
     { header: "Miembro", accessor: "memberName" },
@@ -100,25 +75,20 @@ export default function AdminDashboardPage() {
     {
       header: "Acciones",
       accessor: "actions",
+      className: "w-40 px-3 py-4 text-center",
       render: (req: MembershipRequest) => (
-        <div className="flex gap-2">
-          <Button size="sm" onClick={() => openModal("membership", req, "approved")}
-          >
-            Aprobar
-          </Button>
-          <Button
-            size="sm"
-            variant="danger"
-            onClick={() => openModal("membership", req, "rejected")}
-          >
-            Rechazar
-          </Button>
-        </div>
+        <Link
+          href={`/admin/miembros/solicitudes/${req.id}`}
+          className={viewActionClassName}
+        >
+          Ver
+        </Link>
       ),
     },
   ];
 
   const eventColumns = [
+    { header: "Evento", accessor: "eventName" },
     { header: "Miembro", accessor: "memberName" },
     { header: "Sección", accessor: "sectionName" },
     {
@@ -129,29 +99,17 @@ export default function AdminDashboardPage() {
     {
       header: "Acciones",
       accessor: "actions",
+      className: "w-40 px-3 py-4 text-center",
       render: (req: EventRequest) => (
-        <div className="flex gap-2">
-          <Button size="sm" onClick={() => openModal("event", req, "approved")}
-          >
-            Aprobar
-          </Button>
-          <Button
-            size="sm"
-            variant="danger"
-            onClick={() => openModal("event", req, "rejected")}
-          >
-            Rechazar
-          </Button>
-        </div>
+        <Link
+          href={`/admin/eventos/${req.eventId}/solicitudes/${req.id}`}
+          className={viewActionClassName}
+        >
+          Ver
+        </Link>
       ),
     },
   ];
-
-  const bulkStats = useMemo(() => {
-    const active = bulkLinks.filter((link) => link.status === "active").length;
-    const totalUses = bulkLinks.reduce((acc, link) => acc + link.usedCount, 0);
-    return { active, totalUses };
-  }, [bulkLinks]);
 
   return (
     <div className="space-y-6">
@@ -161,35 +119,10 @@ export default function AdminDashboardPage() {
         breadcrumb={["Admin", "Panel"]}
       />
 
-      <Card className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <div className="text-xs uppercase tracking-[0.3em] text-[var(--muted)]">Evento</div>
-          <div className="text-xl font-semibold text-[var(--ink)]">
-            {selectedEvent?.name ?? "Selecciona un evento"}
-          </div>
-          <div className="text-sm text-[var(--muted)]">
-            {selectedEvent?.location} • {selectedEvent?.startDate}
-          </div>
-        </div>
-        <div className="w-full max-w-xs">
-          <Select
-            value={selectedEventId ?? ""}
-            onChange={(event) => selectEvent(event.target.value)}
-          >
-            {events.map((event) => (
-              <option key={event.id} value={event.id}>
-                {event.name}
-              </option>
-            ))}
-          </Select>
-        </div>
-      </Card>
-
-      <div className="grid gap-4 md:grid-cols-4">
-        <StatCard label="Membresías pendientes" value={pendingMembership.length} />
-        <StatCard label="Solicitudes de evento" value={pendingEvent.length} />
+      <div className="grid gap-4 md:grid-cols-3">
+        <StatCard label="Membresías pendientes" value={pendingMembership} />
+        <StatCard label="Solicitudes de evento" value={pendingEvent} />
         <StatCard label="Secciones pendientes" value={pendingSections.length} />
-        <StatCard label="Bulk activos" value={bulkStats.active} helper={`${bulkStats.totalUses} usos`} />
       </div>
 
       <Card className="space-y-4">
@@ -199,42 +132,74 @@ export default function AdminDashboardPage() {
             Revisa comprobantes y responde con comentarios opcionales.
           </div>
         </div>
-        <DataTable columns={membershipColumns} data={membershipRequests} />
+        <Input
+          value={membershipSearch}
+          onChange={(event) => setMembershipSearch(event.target.value)}
+          placeholder="Buscar por miembro, correo, teléfono o perfil"
+        />
+        <DataTable
+          columns={membershipColumns}
+          data={membershipRequests}
+          tableContainerClassName="max-h-[28rem] overflow-y-auto pr-1"
+        />
+        <Pagination
+          page={membershipRequestsPage}
+          pageSize={requestPageSize}
+          total={membershipRequestsTotal}
+          onPageChange={(page) => loadMembershipRequests(page, deferredMembershipSearch)}
+        />
       </Card>
 
       <Card className="space-y-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <div className="text-lg font-semibold text-[var(--ink)]">Solicitudes del evento</div>
+            <div className="text-sm text-[var(--muted)]">
+              Vista global por defecto; puedes enfocarte en un evento especifico desde aqui.
+            </div>
+          </div>
+          <div className="w-full max-w-xs">
+            <Select
+              value={eventFilterId}
+              onChange={(event) => setEventFilterId(event.target.value)}
+            >
+              <option value="all">Todos los eventos</option>
+              {events.map((event) => (
+                <option key={event.id} value={event.id}>
+                  {event.name}
+                </option>
+              ))}
+            </Select>
+          </div>
+        </div>
         <div>
-          <div className="text-lg font-semibold text-[var(--ink)]">Solicitudes del evento</div>
           <div className="text-sm text-[var(--muted)]">
             Validación de registro y seguimiento de pagos.
           </div>
         </div>
-        <DataTable columns={eventColumns} data={eventRequests} />
+        <Input
+          value={eventSearch}
+          onChange={(event) => setEventSearch(event.target.value)}
+          placeholder="Buscar por miembro, correo, sección o comentarios"
+        />
+        <DataTable
+          columns={eventColumns}
+          data={dashboardEventRequests}
+          tableContainerClassName="max-h-[28rem] overflow-y-auto pr-1"
+        />
+        <Pagination
+          page={dashboardEventRequestsPage}
+          pageSize={requestPageSize}
+          total={dashboardEventRequestsTotal}
+          onPageChange={(page) =>
+            loadDashboardEventRequests(
+              eventFilterId === "all" ? null : eventFilterId,
+              page,
+              deferredEventSearch
+            )
+          }
+        />
       </Card>
-
-      <Modal
-        open={!!modal}
-        onClose={() => setModal(null)}
-        title={modal?.action === "approved" ? "Confirmar aprobación" : "Confirmar rechazo"}
-      >
-        <div className="space-y-3 text-sm text-[var(--muted)]">
-          <div>
-            Agrega un comentario opcional para el miembro. Este mensaje se registrará en el
-            historial.
-          </div>
-          <Input
-            placeholder="Comentario"
-            value={comment}
-            onChange={(event) => setComment(event.target.value)}
-          />
-          <div className="flex justify-end gap-2">
-            <Button variant="secondary" onClick={() => setModal(null)}>
-              Cancelar
-            </Button>
-            <Button onClick={confirmModal}>Confirmar</Button>
-          </div>
-        </div>
-      </Modal>
     </div>
   );
 }

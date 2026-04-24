@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/layout/PageMetaContext";
 import { Card } from "@/components/ui/Card";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useAppStore } from "@/store";
+import { formatDate } from "@/lib/utils";
 
 export default function MemberEventosPage() {
   const { events, loadEvents } = useAppStore();
@@ -25,22 +26,13 @@ export default function MemberEventosPage() {
       <div className="grid gap-4 md:grid-cols-2">
         {events.map((event) => (
           <Card key={event.id} className="space-y-3">
-            {event.bannerUrl ? (
-              <div className="overflow-hidden rounded-xl border border-[var(--border)]">
-                <img
-                  src={event.bannerUrl}
-                  alt={`Banner ${event.name}`}
-                  className="h-32 w-full object-cover"
-                />
-              </div>
-            ) : null}
             <div className="flex items-center justify-between">
               <div className="text-lg font-semibold text-[var(--ink)]">{event.name}</div>
               <StatusBadge status={event.status} />
             </div>
             <div className="text-sm text-[var(--muted)]">{event.description}</div>
             <div className="text-xs text-[var(--muted)]">
-              {event.location} • {event.startDate} • {event.duration} día(s)
+              {event.location} • {formatDate(event.startDate)} • {event.duration} día(s)
             </div>
             <Link href={`/member/eventos/${event.id}`} className="text-sm text-[var(--accent)]">
               Ver detalle

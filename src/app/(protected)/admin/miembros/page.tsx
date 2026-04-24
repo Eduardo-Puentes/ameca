@@ -1,22 +1,50 @@
 "use client";
 
-import { useEffect } from "react";
+import Link from "next/link";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/layout/PageMetaContext";
 import { Card } from "@/components/ui/Card";
 import { DataTable } from "@/components/ui/DataTable";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
+import { Pagination } from "@/components/ui/Pagination";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useToastStore } from "@/components/ui/Toast";
 import { useAppStore } from "@/store";
 import type { Member } from "@/lib/types";
+import { formatDate } from "@/lib/utils";
 
 export default function AdminMiembrosPage() {
-  const { members, loadMembers, updateMemberProfile } = useAppStore();
+  const { members, loadMembers, updateMemberProfile, removeMember } = useAppStore();
   const pushToast = useToastStore((state) => state.pushToast);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
+  const deferredSearch = useDeferredValue(search);
 
   useEffect(() => {
     loadMembers();
   }, [loadMembers]);
+
+  const verifiedMembers = useMemo(
+    () => members.filter((member) => member.verified),
+    [members]
+  );
+
+  const filteredMembers = useMemo(() => {
+    const normalized = deferredSearch.trim().toLowerCase();
+    if (!normalized) return verifiedMembers;
+    return verifiedMembers.filter((member) =>
+      [member.fullName, member.email, member.phoneNumber, member.profileType]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(normalized))
+    );
+  }, [deferredSearch, verifiedMembers]);
+
+  const paginatedMembers = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filteredMembers.slice(start, start + pageSize);
+  }, [filteredMembers, page]);
 
   const columns = [
     {
@@ -37,21 +65,52 @@ export default function AdminMiembrosPage() {
         <StatusBadge status={member.verified ? "approved" : "pending"} />
       ),
     },
-    { header: "Vencimiento", accessor: "expirationDate" },
+    {
+      header: "Vencimiento",
+      accessor: "expirationDate",
+      render: (member: Member) => formatDate(member.expirationDate, "Sin vencimiento"),
+    },
     {
       header: "Acciones",
       accessor: "actions",
+      className: "w-56 px-3 py-4",
       render: (member: Member) => (
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={async () => {
-            await updateMemberProfile(member.id, { verified: !member.verified });
-            pushToast({ title: "Estado actualizado", tone: "success" });
-          }}
-        >
-          Alternar verificación
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href={`/admin/miembros/${member.id}`}
+            className="inline-flex h-9 items-center justify-center rounded-lg bg-[var(--accent-soft)] px-3 text-sm font-semibold text-[var(--accent-strong)] transition hover:bg-[var(--accent)] hover:text-white"
+          >
+            Ver perfil
+          </Link>
+          {!member.verified ? (
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={async () => {
+                await updateMemberProfile(member.id, { verified: true });
+                pushToast({ title: "Miembro verificado", tone: "success" });
+              }}
+            >
+              Marcar verificado
+            </Button>
+          ) : null}
+          <Button
+            size="sm"
+            variant="danger"
+            onClick={async () => {
+              try {
+                await removeMember(member.id);
+                pushToast({ title: "Miembro eliminado", tone: "success" });
+              } catch (error) {
+                const message =
+                  error instanceof Error ? error.message : "No se pudo eliminar el miembro.";
+                pushToast({ title: "Error al eliminar", message, tone: "danger" });
+              }
+            }}
+          >
+            Eliminar
+          </Button>
+        </div>
       ),
     },
   ];
@@ -60,12 +119,32 @@ export default function AdminMiembrosPage() {
     <div className="space-y-6">
       <PageHeader
         title="Miembros"
-        subtitle="Listado y validación de membresías"
+        subtitle="Directorio de miembros verificados"
         breadcrumb={["Admin", "Miembros"]}
       />
 
-      <Card>
-        <DataTable columns={columns} data={members} />
+      <Card className="space-y-4">
+        <div>
+          <div className="text-lg font-semibold text-[var(--ink)]">Miembros registrados</div>
+          <div className="text-sm text-[var(--muted)]">
+            Solo se muestran miembros verificados y correctamente registrados en la app.
+          </div>
+        </div>
+        <Input
+          value={search}
+          onChange={(event) => {
+            setSearch(event.target.value);
+            setPage(1);
+          }}
+          placeholder="Buscar por nombre, correo, teléfono o perfil"
+        />
+        <DataTable columns={columns} data={paginatedMembers} />
+        <Pagination
+          page={page}
+          pageSize={pageSize}
+          total={filteredMembers.length}
+          onPageChange={setPage}
+        />
       </Card>
     </div>
   );

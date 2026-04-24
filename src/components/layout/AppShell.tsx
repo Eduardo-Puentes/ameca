@@ -31,7 +31,7 @@ export function AppShell({
   }, [navOpen]);
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(1,153,39,0.12),_transparent_45%),_radial-gradient(circle_at_15%_30%,_rgba(253,183,1,0.18),_transparent_38%),_var(--bg)]">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_rgba(1,153,39,0.11),_transparent_42%),_radial-gradient(circle_at_15%_30%,_rgba(253,183,1,0.12),_transparent_34%),_linear-gradient(180deg,rgba(221,228,221,0.68),rgba(238,242,237,0.96)),_var(--bg)]">
       {navOpen ? (
         <div className="fixed inset-0 z-40 lg:hidden">
           <div
@@ -42,7 +42,7 @@ export function AppShell({
             <Sidebar items={navItems} onNavigate={() => setNavOpen(false)} />
           </div>
           <button
-            className="absolute right-4 top-4 rounded-full bg-white p-2 text-[var(--ink)] shadow"
+            className="absolute right-4 top-4 rounded-full bg-[var(--surface)] p-2 text-[var(--ink)] shadow-[0_16px_32px_-22px_rgba(27,29,27,0.45)]"
             onClick={() => setNavOpen(false)}
             aria-label="Cerrar menú"
           >
@@ -56,7 +56,7 @@ export function AppShell({
           <Sidebar items={navItems} />
         </div>
         <main className="flex-1 min-w-0 space-y-6">
-          <div className="flex items-center justify-between rounded-2xl bg-[var(--surface)] px-4 py-3 shadow-sm lg:hidden">
+          <div className="flex items-center justify-between rounded-2xl bg-[var(--surface)] px-4 py-3 shadow-[0_18px_36px_-28px_rgba(27,29,27,0.4)] lg:hidden">
             <div className="text-sm font-semibold text-[var(--ink)]">{title}</div>
             <button
               className="rounded-full bg-[var(--surface-2)] p-2 text-[var(--ink)]"

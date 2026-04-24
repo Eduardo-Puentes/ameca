@@ -5,7 +5,6 @@ import {
   deleteEvent,
   listEvents,
   updateEvent,
-  uploadEventBanner,
 } from "@/lib/data";
 
 export type EventsSlice = {
@@ -15,7 +14,6 @@ export type EventsSlice = {
   loadEvents: () => Promise<void>;
   selectEvent: (id: string) => void;
   addEvent: (payload: Partial<Event>) => Promise<Event>;
-  uploadEventBanner: (id: string, file: File) => Promise<Event | null>;
   editEvent: (id: string, payload: Partial<Event>) => Promise<Event | null>;
   removeEvent: (id: string) => Promise<void>;
 };
@@ -38,13 +36,6 @@ export const createEventsSlice: StateCreator<EventsSlice, [], [], EventsSlice> =
     const created = await createEvent(payload);
     set({ events: [created, ...get().events] });
     return created;
-  },
-  uploadEventBanner: async (id, file) => {
-    const updated = await uploadEventBanner(id, file);
-    if (updated) {
-      set({ events: get().events.map((item) => (item.id === id ? updated : item)) });
-    }
-    return updated;
   },
   editEvent: async (id, payload) => {
     const updated = await updateEvent(id, payload);

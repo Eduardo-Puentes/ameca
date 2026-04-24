@@ -5,7 +5,7 @@ import {
   authLoginWithCredentials,
   authMe,
   authRegister,
-  authRegisterRepresentative,
+  authLogout,
 } from "@/lib/data";
 import { tokenStorage } from "@/lib/authStorage";
 
@@ -22,17 +22,9 @@ export type AuthSlice = {
     email: string;
     password: string;
     phoneNumber?: string;
-    organizationId?: string;
-  }) => Promise<User>;
-  registerRepresentative: (payload: {
-    fullName: string;
-    email: string;
-    password: string;
-    phoneNumber?: string;
-    organizationName: string;
   }) => Promise<User>;
   hydrateSession: () => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 };
 
 export const createAuthSlice: StateCreator<AuthSlice, [], [], AuthSlice> = (set) => ({
@@ -94,30 +86,8 @@ export const createAuthSlice: StateCreator<AuthSlice, [], [], AuthSlice> = (set)
       throw error;
     }
   },
-  registerRepresentative: async (payload) => {
-    set({ authLoading: true });
-    try {
-      const response = await authRegisterRepresentative(payload);
-      tokenStorage.set(response.token);
-      set({
-        user: response.user,
-        token: response.token,
-        role: response.user.role,
-        authLoading: false,
-        authReady: true,
-      });
-      return response.user;
-    } catch (error) {
-      set({ authLoading: false, authReady: true });
-      throw error;
-    }
-  },
   hydrateSession: async () => {
     const token = tokenStorage.get();
-    if (!token) {
-      set({ authReady: true });
-      return;
-    }
     try {
       const user = await authMe();
       set({ user, token, role: user.role, authReady: true });
@@ -126,7 +96,12 @@ export const createAuthSlice: StateCreator<AuthSlice, [], [], AuthSlice> = (set)
       set({ user: null, token: null, role: null, authReady: true });
     }
   },
-  logout: () => {
+  logout: async () => {
+    try {
+      await authLogout();
+    } catch {
+      // Clear local state even if the server-side cookie is already gone.
+    }
     tokenStorage.clear();
     set({ user: null, token: null, role: null, authReady: true });
   },

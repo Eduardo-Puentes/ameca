@@ -50,11 +50,11 @@ export type DiplomaPreviewContext = {
   };
   event: {
     name: string;
-    startDate: string;
+    startDate: string | number;
   };
   organization?: string;
   attendedDays: number;
-  issueDate: string;
+  issueDate: string | number | null | undefined;
 };
 
 export function buildPreviewContext({
@@ -66,7 +66,7 @@ export function buildPreviewContext({
   member: Member;
   event: Event;
   attendedDays: number;
-  issueDate: string;
+  issueDate: string | number | null | undefined;
 }): DiplomaPreviewContext {
   return {
     participant: {

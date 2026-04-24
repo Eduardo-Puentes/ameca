@@ -4,13 +4,13 @@ import { brand } from "@/lib/brand";
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen bg-[var(--bg)]">
-      <header className="border-b border-[var(--border)] bg-white/80 backdrop-blur">
+      <header className="border-b border-[var(--border)] bg-[var(--surface)]/90 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
             <img
               src={brand.logoUrl}
               alt={`Logo ${brand.brandName}`}
-              className="h-10 w-10 rounded-xl bg-[var(--surface-2)] object-cover"
+              className="h-12 w-12 object-contain"
             />
             <div>
               <div className="text-xs uppercase tracking-[0.3em] text-[var(--muted)]">
@@ -33,7 +33,7 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
         </div>
       </header>
       <main>{children}</main>
-      <footer className="border-t border-[var(--border)] bg-white/80">
+      <footer className="border-t border-[var(--border)] bg-[var(--surface)]/90">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-6 text-sm text-[var(--muted)]">
           <div>© 2026 {brand.brandName}. Todos los derechos reservados.</div>
           <div className="flex items-center gap-4">

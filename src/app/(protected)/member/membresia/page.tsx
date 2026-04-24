@@ -9,6 +9,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Select } from "@/components/ui/Select";
 import { useToastStore } from "@/components/ui/Toast";
 import { useAppStore } from "@/store";
+import { formatDate } from "@/lib/utils";
 import type { ProfileType } from "@/lib/types";
 
 const PROFILE_OPTIONS: Array<{ value: ProfileType; label: string }> = [
@@ -55,7 +56,9 @@ export default function MemberMembresiaPage() {
             </div>
             <div className="flex justify-between">
               <span className="text-[var(--muted)]">Vencimiento</span>
-              <span className="font-semibold text-[var(--ink)]">{member?.expirationDate}</span>
+              <span className="font-semibold text-[var(--ink)]">
+                {formatDate(member?.expirationDate, "Sin vencimiento")}
+              </span>
             </div>
           </div>
         </Card>

@@ -20,7 +20,7 @@ export function BasicFileUploader({
   return (
     <div className="space-y-2">
       <div className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">{label}</div>
-      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-dashed border-[var(--border)] bg-white/70 px-3 py-3">
+      <div className="flex flex-wrap items-center gap-3 rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface-2)]/85 px-3 py-3">
         <Input
           type="file"
           accept={accept}
