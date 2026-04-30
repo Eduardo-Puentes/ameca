@@ -5,12 +5,13 @@ import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/layout/PageMetaContext";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { ConfirmActionModal } from "@/components/ui/ConfirmActionModal";
 import { Modal } from "@/components/ui/Modal";
 import { EventForm } from "@/components/forms/EventForm";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useToastStore } from "@/components/ui/Toast";
 import { listEventRequests } from "@/lib/data";
-import { formatDate } from "@/lib/utils";
+import { formatCurrency, formatDate } from "@/lib/utils";
 import { useAppStore } from "@/store";
 import type { Event } from "@/lib/types";
 
@@ -64,28 +65,11 @@ export default function AdminEventosPage() {
   const confirmDelete = async () => {
     if (!deleteModal) return;
     if (deleteModal.approvedCount > 0) {
-      pushToast({
-        title: "Evento protegido",
-        message: "No puedes eliminar un evento con registros aprobados.",
-        tone: "warning",
-      });
       return;
     }
+    setDeleteLoading(true);
     try {
-      setDeleteLoading(true);
       await removeEvent(deleteModal.event.id);
-      pushToast({
-        title: "Evento eliminado",
-        message:
-          deleteModal.pendingCount + deleteModal.rejectedCount > 0
-            ? "Las solicitudes quedan sujetas a la politica del backend."
-            : undefined,
-        tone: "warning",
-      });
-      setDeleteModal(null);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "No se pudo eliminar el evento.";
-      pushToast({ title: "Error al eliminar", message, tone: "danger" });
     } finally {
       setDeleteLoading(false);
     }
@@ -117,6 +101,12 @@ export default function AdminEventosPage() {
             <div className="text-xs text-[var(--muted)]">
               {event.location} • {formatDate(event.startDate)} • {event.duration} día(s)
             </div>
+            <div className="grid gap-2 text-xs text-[var(--muted)] sm:grid-cols-2">
+              <div>Profesional: {formatCurrency(event.profilePrices.professional)}</div>
+              <div>Estudiante: {formatCurrency(event.profilePrices.student)}</div>
+              <div>Asoc. profesional: {formatCurrency(event.profilePrices.associatedProfessional)}</div>
+              <div>Asoc. estudiante: {formatCurrency(event.profilePrices.associatedStudent)}</div>
+            </div>
             <div className="flex flex-wrap gap-2">
               <Button
                 size="sm"
@@ -142,19 +132,43 @@ export default function AdminEventosPage() {
         <EventForm onSubmit={handleCreate} submitLabel="Crear evento" />
       </Modal>
 
-      <Modal
+      <ConfirmActionModal
         open={!!deleteModal}
         onClose={() => {
           if (deleteLoading) return;
           setDeleteModal(null);
         }}
         title="Eliminar evento"
+        description={
+          deleteModal ? (
+            <>
+              Estas a punto de eliminar{" "}
+              <span className="font-semibold text-[var(--ink)]">
+                {deleteModal.event.name}
+              </span>
+              .
+            </>
+          ) : null
+        }
+        confirmLabel="Eliminar evento"
+        confirmDisabled={!deleteModal || deleteModal.approvedCount > 0}
+        onConfirm={confirmDelete}
+        successToast={
+          deleteModal
+            ? {
+                title: "Evento eliminado",
+                message:
+                  deleteModal.pendingCount + deleteModal.rejectedCount > 0
+                    ? "Las solicitudes quedan sujetas a la politica del backend."
+                    : undefined,
+                tone: "warning",
+              }
+            : undefined
+        }
+        errorTitle="Error al eliminar"
       >
         {deleteModal ? (
-          <div className="space-y-4 text-sm text-[var(--muted)]">
-            <div>
-              Estas a punto de eliminar <span className="font-semibold text-[var(--ink)]">{deleteModal.event.name}</span>.
-            </div>
+          <>
             <div className="rounded-xl bg-[var(--surface-2)] p-4">
               <div>Registros aprobados: {deleteModal.approvedCount}</div>
               <div>Solicitudes pendientes: {deleteModal.pendingCount}</div>
@@ -169,25 +183,9 @@ export default function AdminEventosPage() {
                 Confirma solo si de verdad quieres retirar este evento del panel.
               </div>
             )}
-            <div className="flex justify-end gap-2">
-              <Button
-                variant="secondary"
-                onClick={() => setDeleteModal(null)}
-                disabled={deleteLoading}
-              >
-                Cancelar
-              </Button>
-              <Button
-                variant="danger"
-                onClick={confirmDelete}
-                disabled={deleteLoading || deleteModal.approvedCount > 0}
-              >
-                Confirmar eliminacion
-              </Button>
-            </div>
-          </div>
+          </>
         ) : null}
-      </Modal>
+      </ConfirmActionModal>
     </div>
   );
 }

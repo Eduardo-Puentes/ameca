@@ -28,6 +28,7 @@ export const authMe: typeof api.authMe = () => {
   const matchedRole = token?.match(/^mock\.jwt\.([^.]+)\.\d+$/)?.[1];
   const fallbackRole = matchedRole === "superadmin" ||
     matchedRole === "admin" ||
+    matchedRole === "treasurer" ||
     matchedRole === "staff" ||
     matchedRole === "member" ||
     matchedRole === "representative"
@@ -40,6 +41,7 @@ export const authMe: typeof api.authMe = () => {
 export const listEvents = pick(api.listEvents, mock.listEvents);
 export const getEvent = pick(api.getEvent, mock.getEvent);
 export const getMyTicket = pick(api.getMyTicket, mock.getMyTicket);
+export const listMyEvents = pick(api.listMyEvents, mock.listMyEvents);
 export const createEvent = pick(api.createEvent, mock.createEvent);
 export const updateEvent = pick(api.updateEvent, mock.updateEvent);
 export const deleteEvent = pick(api.deleteEvent, mock.deleteEvent);
@@ -83,12 +85,13 @@ export const approveMemberRequest = pick(api.approveMemberRequest, mock.approveM
 export const denyMemberRequest = pick(api.denyMemberRequest, mock.denyMemberRequest);
 export const listEventRequests = pick(api.listEventRequests, mock.listEventRequests);
 export const listAdminEventRequests = pick(api.listAdminEventRequests, mock.listAdminEventRequests);
+export const listEventMembers = pick(api.listEventMembers, mock.listEventMembers);
 export const getEventRequest = pick(api.getEventRequest, mock.getEventRequest);
 export const listMyEventRequests = pick(api.listMyEventRequests, mock.listMyEventRequests);
 export const approveEventRequest = pick(api.approveEventRequest, mock.approveEventRequest);
 export const denyEventRequest = pick(api.denyEventRequest, mock.denyEventRequest);
 export const createEventRequest = pick(api.createEventRequest, mock.createEventRequest);
-export const createSectionRequest = pick(api.createSectionRequest);
+export const createSectionRequest = pick(api.createSectionRequest, mock.createSectionRequest);
 export const listSectionRequests = pick(api.listSectionRequests, mock.listSectionRequests);
 export const approveSectionRequest = pick(
   api.approveSectionRequest,
@@ -96,7 +99,10 @@ export const approveSectionRequest = pick(
 );
 export const denySectionRequest = pick(api.denySectionRequest, mock.denySectionRequest);
 export const listSections = pick(api.listSections, mock.listSections);
+export const getSection = pick(api.getSection, mock.getSection);
 export const updateSection = pick(api.updateSection, mock.updateSection);
+export const deleteSection = pick(api.deleteSection, mock.deleteSection);
+export const removeSectionMember = pick(api.removeSectionMember, mock.removeSectionMember);
 export const listSectionInvites = pick(api.listSectionInvites);
 export const createSectionInvite = pick(api.createSectionInvite);
 export const listMySectionInvites = pick(api.listMySectionInvites);

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useDeferredValue, useEffect, useState } from "react";
 import { PageHeader } from "@/components/layout/PageMetaContext";
 import { Card } from "@/components/ui/Card";
+import { CostTypeFilter } from "@/components/ui/CostTypeFilter";
 import { StatCard } from "@/components/ui/StatCard";
 import { Select } from "@/components/ui/Select";
 import { DataTable } from "@/components/ui/DataTable";
@@ -21,11 +22,13 @@ export default function AdminDashboardPage() {
     membershipRequestsTotal,
     membershipRequestStatusCounts,
     membershipRequestsQuery,
+    membershipRequestsCostType,
     dashboardEventRequests,
     dashboardEventRequestsPage,
     dashboardEventRequestsTotal,
     dashboardEventRequestStatusCounts,
     dashboardEventRequestsQuery,
+    dashboardEventRequestsCostType,
     dashboardEventRequestsEventId,
     requestPageSize,
     sectionRequests,
@@ -36,26 +39,27 @@ export default function AdminDashboardPage() {
   const [membershipSearch, setMembershipSearch] = useState(membershipRequestsQuery);
   const [eventSearch, setEventSearch] = useState(dashboardEventRequestsQuery);
   const [eventFilterId, setEventFilterId] = useState<string>(dashboardEventRequestsEventId ?? "all");
+  const [membershipCostType, setMembershipCostType] = useState(membershipRequestsCostType);
+  const [eventCostType, setEventCostType] = useState(dashboardEventRequestsCostType);
   const deferredMembershipSearch = useDeferredValue(membershipSearch);
   const deferredEventSearch = useDeferredValue(eventSearch);
 
   useEffect(() => {
-    loadMembershipRequests(1);
-    loadDashboardEventRequests(null, 1);
     loadSectionRequests();
-  }, [loadDashboardEventRequests, loadMembershipRequests, loadSectionRequests]);
+  }, [loadSectionRequests]);
 
   useEffect(() => {
-    loadMembershipRequests(1, deferredMembershipSearch);
-  }, [deferredMembershipSearch, loadMembershipRequests]);
+    loadMembershipRequests(1, deferredMembershipSearch, membershipCostType, "pending");
+  }, [deferredMembershipSearch, loadMembershipRequests, membershipCostType]);
 
   useEffect(() => {
     loadDashboardEventRequests(
       eventFilterId === "all" ? null : eventFilterId,
       1,
-      deferredEventSearch
+      deferredEventSearch,
+      eventCostType
     );
-  }, [deferredEventSearch, eventFilterId, loadDashboardEventRequests]);
+  }, [deferredEventSearch, eventCostType, eventFilterId, loadDashboardEventRequests]);
 
   const pendingMembership = membershipRequestStatusCounts.pending;
   const pendingEvent = dashboardEventRequestStatusCounts.pending;
@@ -132,11 +136,15 @@ export default function AdminDashboardPage() {
             Revisa comprobantes y responde con comentarios opcionales.
           </div>
         </div>
-        <Input
-          value={membershipSearch}
-          onChange={(event) => setMembershipSearch(event.target.value)}
-          placeholder="Buscar por miembro, correo, teléfono o perfil"
-        />
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <Input
+            value={membershipSearch}
+            onChange={(event) => setMembershipSearch(event.target.value)}
+            placeholder="Buscar por miembro, correo, teléfono o perfil"
+            className="md:max-w-xl"
+          />
+          <CostTypeFilter value={membershipCostType} onChange={setMembershipCostType} />
+        </div>
         <DataTable
           columns={membershipColumns}
           data={membershipRequests}
@@ -146,14 +154,16 @@ export default function AdminDashboardPage() {
           page={membershipRequestsPage}
           pageSize={requestPageSize}
           total={membershipRequestsTotal}
-          onPageChange={(page) => loadMembershipRequests(page, deferredMembershipSearch)}
+          onPageChange={(page) =>
+            loadMembershipRequests(page, deferredMembershipSearch, membershipCostType, "pending")
+          }
         />
       </Card>
 
       <Card className="space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <div className="text-lg font-semibold text-[var(--ink)]">Solicitudes del evento</div>
+            <div className="text-lg font-semibold text-[var(--ink)]">Solicitudes de evento por aprobar</div>
             <div className="text-sm text-[var(--muted)]">
               Vista global por defecto; puedes enfocarte en un evento especifico desde aqui.
             </div>
@@ -177,11 +187,15 @@ export default function AdminDashboardPage() {
             Validación de registro y seguimiento de pagos.
           </div>
         </div>
-        <Input
-          value={eventSearch}
-          onChange={(event) => setEventSearch(event.target.value)}
-          placeholder="Buscar por miembro, correo, sección o comentarios"
-        />
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <Input
+            value={eventSearch}
+            onChange={(event) => setEventSearch(event.target.value)}
+            placeholder="Buscar por miembro, correo, sección o comentarios"
+            className="md:max-w-xl"
+          />
+          <CostTypeFilter value={eventCostType} onChange={setEventCostType} />
+        </div>
         <DataTable
           columns={eventColumns}
           data={dashboardEventRequests}
@@ -195,7 +209,8 @@ export default function AdminDashboardPage() {
             loadDashboardEventRequests(
               eventFilterId === "all" ? null : eventFilterId,
               page,
-              deferredEventSearch
+              deferredEventSearch,
+              eventCostType
             )
           }
         />

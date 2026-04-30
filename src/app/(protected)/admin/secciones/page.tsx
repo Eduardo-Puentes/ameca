@@ -20,9 +20,9 @@ export default function AdminSeccionesPage() {
   }, [loadSectionRequests]);
 
   const columns = [
+    { header: "Sección", accessor: "name" },
     { header: "Representante", accessor: "representativeName" },
     { header: "Evento", accessor: "eventName" },
-    { header: "Cupo", accessor: "pCount" },
     {
       header: "Estado",
       accessor: "status",

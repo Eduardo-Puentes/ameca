@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { PageHeader } from "@/components/layout/PageMetaContext";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { ConfirmActionModal } from "@/components/ui/ConfirmActionModal";
 import { FileUpload } from "@/components/ui/FileUpload";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Input } from "@/components/ui/Input";
@@ -16,7 +17,7 @@ import {
   uploadPresentation,
 } from "@/lib/data";
 import type { Presentation } from "@/lib/types";
-import { formatDate } from "@/lib/utils";
+import { formatCurrency, formatDate } from "@/lib/utils";
 
 export default function MemberEventoDetallePage() {
   const params = useParams();
@@ -38,6 +39,7 @@ export default function MemberEventoDetallePage() {
   const [presentationFile, setPresentationFile] = useState<File | null>(null);
   const [presentationName, setPresentationName] = useState("");
   const [presentationDescription, setPresentationDescription] = useState("");
+  const [presentationToDelete, setPresentationToDelete] = useState<Presentation | null>(null);
 
   useEffect(() => {
     loadEvents();
@@ -96,10 +98,9 @@ export default function MemberEventoDetallePage() {
     pushToast({ title: "Presentación cargada", tone: "success" });
   };
 
-  const handleDeletePresentation = async (id: string) => {
-    await deletePresentation(id);
-    setPresentations((prev) => prev.filter((item) => item.id !== id));
-    pushToast({ title: "Presentación eliminada", tone: "warning" });
+  const handleDeletePresentation = async (presentation: Presentation) => {
+    await deletePresentation(presentation.id);
+    setPresentations((prev) => prev.filter((item) => item.id !== presentation.id));
   };
 
   if (!event) {
@@ -125,6 +126,12 @@ export default function MemberEventoDetallePage() {
           <div className="text-xs text-[var(--muted)]">
             {event.location} • {formatDate(event.startDate)} • {event.duration} día(s)
           </div>
+          <div className="grid gap-2 border-t border-[var(--border)] pt-3 text-xs text-[var(--muted)] sm:grid-cols-2">
+            <div>Profesional: {formatCurrency(event.profilePrices.professional)}</div>
+            <div>Estudiante: {formatCurrency(event.profilePrices.student)}</div>
+            <div>Asoc. profesional: {formatCurrency(event.profilePrices.associatedProfessional)}</div>
+            <div>Asoc. estudiante: {formatCurrency(event.profilePrices.associatedStudent)}</div>
+          </div>
         </Card>
 
         <Card className="space-y-4">
@@ -134,7 +141,7 @@ export default function MemberEventoDetallePage() {
               <StatusBadge status={existingRequest.status} />
               {typeof existingRequest.calculatedCost === "number" ? (
                 <div className="text-sm text-[var(--muted)]">
-                  Costo calculado: {existingRequest.calculatedCost}
+                  Costo calculado: {formatCurrency(existingRequest.calculatedCost)}
                 </div>
               ) : null}
               <div className="text-sm text-[var(--muted)]">
@@ -212,7 +219,11 @@ export default function MemberEventoDetallePage() {
                         Ver
                       </a>
                     ) : null}
-                    <Button size="sm" variant="secondary" onClick={() => handleDeletePresentation(item.id)}>
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      onClick={() => setPresentationToDelete(item)}
+                    >
                       Quitar
                     </Button>
                   </div>
@@ -222,6 +233,28 @@ export default function MemberEventoDetallePage() {
           )}
         </Card>
       ) : null}
+
+      <ConfirmActionModal
+        open={!!presentationToDelete}
+        title="Quitar presentacion"
+        description={
+          <>
+            Estas a punto de quitar{" "}
+            <span className="font-semibold text-[var(--ink)]">
+              {presentationToDelete?.name || presentationToDelete?.fileName}
+            </span>
+            .
+          </>
+        }
+        confirmLabel="Quitar archivo"
+        onClose={() => setPresentationToDelete(null)}
+        onConfirm={async () => {
+          if (!presentationToDelete) return;
+          await handleDeletePresentation(presentationToDelete);
+        }}
+        successToast={{ title: "Presentacion eliminada", tone: "warning" }}
+        errorTitle="Error al quitar"
+      />
     </div>
   );
 }

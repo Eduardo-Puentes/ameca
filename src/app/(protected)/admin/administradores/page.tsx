@@ -7,10 +7,11 @@ import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
+import { ConfirmActionModal } from "@/components/ui/ConfirmActionModal";
 import { useToastStore } from "@/components/ui/Toast";
 import { DataTable } from "@/components/ui/DataTable";
 import { Pagination } from "@/components/ui/Pagination";
-import { createAdminUser, listAdminUsers } from "@/lib/data";
+import { createAdminUser, deleteAdminUser, listAdminUsers } from "@/lib/data";
 import type { AdminUser } from "@/lib/types";
 
 export default function AdminAdministradoresPage() {
@@ -22,6 +23,7 @@ export default function AdminAdministradoresPage() {
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [adminsLoading, setAdminsLoading] = useState(false);
   const [page, setPage] = useState(1);
+  const [adminToDelete, setAdminToDelete] = useState<AdminUser | null>(null);
   const pageSize = 10;
 
   useEffect(() => {
@@ -62,6 +64,16 @@ export default function AdminAdministradoresPage() {
       header: "Verificación",
       accessor: "verified",
       render: (admin: AdminUser) => (admin.verified ? "Verificado" : "Pendiente"),
+    },
+    {
+      header: "Acciones",
+      accessor: "actions",
+      className: "w-32 px-3 py-4 text-right",
+      render: (admin: AdminUser) => (
+        <Button size="sm" variant="danger" onClick={() => setAdminToDelete(admin)}>
+          Eliminar
+        </Button>
+      ),
     },
   ];
 
@@ -153,6 +165,29 @@ export default function AdminAdministradoresPage() {
           onPageChange={setPage}
         />
       </Card>
+
+      <ConfirmActionModal
+        open={!!adminToDelete}
+        title="Eliminar administrador"
+        description={
+          <>
+            Estas a punto de eliminar la cuenta de{" "}
+            <span className="font-semibold text-[var(--ink)]">
+              {adminToDelete?.fullName}
+            </span>
+            . Esta accion no se puede deshacer.
+          </>
+        }
+        confirmLabel="Eliminar cuenta"
+        onClose={() => setAdminToDelete(null)}
+        onConfirm={async () => {
+          if (!adminToDelete) return;
+          await deleteAdminUser(adminToDelete.id);
+          setAdmins((prev) => prev.filter((admin) => admin.id !== adminToDelete.id));
+        }}
+        successToast={{ title: "Administrador eliminado", tone: "success" }}
+        errorTitle="Error al eliminar"
+      />
     </div>
   );
 }

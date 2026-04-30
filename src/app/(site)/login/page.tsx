@@ -15,6 +15,7 @@ import type { Role } from "@/lib/types";
 const routeForRole: Record<Role, string> = {
   superadmin: "/admin/dashboard",
   admin: "/admin/dashboard",
+  treasurer: "/admin/dashboard",
   staff: "/staff/escaner",
   member: "/member/dashboard",
   representative: "/member/dashboard",

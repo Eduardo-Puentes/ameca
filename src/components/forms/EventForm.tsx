@@ -7,6 +7,19 @@ import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
 import { Textarea } from "@/components/ui/Textarea";
 
+const DEFAULT_PROFILE_PRICES = {
+  professional: 1000,
+  student: 500,
+  associatedProfessional: 700,
+  associatedStudent: 400,
+};
+
+const toDateInputValue = (value: Event["startDate"] | undefined) => {
+  if (!value) return "";
+  if (typeof value === "string") return value;
+  return new Date(value * 1000).toISOString().slice(0, 10);
+};
+
 export function EventForm({
   initial,
   onSubmit,
@@ -18,12 +31,28 @@ export function EventForm({
 }) {
   const [form, setForm] = useState({
     name: initial?.name ?? "",
-    startDate: initial?.startDate ?? "",
+    startDate: toDateInputValue(initial?.startDate),
     duration: initial?.duration ?? 1,
     location: initial?.location ?? "",
     capacity: initial?.capacity ?? 100,
     description: initial?.description ?? "",
+    profilePrices: {
+      ...DEFAULT_PROFILE_PRICES,
+      ...initial?.profilePrices,
+    },
   });
+
+  const setProfilePrice = (key: keyof Event["profilePrices"], value: string) => {
+    const parsed = Number(value);
+    setForm((prev) => ({
+      ...prev,
+      profilePrices: {
+        ...prev.profilePrices,
+        [key]: Number.isFinite(parsed) && parsed >= 0 ? parsed : 0,
+      },
+    }));
+  };
+
   return (
     <div className="space-y-4">
       <div className="grid gap-4 md:grid-cols-2">
@@ -64,6 +93,40 @@ export function EventForm({
             onChange={(event) =>
               setForm((prev) => ({ ...prev, capacity: Number(event.target.value) }))
             }
+          />
+        </FormField>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        <FormField label="Precio profesional">
+          <Input
+            type="number"
+            min={0}
+            value={form.profilePrices.professional}
+            onChange={(event) => setProfilePrice("professional", event.target.value)}
+          />
+        </FormField>
+        <FormField label="Precio estudiante">
+          <Input
+            type="number"
+            min={0}
+            value={form.profilePrices.student}
+            onChange={(event) => setProfilePrice("student", event.target.value)}
+          />
+        </FormField>
+        <FormField label="Precio asociado profesional">
+          <Input
+            type="number"
+            min={0}
+            value={form.profilePrices.associatedProfessional}
+            onChange={(event) => setProfilePrice("associatedProfessional", event.target.value)}
+          />
+        </FormField>
+        <FormField label="Precio asociado estudiante">
+          <Input
+            type="number"
+            min={0}
+            value={form.profilePrices.associatedStudent}
+            onChange={(event) => setProfilePrice("associatedStudent", event.target.value)}
           />
         </FormField>
       </div>

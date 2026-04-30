@@ -4,9 +4,11 @@ import Link from "next/link";
 import { useDeferredValue, useEffect, useState } from "react";
 import { PageHeader } from "@/components/layout/PageMetaContext";
 import { Card } from "@/components/ui/Card";
+import { CostTypeFilter } from "@/components/ui/CostTypeFilter";
 import { DataTable } from "@/components/ui/DataTable";
 import { Input } from "@/components/ui/Input";
 import { Pagination } from "@/components/ui/Pagination";
+import { RequestStatusFilter } from "@/components/ui/RequestStatusFilter";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useAppStore } from "@/store";
 import type { MembershipRequest } from "@/lib/types";
@@ -18,21 +20,21 @@ export default function AdminSolicitudesMembresiaPage() {
     membershipRequestsPage,
     membershipRequestsTotal,
     membershipRequestsQuery,
+    membershipRequestsCostType,
+    membershipRequestsStatus,
     requestPageSize,
     loadMembershipRequests,
   } = useAppStore();
   const [search, setSearch] = useState(membershipRequestsQuery);
+  const [costType, setCostType] = useState(membershipRequestsCostType);
+  const [status, setStatus] = useState(membershipRequestsStatus);
   const deferredSearch = useDeferredValue(search);
   const viewActionClassName =
     "flex h-10 w-full items-center justify-center rounded-xl bg-[var(--accent-soft)] px-4 text-sm font-semibold text-[var(--accent-strong)] shadow-[0_16px_30px_-18px_rgba(1,122,31,0.55)] transition duration-150 hover:bg-[var(--accent)] hover:text-white hover:shadow-[0_18px_32px_-16px_rgba(1,122,31,0.65)] active:scale-[0.985] active:translate-y-px";
 
   useEffect(() => {
-    loadMembershipRequests(1);
-  }, [loadMembershipRequests]);
-
-  useEffect(() => {
-    loadMembershipRequests(1, deferredSearch);
-  }, [deferredSearch, loadMembershipRequests]);
+    loadMembershipRequests(1, deferredSearch, costType, status);
+  }, [costType, deferredSearch, loadMembershipRequests, status]);
 
   const columns = [
     { header: "Miembro", accessor: "memberName" },
@@ -72,18 +74,24 @@ export default function AdminSolicitudesMembresiaPage() {
       />
 
       <Card>
-        <Input
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder="Buscar por miembro, correo, teléfono o perfil"
-          className="mb-4"
-        />
+        <div className="mb-4 space-y-3">
+          <Input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Buscar por miembro, correo, teléfono o perfil"
+            className="md:max-w-xl"
+          />
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <RequestStatusFilter value={status} onChange={setStatus} />
+            <CostTypeFilter value={costType} onChange={setCostType} />
+          </div>
+        </div>
         <DataTable columns={columns} data={membershipRequests} />
         <Pagination
           page={membershipRequestsPage}
           pageSize={requestPageSize}
           total={membershipRequestsTotal}
-          onPageChange={(page) => loadMembershipRequests(page, deferredSearch)}
+          onPageChange={(page) => loadMembershipRequests(page, deferredSearch, costType, status)}
         />
       </Card>
     </div>

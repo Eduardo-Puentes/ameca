@@ -5,17 +5,22 @@ import type {
   AdminUserUpdatePayload,
   AttendanceRecord,
   BackendRole,
+  CostType,
   DiplomaRecord,
   DiplomaTemplate,
   Event,
+  EventMemberRegistration,
   EventUpsertPayload,
   EventRequest,
   Member,
+  MemberEventRegistration,
   MemberUpdatePayload,
   MembershipRequest,
   PaginatedResponse,
   Presentation,
+  RequestStatusFilter,
   Section,
+  SectionDetail,
   SectionInvite,
   SectionRequest,
 } from "@/lib/types";
@@ -27,6 +32,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1
 const ROLE_CREDENTIALS: Record<Role, { email: string; password: string }> = {
   superadmin: { email: "superuser@ameca.org", password: "ChangeMe123!" },
   admin: { email: "admin@ameca.org", password: "ChangeMe123!" },
+  treasurer: { email: "treasurer@ameca.org", password: "ChangeMe123!" },
   staff: { email: "staff@ameca.org", password: "ChangeMe123!" },
   member: { email: "member@ameca.org", password: "ChangeMe123!" },
   representative: { email: "member@ameca.org", password: "ChangeMe123!" },
@@ -34,6 +40,7 @@ const ROLE_CREDENTIALS: Record<Role, { email: string; password: string }> = {
 
 type AuthUser = { id: string; name: string; email: string; role: BackendRole };
 type AuthResponse = { token: string; user: AuthUser };
+type RegisterResponse = { ok: boolean };
 
 const normalizeRole = (role: BackendRole): Role =>
   role === "superuser" ? "superadmin" : (role as Role);
@@ -78,6 +85,9 @@ const humanizeError = (message: string, status: number) => {
     ["profile type must be changed", "El tipo de membresía se cambia desde una solicitud de upgrade."],
     ["member must accept the section invite", "Debes aceptar la invitación antes de usar esta sección."],
     ["member already belongs to another section", "Ya perteneces a otra sección de este evento."],
+    ["remove all section members before deleting this section", "Retira primero a todos los integrantes de la sección. Debe quedar solo el representante."],
+    ["transfer the section representative before removing this member", "Transfiere la representación antes de retirar a este integrante."],
+    ["only a treasurer or superuser can approve a membership request with an associated cost", "Solo tesorería o superadmin puede aprobar solicitudes de membresía con costo."],
     ["same profile", "El perfil solicitado debe ser distinto al actual."],
     ["upgrade requirements", "Faltan documentos requeridos para este upgrade."],
     ["error parsing the body", "No se pudo procesar la solicitud."],
@@ -141,6 +151,12 @@ async function request<T>(
       const parsed = JSON.parse(raw);
       if (typeof parsed?.detail === "string") {
         message = parsed.detail;
+      } else if (
+        typeof parsed?.detail === "object" &&
+        parsed.detail !== null &&
+        typeof parsed.detail.message === "string"
+      ) {
+        message = parsed.detail.message;
       } else if (Array.isArray(parsed?.detail)) {
         message = parsed.detail
           .map((item: unknown) =>
@@ -195,7 +211,7 @@ export async function authRegister(payload: {
   password: string;
   phoneNumber?: string;
 }) {
-  const response = await request<AuthResponse>(
+  return request<RegisterResponse>(
     "/auth/register",
     {
       method: "POST",
@@ -208,7 +224,6 @@ export async function authRegister(payload: {
     },
     false
   );
-  return normalizeAuthResponse(response);
 }
 
 export async function authMe() {
@@ -237,6 +252,10 @@ export async function getEvent(id: string): Promise<Event | null> {
 
 export async function getMyTicket(eventId: string) {
   return request<{ token: string; event_id: string }>(`/events/${eventId}/ticket/me`);
+}
+
+export async function listMyEvents(): Promise<MemberEventRegistration[]> {
+  return request<MemberEventRegistration[]>("/members/me/events");
 }
 
 export async function createEvent(payload: EventUpsertPayload): Promise<Event> {
@@ -328,11 +347,15 @@ export async function deleteMember(id: string) {
 export async function listMemberRequests(
   query = "",
   page = 1,
-  pageSize = 20
+  pageSize = 20,
+  costType: CostType = "all",
+  status: RequestStatusFilter = "pending"
 ): Promise<PaginatedResponse<MembershipRequest>> {
   const params = new URLSearchParams();
   params.set("page", String(page));
   params.set("pageSize", String(pageSize));
+  params.set("costType", costType);
+  params.set("status", status);
   if (query.trim()) {
     params.set("query", query.trim());
   }
@@ -364,13 +387,15 @@ export async function listEventRequests(
   status?: "pending" | "approved" | "rejected",
   query = "",
   page = 1,
-  pageSize = 20
+  pageSize = 20,
+  costType: CostType = "all"
 ): Promise<PaginatedResponse<EventRequest>> {
   const params = new URLSearchParams();
   if (status) params.set("status", status);
   if (query.trim()) params.set("query", query.trim());
   params.set("page", String(page));
   params.set("pageSize", String(pageSize));
+  params.set("costType", costType);
   return request<PaginatedResponse<EventRequest>>(
     `/admin/events/${eventId}/requests?${params.toString()}`
   );
@@ -380,14 +405,31 @@ export async function listAdminEventRequests(
   status?: "pending" | "approved" | "rejected",
   query = "",
   page = 1,
-  pageSize = 20
+  pageSize = 20,
+  costType: CostType = "all"
 ): Promise<PaginatedResponse<EventRequest>> {
   const params = new URLSearchParams();
   if (status) params.set("status", status);
   if (query.trim()) params.set("query", query.trim());
   params.set("page", String(page));
   params.set("pageSize", String(pageSize));
+  params.set("costType", costType);
   return request<PaginatedResponse<EventRequest>>(`/admin/event-requests?${params.toString()}`);
+}
+
+export async function listEventMembers(
+  eventId: string,
+  query = "",
+  page = 1,
+  pageSize = 20
+): Promise<PaginatedResponse<EventMemberRegistration>> {
+  const params = new URLSearchParams();
+  if (query.trim()) params.set("query", query.trim());
+  params.set("page", String(page));
+  params.set("pageSize", String(pageSize));
+  return request<PaginatedResponse<EventMemberRegistration>>(
+    `/admin/events/${eventId}/members?${params.toString()}`
+  );
 }
 
 export async function getEventRequest(id: string): Promise<EventRequest> {
@@ -442,14 +484,12 @@ export async function createEventRequest(
 export async function createSectionRequest(payload: {
   eventId: string;
   name: string;
-  requestedPCount?: number;
 }) {
   return request<SectionRequest>("/section-requests", {
     method: "POST",
     body: JSON.stringify({
       event_id: payload.eventId,
       name: payload.name,
-      requested_p_count: payload.requestedPCount ?? 0,
     }),
   });
 }
@@ -477,10 +517,26 @@ export async function listSections(eventId?: string): Promise<Section[]> {
   return request<Section[]>(`/sections${query}`);
 }
 
+export async function getSection(sectionId: string): Promise<SectionDetail> {
+  return request<SectionDetail>(`/sections/${sectionId}`);
+}
+
 export async function updateSection(id: string, payload: Partial<Section>) {
   return request<Section>(`/admin/sections/${id}`, {
     method: "PATCH",
     body: JSON.stringify({ status: payload.status }),
+  });
+}
+
+export async function deleteSection(id: string) {
+  return request<{ ok: boolean }>(`/sections/${id}`, {
+    method: "DELETE",
+  });
+}
+
+export async function removeSectionMember(sectionId: string, memberId: string): Promise<Section> {
+  return request<Section>(`/sections/${sectionId}/members/${memberId}`, {
+    method: "DELETE",
   });
 }
 

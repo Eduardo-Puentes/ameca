@@ -4,7 +4,11 @@ import Link from "next/link";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { PageHeader } from "@/components/layout/PageMetaContext";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { ConfirmActionModal } from "@/components/ui/ConfirmActionModal";
+import { CostTypeFilter } from "@/components/ui/CostTypeFilter";
 import { DataTable } from "@/components/ui/DataTable";
 import { Input } from "@/components/ui/Input";
 import { Pagination } from "@/components/ui/Pagination";
@@ -12,8 +16,9 @@ import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useToastStore } from "@/components/ui/Toast";
 import { useAppStore } from "@/store";
-import type { EventRequest } from "@/lib/types";
-import { formatDate } from "@/lib/utils";
+import { listEventMembers } from "@/lib/data";
+import type { EventMemberRegistration, EventRequest, Section } from "@/lib/types";
+import { formatCurrency, formatDate } from "@/lib/utils";
 
 export default function AdminEventoDetallePage() {
   const params = useParams();
@@ -24,23 +29,36 @@ export default function AdminEventoDetallePage() {
     eventRequestsPage,
     eventRequestsTotal,
     eventRequestsQuery,
+    eventRequestsCostType,
     requestPageSize,
     attendanceRecords,
+    sections,
     editEvent,
+    loadSections,
+    deleteSectionById,
   } = useAppStore();
   const loadEventRequests = useAppStore((state) => state.loadEventRequests);
   const loadAttendance = useAppStore((state) => state.loadAttendance);
   const pushToast = useToastStore((state) => state.pushToast);
   const [toggleLoading, setToggleLoading] = useState(false);
   const [requestSearch, setRequestSearch] = useState(eventRequestsQuery);
+  const [requestCostType, setRequestCostType] = useState(eventRequestsCostType);
+  const [memberSearch, setMemberSearch] = useState("");
+  const [eventMembers, setEventMembers] = useState<EventMemberRegistration[]>([]);
+  const [eventMembersPage, setEventMembersPage] = useState(1);
+  const [eventMembersTotal, setEventMembersTotal] = useState(0);
+  const [eventMembersLoading, setEventMembersLoading] = useState(false);
+  const [eventMembersError, setEventMembersError] = useState<string | null>(null);
+  const [sectionDeleteModal, setSectionDeleteModal] = useState<Section | null>(null);
   const deferredRequestSearch = useDeferredValue(requestSearch);
+  const deferredMemberSearch = useDeferredValue(memberSearch);
 
   useEffect(() => {
     if (eventId) {
-      loadEventRequests(eventId);
       loadAttendance(eventId);
+      loadSections(eventId);
     }
-  }, [eventId, loadEventRequests, loadAttendance]);
+  }, [eventId, loadAttendance, loadSections]);
 
   useEffect(() => {
     setRequestSearch(eventRequestsQuery);
@@ -48,9 +66,37 @@ export default function AdminEventoDetallePage() {
 
   useEffect(() => {
     if (eventId) {
-      loadEventRequests(eventId, 1, deferredRequestSearch);
+      loadEventRequests(eventId, 1, deferredRequestSearch, requestCostType);
     }
-  }, [deferredRequestSearch, eventId, loadEventRequests]);
+  }, [deferredRequestSearch, eventId, loadEventRequests, requestCostType]);
+
+  useEffect(() => {
+    if (!eventId) return;
+    let active = true;
+    setEventMembersLoading(true);
+    setEventMembersError(null);
+    listEventMembers(eventId, deferredMemberSearch, eventMembersPage, requestPageSize)
+      .then((result) => {
+        if (!active) return;
+        setEventMembers(result.items);
+        setEventMembersPage(result.page);
+        setEventMembersTotal(result.total);
+      })
+      .catch((error) => {
+        if (!active) return;
+        const message =
+          error instanceof Error ? error.message : "No se pudieron cargar los miembros.";
+        setEventMembersError(message);
+        setEventMembers([]);
+        setEventMembersTotal(0);
+      })
+      .finally(() => {
+        if (active) setEventMembersLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [deferredMemberSearch, eventId, eventMembersPage, requestPageSize]);
 
   const event = events.find((item) => item.id === eventId);
   const pendingRequests = eventRequests.filter((req) => req.status === "pending").length;
@@ -62,8 +108,9 @@ export default function AdminEventoDetallePage() {
       { label: "Solicitudes pendientes", value: pendingRequests },
       { label: "Registros aprobados", value: approvedRequests },
       { label: "Asistencias", value: attendanceCount },
+      { label: "Secciones", value: sections.length },
     ],
-    [pendingRequests, approvedRequests, attendanceCount]
+    [attendanceCount, approvedRequests, pendingRequests, sections.length]
   );
   const quickActionClassName =
     "inline-flex h-10 items-center justify-center rounded-lg bg-[var(--accent-soft)] px-4 text-sm font-semibold text-[var(--accent-strong)] transition hover:bg-[var(--accent)] hover:text-white";
@@ -91,6 +138,65 @@ export default function AdminEventoDetallePage() {
       ),
     },
   ];
+  const memberColumns = [
+    { header: "Miembro", accessor: "memberName" },
+    { header: "Email", accessor: "memberEmail" },
+    { header: "Perfil", accessor: "profileType" },
+    { header: "Sección", accessor: "sectionName" },
+    {
+      header: "Costo",
+      accessor: "cost",
+      render: (registration: EventMemberRegistration) => formatCurrency(registration.cost),
+    },
+    {
+      header: "Ticket",
+      accessor: "ticketToken",
+      render: (registration: EventMemberRegistration) => (
+        <span className="font-mono text-xs">{registration.ticketToken}</span>
+      ),
+    },
+    {
+      header: "Asistencia",
+      accessor: "attended",
+      render: (registration: EventMemberRegistration) => (
+        <Badge tone={registration.attended ? "success" : "neutral"}>
+          {registration.attended ? "Asistió" : "Sin asistencia"}
+        </Badge>
+      ),
+    },
+  ];
+  const sectionColumns = [
+    { header: "Sección", accessor: "name" },
+    { header: "Representante", accessor: "representativeName" },
+    { header: "Integrantes", accessor: "pCount" },
+    {
+      header: "Estado",
+      accessor: "status",
+      render: (section: Section) => <StatusBadge status={section.status} />,
+    },
+    {
+      header: "Acciones",
+      accessor: "actions",
+      className: "w-56 px-3 py-4 text-center",
+      render: (section: Section) => (
+        <div className="flex justify-center gap-2">
+          <Link
+            href={`/admin/eventos/${eventId}/secciones/${section.id}`}
+            className="inline-flex h-9 items-center justify-center rounded-lg bg-[var(--surface-3)] px-3 text-sm font-medium text-[var(--ink)] transition hover:bg-[var(--surface-2)]"
+          >
+            Ver
+          </Link>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => setSectionDeleteModal(section)}
+          >
+            Desactivar
+          </Button>
+        </div>
+      ),
+    },
+  ];
 
   const handleToggleRegistrations = async () => {
     if (!event) return;
@@ -112,6 +218,16 @@ export default function AdminEventoDetallePage() {
     } finally {
       setToggleLoading(false);
     }
+  };
+  const handleDeleteSection = async (section: Section) => {
+    if (section.pCount > 1) {
+      throw new Error(
+        "Retira primero a todos los integrantes de la sección. Debe quedar solo el representante."
+      );
+    }
+
+    await deleteSectionById(section.id);
+    await loadSections(eventId);
   };
 
   if (!event) {
@@ -143,6 +259,12 @@ export default function AdminEventoDetallePage() {
         <div className="text-xs text-[var(--muted)]">
           {formatDate(event.startDate)} • {event.duration} día(s) • Capacidad {event.capacity}
         </div>
+        <div className="grid gap-2 border-t border-[var(--border)] pt-3 text-xs text-[var(--muted)] sm:grid-cols-2 lg:grid-cols-4">
+          <div>Profesional: {formatCurrency(event.profilePrices.professional)}</div>
+          <div>Estudiante: {formatCurrency(event.profilePrices.student)}</div>
+          <div>Asoc. profesional: {formatCurrency(event.profilePrices.associatedProfessional)}</div>
+          <div>Asoc. estudiante: {formatCurrency(event.profilePrices.associatedStudent)}</div>
+        </div>
       </Card>
 
       <div className="grid gap-4 md:grid-cols-4">
@@ -158,11 +280,15 @@ export default function AdminEventoDetallePage() {
             Vista completa de solicitudes para este evento, con búsqueda y paginación.
           </div>
         </div>
-        <Input
-          value={requestSearch}
-          onChange={(inputEvent) => setRequestSearch(inputEvent.target.value)}
-          placeholder="Buscar por miembro, correo, sección o comentarios"
-        />
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <Input
+            value={requestSearch}
+            onChange={(inputEvent) => setRequestSearch(inputEvent.target.value)}
+            placeholder="Buscar por miembro, correo, sección o comentarios"
+            className="md:max-w-xl"
+          />
+          <CostTypeFilter value={requestCostType} onChange={setRequestCostType} />
+        </div>
         <DataTable
           columns={requestColumns}
           data={eventRequests}
@@ -172,7 +298,69 @@ export default function AdminEventoDetallePage() {
           page={eventRequestsPage}
           pageSize={requestPageSize}
           total={eventRequestsTotal}
-          onPageChange={(page) => loadEventRequests(eventId, page, deferredRequestSearch)}
+          onPageChange={(page) =>
+            loadEventRequests(eventId, page, deferredRequestSearch, requestCostType)
+          }
+        />
+      </Card>
+
+      <Card className="space-y-4">
+        <div className="space-y-1">
+          <div className="text-lg font-semibold text-[var(--ink)]">Secciones del evento</div>
+          <div className="text-sm text-[var(--muted)]">
+            Consulta las secciones aprobadas, su representante y sus integrantes.
+          </div>
+        </div>
+        <div className="space-y-3">
+          {sections.length === 0 ? (
+            <div className="text-sm text-[var(--muted)]">No hay secciones aprobadas para este evento.</div>
+          ) : (
+            <DataTable
+              columns={sectionColumns}
+              data={sections}
+              tableContainerClassName="max-h-[22rem] overflow-y-auto pr-1"
+            />
+          )}
+        </div>
+      </Card>
+
+      <Card className="space-y-4">
+        <div className="space-y-1">
+          <div className="text-lg font-semibold text-[var(--ink)]">Miembros registrados</div>
+          <div className="text-sm text-[var(--muted)]">
+            Registros aprobados para este evento, con búsqueda por datos del miembro, sección o boleto.
+          </div>
+        </div>
+        <Input
+          value={memberSearch}
+          onChange={(inputEvent) => {
+            setMemberSearch(inputEvent.target.value);
+            setEventMembersPage(1);
+          }}
+          placeholder="Buscar por nombre, correo, teléfono, organización, perfil, sección o boleto"
+          className="md:max-w-xl"
+        />
+        {eventMembersError ? (
+          <div className="rounded-lg border border-[var(--danger)] bg-[var(--danger-soft)] p-3 text-sm text-[var(--danger)]">
+            {eventMembersError}
+          </div>
+        ) : null}
+        {eventMembersLoading ? (
+          <div className="text-sm text-[var(--muted)]">Cargando registros...</div>
+        ) : eventMembers.length === 0 ? (
+          <div className="text-sm text-[var(--muted)]">No hay miembros registrados.</div>
+        ) : (
+          <DataTable
+            columns={memberColumns}
+            data={eventMembers}
+            tableContainerClassName="max-h-[28rem] overflow-y-auto pr-1"
+          />
+        )}
+        <Pagination
+          page={eventMembersPage}
+          pageSize={requestPageSize}
+          total={eventMembersTotal}
+          onPageChange={setEventMembersPage}
         />
       </Card>
 
@@ -250,6 +438,48 @@ export default function AdminEventoDetallePage() {
           </Link>
         </Card>
       </div>
+
+      <ConfirmActionModal
+        open={!!sectionDeleteModal}
+        onClose={() => setSectionDeleteModal(null)}
+        title="Desactivar sección"
+        description={
+          sectionDeleteModal ? (
+            <>
+              Estas a punto de desactivar{" "}
+              <span className="font-semibold text-[var(--ink)]">
+                {sectionDeleteModal.name}
+              </span>
+              .
+            </>
+          ) : null
+        }
+        confirmLabel="Desactivar sección"
+        confirmDisabled={!sectionDeleteModal || sectionDeleteModal.pCount > 1}
+        onConfirm={async () => {
+          if (!sectionDeleteModal) return;
+          await handleDeleteSection(sectionDeleteModal);
+        }}
+        successToast={{
+          title: "Sección eliminada",
+          message: "La sección fue desactivada y retirada del evento.",
+          tone: "success",
+        }}
+        errorTitle="No se puede desactivar"
+      >
+        {sectionDeleteModal ? (
+          sectionDeleteModal.pCount > 1 ? (
+            <div className="rounded-xl border border-[var(--warning)]/40 bg-[var(--warning)]/10 p-4 text-[var(--ink)]">
+              Retira primero a todos los integrantes de la sección. Debe quedar solo el
+              representante.
+            </div>
+          ) : (
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-4 text-[var(--ink)]">
+              Confirma solo si esta sección ya no debe aparecer en el evento.
+            </div>
+          )
+        ) : null}
+      </ConfirmActionModal>
     </div>
   );
 }

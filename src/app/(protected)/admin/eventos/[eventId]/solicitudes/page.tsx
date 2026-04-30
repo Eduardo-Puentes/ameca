@@ -5,6 +5,7 @@ import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { PageHeader } from "@/components/layout/PageMetaContext";
 import { Card } from "@/components/ui/Card";
+import { CostTypeFilter } from "@/components/ui/CostTypeFilter";
 import { DataTable } from "@/components/ui/DataTable";
 import { Input } from "@/components/ui/Input";
 import { Pagination } from "@/components/ui/Pagination";
@@ -16,36 +17,25 @@ export default function AdminEventRequestsPage() {
   const params = useParams();
   const eventId = params?.eventId as string;
   const {
-    events,
     eventRequests,
     eventRequestsPage,
     eventRequestsTotal,
     eventRequestStatusCounts,
     eventRequestsQuery,
+    eventRequestsCostType,
     requestPageSize,
     loadEventRequests,
-    loadEvents,
   } = useAppStore();
   const [search, setSearch] = useState(eventRequestsQuery);
+  const [costType, setCostType] = useState(eventRequestsCostType);
   const deferredSearch = useDeferredValue(search);
 
   useEffect(() => {
     if (eventId) {
-      loadEventRequests(eventId, 1);
+      loadEventRequests(eventId, 1, deferredSearch, costType);
     }
-  }, [eventId, loadEventRequests]);
+  }, [costType, deferredSearch, eventId, loadEventRequests]);
 
-  useEffect(() => {
-    if (eventId) {
-      loadEventRequests(eventId, 1, deferredSearch);
-    }
-  }, [deferredSearch, eventId, loadEventRequests]);
-
-  useEffect(() => {
-    loadEvents();
-  }, [loadEvents]);
-
-  const event = events.find((item) => item.id === eventId);
   const currentRequests = useMemo(() => eventRequests, [eventRequests]);
 
   const columns = [
@@ -111,11 +101,15 @@ export default function AdminEventRequestsPage() {
             Mostrando grupos de 20 solicitudes por página.
           </div>
         </div>
-        <Input
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder="Buscar por miembro, correo, sección o comentarios"
-        />
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <Input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Buscar por miembro, correo, sección o comentarios"
+            className="md:max-w-xl"
+          />
+          <CostTypeFilter value={costType} onChange={setCostType} />
+        </div>
         {currentRequests.length === 0 ? (
           <div className="text-sm text-[var(--muted)]">No hay solicitudes registradas.</div>
         ) : (
@@ -125,7 +119,7 @@ export default function AdminEventRequestsPage() {
           page={eventRequestsPage}
           pageSize={requestPageSize}
           total={eventRequestsTotal}
-          onPageChange={(page) => loadEventRequests(eventId, page, deferredSearch)}
+          onPageChange={(page) => loadEventRequests(eventId, page, deferredSearch, costType)}
         />
       </Card>
     </div>

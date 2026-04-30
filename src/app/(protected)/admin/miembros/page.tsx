@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/layout/PageMetaContext";
 import { Card } from "@/components/ui/Card";
 import { DataTable } from "@/components/ui/DataTable";
 import { Button } from "@/components/ui/Button";
+import { ConfirmActionModal } from "@/components/ui/ConfirmActionModal";
 import { Input } from "@/components/ui/Input";
 import { Pagination } from "@/components/ui/Pagination";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -19,6 +20,7 @@ export default function AdminMiembrosPage() {
   const pushToast = useToastStore((state) => state.pushToast);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [memberToDelete, setMemberToDelete] = useState<Member | null>(null);
   const pageSize = 10;
   const deferredSearch = useDeferredValue(search);
 
@@ -97,16 +99,7 @@ export default function AdminMiembrosPage() {
           <Button
             size="sm"
             variant="danger"
-            onClick={async () => {
-              try {
-                await removeMember(member.id);
-                pushToast({ title: "Miembro eliminado", tone: "success" });
-              } catch (error) {
-                const message =
-                  error instanceof Error ? error.message : "No se pudo eliminar el miembro.";
-                pushToast({ title: "Error al eliminar", message, tone: "danger" });
-              }
-            }}
+            onClick={() => setMemberToDelete(member)}
           >
             Eliminar
           </Button>
@@ -146,6 +139,28 @@ export default function AdminMiembrosPage() {
           onPageChange={setPage}
         />
       </Card>
+
+      <ConfirmActionModal
+        open={!!memberToDelete}
+        title="Eliminar miembro"
+        description={
+          <>
+            Estas a punto de eliminar{" "}
+            <span className="font-semibold text-[var(--ink)]">
+              {memberToDelete?.fullName}
+            </span>
+            . Esta accion no se puede deshacer.
+          </>
+        }
+        confirmLabel="Eliminar miembro"
+        onClose={() => setMemberToDelete(null)}
+        onConfirm={async () => {
+          if (!memberToDelete) return;
+          await removeMember(memberToDelete.id);
+        }}
+        successToast={{ title: "Miembro eliminado", tone: "success" }}
+        errorTitle="Error al eliminar"
+      />
     </div>
   );
 }

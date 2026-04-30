@@ -3,6 +3,7 @@ import type { Section, SectionRequest } from "@/lib/types";
 import {
   approveSectionRequest,
   denySectionRequest,
+  deleteSection,
   listSectionRequests,
   listSections,
   updateSection,
@@ -17,6 +18,7 @@ export type SectionsSlice = {
   approveSectionCreation: (id: string) => Promise<void>;
   rejectSectionCreation: (id: string) => Promise<void>;
   updateSectionStatus: (id: string, status: Section["status"]) => Promise<void>;
+  deleteSectionById: (id: string) => Promise<void>;
 };
 
 export const createSectionsSlice: StateCreator<SectionsSlice, [], [], SectionsSlice> = (set, get) => ({
@@ -51,5 +53,9 @@ export const createSectionsSlice: StateCreator<SectionsSlice, [], [], SectionsSl
     const updated = await updateSection(id, { status });
     if (!updated) return;
     set({ sections: get().sections.map((sec) => (sec.id === id ? updated : sec)) });
+  },
+  deleteSectionById: async (id) => {
+    await deleteSection(id);
+    set({ sections: get().sections.filter((sec) => sec.id !== id) });
   },
 });

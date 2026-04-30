@@ -1,8 +1,9 @@
-export type BackendRole = "superuser" | "admin" | "staff" | "member";
+export type BackendRole = "superuser" | "admin" | "treasurer" | "staff" | "member";
 
 export type Role =
   | "superadmin"
   | "admin"
+  | "treasurer"
   | "staff"
   | "member"
   | "representative";
@@ -40,7 +41,7 @@ export type User = {
   role: Role;
 };
 
-export type AdminRole = Extract<BackendRole, "admin" | "staff">;
+export type AdminRole = Extract<BackendRole, "admin" | "treasurer" | "staff">;
 
 export type Event = {
   id: string;
@@ -51,10 +52,20 @@ export type Event = {
   location: string;
   description: string;
   capacity: number;
+  profilePrices: EventProfilePrices;
   status: "open" | "closed";
 };
 
+export type EventProfilePrices = {
+  professional: number;
+  student: number;
+  associatedProfessional: number;
+  associatedStudent: number;
+};
+
 export type RequestStatus = "pending" | "approved" | "rejected";
+export type CostType = "all" | "paid" | "free";
+export type RequestStatusFilter = "all" | RequestStatus;
 export type ProfileType =
   | "professional"
   | "student"
@@ -82,6 +93,48 @@ export type EventRequest = {
   decidedByName?: string;
 };
 
+export type EventMemberRegistration = {
+  id: string;
+  eventId: string;
+  event: Event;
+  memberId: string;
+  memberName: string;
+  memberEmail: string;
+  memberPhoneNumber: string;
+  profileType: ProfileType | string;
+  organization: string;
+  sectionId: string | null;
+  sectionName: string;
+  ticketToken: string;
+  cost: number;
+  isSpeaker: boolean;
+  attended: boolean;
+  approvedAt: number | string | null;
+  approvedById: string | null;
+  approvedByName: string;
+};
+
+export type MemberEventRegistration = {
+  id: string;
+  eventId: string;
+  event: Event;
+  memberId: string;
+  memberName: string;
+  memberEmail: string;
+  memberPhoneNumber?: string;
+  profileType?: ProfileType | string;
+  organization?: string;
+  sectionId: string | null;
+  sectionName: string;
+  ticketToken: string;
+  cost: number;
+  isSpeaker: boolean;
+  attended: boolean;
+  approvedAt: number | string | null;
+  approvedById: string | null;
+  approvedByName: string;
+};
+
 export type SectionRequestStatus = RequestStatus;
 
 export type Section = {
@@ -93,12 +146,42 @@ export type Section = {
   status: SectionRequestStatus;
 };
 
+export type SectionRepresentative = {
+  id: string;
+  name: string;
+  email: string;
+  phoneNumber: string;
+  profileType: ProfileType | string;
+  organization: string;
+};
+
+export type SectionMember = {
+  id: string;
+  sectionId: string;
+  eventId: string;
+  memberId: string;
+  memberName: string;
+  memberEmail: string;
+  memberPhoneNumber: string;
+  profileType: ProfileType | string;
+  organization: string;
+  isRepresentative: boolean;
+  createdAt: number | string;
+};
+
+export type SectionDetail = Section & {
+  event: Event | null;
+  representative: SectionRepresentative | null;
+  memberCount: number;
+  members: SectionMember[];
+};
+
 export type SectionRequest = {
   id: string;
   eventId: string;
   eventName: string;
+  name: string;
   representativeName: string;
-  pCount: number;
   status: SectionRequestStatus;
   comments?: string;
   createdAt: number | string;
@@ -199,7 +282,18 @@ export type AdminUserCreateResult = {
 export type AdminUserUpdatePayload = Partial<AdminUserCreatePayload>;
 
 export type EventUpsertPayload = Partial<
-  Pick<Event, "name" | "startDate" | "duration" | "open" | "location" | "description" | "capacity" | "status">
+  Pick<
+    Event,
+    | "name"
+    | "startDate"
+    | "duration"
+    | "open"
+    | "location"
+    | "description"
+    | "capacity"
+    | "profilePrices"
+    | "status"
+  >
 >;
 
 export type OrganizationStatus = "pending" | "approved" | "rejected";
@@ -239,6 +333,7 @@ export type SectionInvite = {
   id: string;
   sectionId: string;
   eventId: string;
+  eventName?: string;
   sectionName?: string;
   invitedMemberId: string;
   invitedMemberName?: string;

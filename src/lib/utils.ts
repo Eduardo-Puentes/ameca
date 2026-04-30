@@ -47,3 +47,12 @@ export function formatDateTime(value: DateLike, fallback = "Sin fecha") {
   }
   return parsed.toLocaleString("es-MX");
 }
+
+export function formatCurrency(value: number, fallback = "Sin costo") {
+  if (!Number.isFinite(value)) return fallback;
+  return new Intl.NumberFormat("es-MX", {
+    style: "currency",
+    currency: "MXN",
+    maximumFractionDigits: 0,
+  }).format(value);
+}

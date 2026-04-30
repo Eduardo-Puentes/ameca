@@ -21,6 +21,12 @@ export const mockEvents: Event[] = [
     description:
       "Encuentro nacional de innovación, investigación aplicada y networking entre asociaciones.",
     capacity: 600,
+    profilePrices: {
+      professional: 1200,
+      student: 500,
+      associatedProfessional: 800,
+      associatedStudent: 350,
+    },
     status: "open",
   },
   {
@@ -33,6 +39,12 @@ export const mockEvents: Event[] = [
     description:
       "Evento intensivo para presentar avances, talleres y ponencias destacadas.",
     capacity: 280,
+    profilePrices: {
+      professional: 900,
+      student: 400,
+      associatedProfessional: 650,
+      associatedStudent: 300,
+    },
     status: "closed",
   },
   {
@@ -45,6 +57,12 @@ export const mockEvents: Event[] = [
     description:
       "Sesiones enfocadas en gestión asociativa, alianzas y transformación digital.",
     capacity: 350,
+    profilePrices: {
+      professional: 700,
+      student: 250,
+      associatedProfessional: 450,
+      associatedStudent: 150,
+    },
     status: "open",
   },
 ];
@@ -181,8 +199,8 @@ export const mockSectionRequests: SectionRequest[] = [
     id: "sec-req-01",
     eventId: "event-2026",
     eventName: "Cumbre Anual AMECA 2026",
+    name: "Interfaces Neuronales",
     representativeName: "Dra. Riley Shaw",
-    pCount: 18,
     status: "pending",
     createdAt: "2026-02-15",
   },
@@ -190,8 +208,8 @@ export const mockSectionRequests: SectionRequest[] = [
     id: "sec-req-02",
     eventId: "event-2024",
     eventName: "Jornada de Innovación Asociativa",
+    name: "Innovación Asociativa",
     representativeName: "Carlos Méndez",
-    pCount: 12,
     status: "approved",
     createdAt: "2026-01-25",
   },

@@ -14,20 +14,39 @@ function VerifyPageContent() {
   const [message, setMessage] = useState("Verificando tu cuenta...");
 
   useEffect(() => {
-    if (!token) {
+    let isActive = true;
+
+    const fail = (text: string) => {
       setStatus("error");
-      setMessage("Token de verificación faltante.");
+      setMessage(text);
+    };
+
+    if (!token) {
+      queueMicrotask(() => {
+        if (isActive) {
+          fail("Token de verificación faltante.");
+        }
+      });
       return;
     }
     verifyEmail(token)
       .then(() => {
+        if (!isActive) {
+          return;
+        }
         setStatus("success");
         setMessage("Tu cuenta fue verificada correctamente.");
       })
       .catch((error) => {
-        setStatus("error");
-        setMessage(error instanceof Error ? error.message : "No se pudo verificar la cuenta.");
+        if (!isActive) {
+          return;
+        }
+        fail(error instanceof Error ? error.message : "No se pudo verificar la cuenta.");
       });
+
+    return () => {
+      isActive = false;
+    };
   }, [token]);
 
   return (

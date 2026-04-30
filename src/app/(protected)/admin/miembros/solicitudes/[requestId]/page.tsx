@@ -14,6 +14,7 @@ import {
   denyMemberRequest,
   getMemberRequest,
 } from "@/lib/data";
+import { useAppStore } from "@/store";
 import type { MembershipRequest } from "@/lib/types";
 
 const formatDate = (value?: number | string | null) => {
@@ -28,6 +29,7 @@ export default function AdminMembershipRequestDetailPage() {
   const params = useParams();
   const requestId = params?.requestId as string;
   const pushToast = useToastStore((state) => state.pushToast);
+  const role = useAppStore((state) => state.role);
   const [request, setRequest] = useState<MembershipRequest | null>(null);
   const [comment, setComment] = useState("");
   const [loading, setLoading] = useState(true);
@@ -111,6 +113,8 @@ export default function AdminMembershipRequestDetailPage() {
   const schoolIdUrl = request?.schoolIdentificationUrl ?? "";
   const isProofImage = /\.(png|jpe?g|webp)$/i.test(proofUrl);
   const isSchoolIdImage = /\.(png|jpe?g|webp)$/i.test(schoolIdUrl);
+  const isPaidRequest = (request?.upgradeCost ?? 0) > 0;
+  const canApproveRequest = !isPaidRequest || role === "treasurer" || role === "superadmin";
 
   return (
     <div className="space-y-6">
@@ -155,7 +159,7 @@ export default function AdminMembershipRequestDetailPage() {
                   Nuevo perfil: <span className="text-[var(--ink)]">{request.profileType}</span>
                 </div>
                 <div className="text-sm text-[var(--muted)]">
-                  Costo estimado:{" "}
+                  Costo:{" "}
                   <span className="text-[var(--ink)]">
                     {typeof request.upgradeCost === "number" ? request.upgradeCost : "No disponible"}
                   </span>
@@ -163,18 +167,16 @@ export default function AdminMembershipRequestDetailPage() {
               </div>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2">
               <div className="rounded-xl bg-[var(--surface-2)] p-4 text-sm text-[var(--muted)]">
                 <div className="text-xs uppercase tracking-[0.2em]">Creada</div>
                 <div className="mt-2 text-[var(--ink)]">{formatDate(request.createdAt)}</div>
               </div>
               <div className="rounded-xl bg-[var(--surface-2)] p-4 text-sm text-[var(--muted)]">
-                <div className="text-xs uppercase tracking-[0.2em]">Decidida</div>
-                <div className="mt-2 text-[var(--ink)]">{formatDate(request.decidedAt)}</div>
-              </div>
-              <div className="rounded-xl bg-[var(--surface-2)] p-4 text-sm text-[var(--muted)]">
-                <div className="text-xs uppercase tracking-[0.2em]">Revisó</div>
-                <div className="mt-2 text-[var(--ink)]">{request.decidedByName || "Pendiente"}</div>
+                <div className="text-xs uppercase tracking-[0.2em]">Estado</div>
+                <div className="mt-2">
+                  <StatusBadge status={request.status} />
+                </div>
               </div>
             </div>
           </Card>
@@ -241,7 +243,9 @@ export default function AdminMembershipRequestDetailPage() {
             <div>
               <div className="text-lg font-semibold text-[var(--ink)]">Decisión</div>
               <div className="text-sm text-[var(--muted)]">
-                Usa este espacio para registrar el comentario que acompañará la aprobación o el rechazo.
+                {isPaidRequest && !canApproveRequest
+                  ? "Esta solicitud tiene costo y requiere aprobación de tesorería o superadmin."
+                  : "Usa este espacio para registrar el comentario que acompañará la aprobación o el rechazo."}
               </div>
             </div>
 
@@ -253,7 +257,7 @@ export default function AdminMembershipRequestDetailPage() {
             />
 
             <div className="flex flex-wrap justify-end gap-2">
-              {request.status !== "approved" ? (
+              {request.status !== "approved" && canApproveRequest ? (
                 <Button onClick={handleApprove} disabled={saving}>
                   Aprobar
                 </Button>
