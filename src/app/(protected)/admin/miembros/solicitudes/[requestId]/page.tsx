@@ -115,6 +115,7 @@ export default function AdminMembershipRequestDetailPage() {
   const isSchoolIdImage = /\.(png|jpe?g|webp)$/i.test(schoolIdUrl);
   const isPaidRequest = (request?.upgradeCost ?? 0) > 0;
   const canApproveRequest = !isPaidRequest || role === "treasurer" || role === "superadmin";
+  const canDecideRequest = request?.status === "pending";
 
   return (
     <div className="space-y-6">
@@ -243,7 +244,9 @@ export default function AdminMembershipRequestDetailPage() {
             <div>
               <div className="text-lg font-semibold text-[var(--ink)]">Decisión</div>
               <div className="text-sm text-[var(--muted)]">
-                {isPaidRequest && !canApproveRequest
+                {!canDecideRequest
+                  ? "Esta solicitud ya fue decidida y no puede cambiar de estado."
+                  : isPaidRequest && !canApproveRequest
                   ? "Esta solicitud tiene costo y requiere aprobación de tesorería o superadmin."
                   : "Usa este espacio para registrar el comentario que acompañará la aprobación o el rechazo."}
               </div>
@@ -253,21 +256,27 @@ export default function AdminMembershipRequestDetailPage() {
               placeholder="Comentario para el historial o motivo del rechazo"
               value={comment}
               onChange={(event) => setComment(event.target.value)}
-              disabled={saving}
+              disabled={saving || !canDecideRequest}
             />
 
-            <div className="flex flex-wrap justify-end gap-2">
-              {request.status !== "approved" && canApproveRequest ? (
-                <Button onClick={handleApprove} disabled={saving}>
-                  Aprobar
-                </Button>
-              ) : null}
-              {request.status !== "rejected" ? (
-                <Button variant="danger" onClick={handleReject} disabled={saving || !comment.trim()}>
+            {canDecideRequest ? (
+              <div className="flex flex-wrap justify-end gap-2">
+                {canApproveRequest ? (
+                  <Button onClick={handleApprove} loading={saving} loadingText="Procesando...">
+                    Aprobar
+                  </Button>
+                ) : null}
+                <Button
+                  variant="danger"
+                  onClick={handleReject}
+                  disabled={!comment.trim()}
+                  loading={saving}
+                  loadingText="Procesando..."
+                >
                   Rechazar
                 </Button>
-              ) : null}
-            </div>
+              </div>
+            ) : null}
           </Card>
         </>
       )}

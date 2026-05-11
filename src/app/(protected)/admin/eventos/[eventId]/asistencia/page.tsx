@@ -18,6 +18,7 @@ export default function AdminAsistenciaPage() {
   const { events, attendanceRecords, loadAttendance, scanToken } = useAppStore();
   const pushToast = useToastStore((state) => state.pushToast);
   const [token, setToken] = useState("");
+  const [scanning, setScanning] = useState(false);
 
   useEffect(() => {
     if (eventId) {
@@ -29,13 +30,22 @@ export default function AdminAsistenciaPage() {
 
   const handleScan = async () => {
     if (!eventId || !token.trim()) return;
-    const record = await scanToken(eventId, token.trim());
-    if (record.status === "duplicate") {
-      pushToast({ title: "Escaneo duplicado", tone: "danger" });
-    } else {
-      pushToast({ title: "Asistencia registrada", tone: "success" });
+    try {
+      setScanning(true);
+      const record = await scanToken(eventId, token.trim());
+      if (record.status === "duplicate") {
+        pushToast({ title: "Escaneo duplicado", tone: "danger" });
+      } else {
+        pushToast({ title: "Asistencia registrada", tone: "success" });
+      }
+      setToken("");
+      await loadAttendance(eventId);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "No se pudo registrar el escaneo.";
+      pushToast({ title: "Error de asistencia", message, tone: "danger" });
+    } finally {
+      setScanning(false);
     }
-    setToken("");
   };
 
   const columns = [
@@ -68,7 +78,14 @@ export default function AdminAsistenciaPage() {
               onChange={(event) => setToken(event.target.value)}
             />
           </div>
-          <Button onClick={handleScan}>Registrar escaneo</Button>
+          <Button
+            onClick={handleScan}
+            disabled={!token.trim()}
+            loading={scanning}
+            loadingText="Registrando..."
+          >
+            Registrar escaneo
+          </Button>
           <Button variant="secondary">Exportar reporte</Button>
         </div>
         <div className="text-sm text-[var(--muted)]">

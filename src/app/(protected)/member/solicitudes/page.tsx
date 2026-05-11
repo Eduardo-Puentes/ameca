@@ -1,43 +1,42 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import { PageHeader } from "@/components/layout/PageMetaContext";
 import { Card } from "@/components/ui/Card";
 import { DataTable } from "@/components/ui/DataTable";
+import { Pagination } from "@/components/ui/Pagination";
+import { RequestStatusFilter } from "@/components/ui/RequestStatusFilter";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useAppStore } from "@/store";
-import type { EventRequest, MembershipRequest } from "@/lib/types";
+import type { EventRequest, MembershipRequest, RequestStatusFilter as RequestStatusFilterValue } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
 
 export default function MemberSolicitudesPage() {
   const {
-    members,
     eventRequests,
+    eventRequestsPage,
+    eventRequestsTotal,
+    eventRequestsStatus,
     membershipRequests,
-    loadMembers,
+    membershipRequestsPage,
+    membershipRequestsTotal,
+    membershipRequestsStatus,
     loadEventRequests,
     loadMembershipRequests,
-    selectedEventId,
+    requestPageSize,
   } = useAppStore();
-  const user = useAppStore((state) => state.user);
+  const [membershipStatus, setMembershipStatus] =
+    useState<RequestStatusFilterValue>(membershipRequestsStatus);
+  const [eventStatus, setEventStatus] = useState<RequestStatusFilterValue>(eventRequestsStatus);
 
   useEffect(() => {
-    loadMembers();
-    loadMembershipRequests();
-    if (selectedEventId) loadEventRequests(selectedEventId);
-  }, [loadMembers, loadMembershipRequests, loadEventRequests, selectedEventId]);
+    loadMembershipRequests(1, "", "all", membershipStatus);
+  }, [loadMembershipRequests, membershipStatus]);
 
-  const member = useMemo(() => {
-    return members.find((item) => item.email === user?.email) ?? members[0];
-  }, [members, user]);
-
-  const myMembershipRequests = membershipRequests.filter(
-    (req) => req.memberName === member?.fullName
-  );
-
-  const myEventRequests = eventRequests.filter(
-    (req) => req.memberEmail === member?.email
-  );
+  useEffect(() => {
+    loadEventRequests(undefined, 1, "", "all", eventStatus);
+  }, [eventStatus, loadEventRequests]);
 
   const membershipColumns = [
     { header: "Tipo", accessor: "profileType" },
@@ -51,6 +50,18 @@ export default function MemberSolicitudesPage() {
       accessor: "status",
       render: (req: MembershipRequest) => <StatusBadge status={req.status} />,
     },
+    {
+      header: "",
+      accessor: "actions",
+      render: (req: MembershipRequest) => (
+        <Link
+          href={`/member/solicitudes/membresia/${req.id}`}
+          className="inline-flex h-9 items-center justify-center rounded-lg bg-[var(--surface-2)] px-3 text-sm font-medium text-[var(--ink)] transition hover:bg-[var(--surface-3)]"
+        >
+          Ver
+        </Link>
+      ),
+    },
   ];
 
   const eventColumns = [
@@ -60,6 +71,18 @@ export default function MemberSolicitudesPage() {
       header: "Estado",
       accessor: "status",
       render: (req: EventRequest) => <StatusBadge status={req.status} />,
+    },
+    {
+      header: "",
+      accessor: "actions",
+      render: (req: EventRequest) => (
+        <Link
+          href={`/member/solicitudes/eventos/${req.id}`}
+          className="inline-flex h-9 items-center justify-center rounded-lg bg-[var(--surface-2)] px-3 text-sm font-medium text-[var(--ink)] transition hover:bg-[var(--surface-3)]"
+        >
+          Ver
+        </Link>
+      ),
     },
   ];
 
@@ -73,12 +96,30 @@ export default function MemberSolicitudesPage() {
 
       <Card className="space-y-4">
         <div className="text-lg font-semibold text-[var(--ink)]">Membresía</div>
-        <DataTable columns={membershipColumns} data={myMembershipRequests} />
+        <RequestStatusFilter value={membershipStatus} onChange={setMembershipStatus} />
+        <DataTable columns={membershipColumns} data={membershipRequests} />
+        <Pagination
+          page={membershipRequestsPage}
+          pageSize={requestPageSize}
+          total={membershipRequestsTotal}
+          onPageChange={(page) =>
+            loadMembershipRequests(page, "", "all", membershipStatus)
+          }
+        />
       </Card>
 
       <Card className="space-y-4">
         <div className="text-lg font-semibold text-[var(--ink)]">Eventos</div>
-        <DataTable columns={eventColumns} data={myEventRequests} />
+        <RequestStatusFilter value={eventStatus} onChange={setEventStatus} />
+        <DataTable columns={eventColumns} data={eventRequests} />
+        <Pagination
+          page={eventRequestsPage}
+          pageSize={requestPageSize}
+          total={eventRequestsTotal}
+          onPageChange={(page) =>
+            loadEventRequests(undefined, page, "", "all", eventStatus)
+          }
+        />
       </Card>
     </div>
   );

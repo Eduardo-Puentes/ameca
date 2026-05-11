@@ -8,6 +8,8 @@ type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant;
   size?: "sm" | "md" | "lg";
+  loading?: boolean;
+  loadingText?: string;
 };
 
 const variantClasses: Record<ButtonVariant, string> = {
@@ -29,6 +31,10 @@ export function Button({
   className,
   variant = "primary",
   size = "md",
+  loading = false,
+  loadingText,
+  children,
+  disabled,
   ...props
 }: ButtonProps) {
   return (
@@ -41,7 +47,16 @@ export function Button({
         sizeClasses[size],
         className
       )}
+      disabled={disabled || loading}
       {...props}
-    />
+    >
+      {loading ? (
+        <span
+          className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"
+          aria-hidden="true"
+        />
+      ) : null}
+      {loading ? loadingText ?? children : children}
+    </button>
   );
 }

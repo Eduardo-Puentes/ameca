@@ -19,7 +19,7 @@ const PROFILE_OPTIONS: Array<{ value: ProfileType; label: string }> = [
 ];
 
 export default function MemberMembresiaPage() {
-  const { members, loadMembers, createMembershipRequest } = useAppStore();
+  const { members, loadMembers, createMembershipRequest, requestsLoading } = useAppStore();
   const user = useAppStore((state) => state.user);
   const pushToast = useToastStore((state) => state.pushToast);
   const [requestedType, setRequestedType] = useState<ProfileType>("student");
@@ -33,6 +33,71 @@ export default function MemberMembresiaPage() {
   const member = useMemo(() => {
     return members.find((item) => item.email === user?.email) ?? members[0];
   }, [members, user]);
+
+  const handleSubmit = async () => {
+    if (!member) {
+      pushToast({
+        title: "Perfil no disponible",
+        message: "Espera a que cargue tu información antes de enviar la solicitud.",
+        tone: "warning",
+      });
+      return;
+    }
+
+    if (member.profileType === requestedType) {
+      pushToast({
+        title: "Selecciona otro tipo",
+        message: "Ya tienes ese tipo de membresía.",
+        tone: "warning",
+      });
+      return;
+    }
+
+    if (member.profileType !== "professional") {
+      pushToast({
+        title: "Cambio no disponible",
+        message:
+          "Para cambiar tu membresía actual, primero solicita a administración que revierta tu cuenta a profesional.",
+        tone: "warning",
+      });
+      return;
+    }
+
+    if (
+      (requestedType === "associated_professional" || requestedType === "associated_student") &&
+      !proofFile
+    ) {
+      pushToast({
+        title: "Comprobante requerido",
+        message: "Sube tu comprobante de pago antes de enviar la solicitud.",
+        tone: "warning",
+      });
+      return;
+    }
+
+    if ((requestedType === "student" || requestedType === "associated_student") && !schoolIdFile) {
+      pushToast({
+        title: "Identificación requerida",
+        message: "Sube tu identificación escolar antes de enviar la solicitud.",
+        tone: "warning",
+      });
+      return;
+    }
+
+    try {
+      await createMembershipRequest(requestedType, proofFile, schoolIdFile);
+      pushToast({
+        title: "Solicitud enviada",
+        message: "Un administrador revisará tu solicitud.",
+        tone: "info",
+      });
+      setProofFile(null);
+      setSchoolIdFile(null);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "No se pudo enviar la solicitud.";
+      pushToast({ title: "No se pudo enviar", message, tone: "danger" });
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -100,14 +165,9 @@ export default function MemberMembresiaPage() {
             />
           ) : null}
           <Button
-            onClick={async () => {
-              await createMembershipRequest(requestedType, proofFile, schoolIdFile);
-              pushToast({
-                title: "Solicitud enviada",
-                message: "Un administrador revisará tu comprobante.",
-                tone: "info",
-              });
-            }}
+            onClick={handleSubmit}
+            loading={requestsLoading}
+            loadingText="Enviando..."
           >
             Enviar solicitud
           </Button>

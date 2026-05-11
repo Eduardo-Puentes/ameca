@@ -5,6 +5,7 @@ import type { Event } from "@/lib/types";
 import { Button } from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
+import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 
 const DEFAULT_PROFILE_PRICES = {
@@ -16,23 +17,30 @@ const DEFAULT_PROFILE_PRICES = {
 
 const toDateInputValue = (value: Event["startDate"] | undefined) => {
   if (!value) return "";
-  if (typeof value === "string") return value;
-  return new Date(value * 1000).toISOString().slice(0, 10);
+  if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  const numeric = typeof value === "number" ? value : Number(value);
+  const parsed = Number.isFinite(numeric)
+    ? new Date(numeric * 1000)
+    : new Date(value);
+  return Number.isNaN(parsed.getTime()) ? "" : parsed.toISOString().slice(0, 10);
 };
 
 export function EventForm({
   initial,
   onSubmit,
   submitLabel = "Guardar",
+  submitting = false,
 }: {
   initial?: Partial<Event>;
-  onSubmit: (payload: Partial<Event>) => void;
+  onSubmit: (payload: Partial<Event>) => void | Promise<void>;
   submitLabel?: string;
+  submitting?: boolean;
 }) {
   const [form, setForm] = useState({
     name: initial?.name ?? "",
     startDate: toDateInputValue(initial?.startDate),
     duration: initial?.duration ?? 1,
+    open: initial?.open ?? (initial?.status ? initial.status === "open" : true),
     location: initial?.location ?? "",
     capacity: initial?.capacity ?? 100,
     description: initial?.description ?? "",
@@ -54,7 +62,13 @@ export function EventForm({
   };
 
   return (
-    <div className="space-y-4">
+    <form
+      className="space-y-4"
+      onSubmit={(event) => {
+        event.preventDefault();
+        onSubmit({ ...form, status: form.open ? "open" : "closed" });
+      }}
+    >
       <div className="grid gap-4 md:grid-cols-2">
         <FormField label="Nombre del evento">
           <Input
@@ -85,6 +99,17 @@ export function EventForm({
             onChange={(event) => setForm((prev) => ({ ...prev, location: event.target.value }))}
             placeholder="Ciudad, país"
           />
+        </FormField>
+        <FormField label="Estado de registro">
+          <Select
+            value={form.open ? "open" : "closed"}
+            onChange={(event) =>
+              setForm((prev) => ({ ...prev, open: event.target.value === "open" }))
+            }
+          >
+            <option value="open">Aceptando solicitudes</option>
+            <option value="closed">Registro cerrado</option>
+          </Select>
         </FormField>
         <FormField label="Capacidad">
           <Input
@@ -137,7 +162,9 @@ export function EventForm({
           placeholder="Descripción breve del evento"
         />
       </FormField>
-      <Button onClick={() => onSubmit(form)}>{submitLabel}</Button>
-    </div>
+      <Button type="submit" disabled={submitting}>
+        {submitting ? "Guardando..." : submitLabel}
+      </Button>
+    </form>
   );
 }

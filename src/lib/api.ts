@@ -15,14 +15,18 @@ import type {
   Member,
   MemberEventRegistration,
   MemberUpdatePayload,
+  MembershipPrices,
   MembershipRequest,
   PaginatedResponse,
+  PaymentProof,
   Presentation,
+  PresentationImportResult,
   RequestStatusFilter,
   Section,
   SectionDetail,
   SectionInvite,
   SectionRequest,
+  SpeakerType,
 } from "@/lib/types";
 import type { ProfileType, Role } from "@/lib/types";
 import { tokenStorage } from "@/lib/authStorage";
@@ -41,6 +45,19 @@ const ROLE_CREDENTIALS: Record<Role, { email: string; password: string }> = {
 type AuthUser = { id: string; name: string; email: string; role: BackendRole };
 type AuthResponse = { token: string; user: AuthUser };
 type RegisterResponse = { ok: boolean };
+type MemberResponse = Partial<Member> & {
+  full_name?: string;
+  phone_number?: string;
+  profile_type?: string;
+  expiration_date?: number | string | null;
+};
+type ListMembersResponse =
+  | MemberResponse[]
+  | (Partial<PaginatedResponse<MemberResponse>> & {
+      members?: MemberResponse[];
+      data?: MemberResponse[];
+      results?: MemberResponse[];
+    });
 
 const normalizeRole = (role: BackendRole): Role =>
   role === "superuser" ? "superadmin" : (role as Role);
@@ -49,6 +66,25 @@ const normalizeAuthResponse = (response: AuthResponse) => ({
   ...response,
   user: { ...response.user, role: normalizeRole(response.user.role) },
 });
+
+const normalizeMember = (member: MemberResponse): Member => ({
+  ...member,
+  id: member.id ?? "",
+  fullName: member.fullName ?? member.full_name ?? "",
+  email: member.email ?? "",
+  phoneNumber: member.phoneNumber ?? member.phone_number ?? "",
+  profileType: member.profileType ?? member.profile_type ?? "professional",
+  verified: Boolean(member.verified),
+  expirationDate: member.expirationDate ?? member.expiration_date ?? null,
+  role: member.role ?? "member",
+});
+
+const normalizeMembersResponse = (response: ListMembersResponse): Member[] => {
+  const items = Array.isArray(response)
+    ? response
+    : response.items ?? response.members ?? response.data ?? response.results ?? [];
+  return items.map(normalizeMember);
+};
 
 const toEpochDay = (value: Event["startDate"] | undefined) => {
   if (typeof value === "number") return value;
@@ -62,11 +98,29 @@ const normalizeEventPayload = (payload: EventUpsertPayload) => ({
   startDate: toEpochDay(payload.startDate),
 });
 
-const humanizeError = (message: string, status: number) => {
+const humanizeError = (message: string, status: number, code?: string) => {
+  const codeMappings: Record<string, string> = {
+    email_already_registered: "El correo ya está registrado.",
+    email_not_verified: "Debes verificar tu correo antes de iniciar sesión.",
+    invalid_credentials: "Correo o contraseña inválidos.",
+    invalid_profile_type: "El tipo de membresía solicitado no es válido.",
+    membership_request_already_pending: "Ya tienes una solicitud de membresía pendiente.",
+    payment_proof_required: "Debes subir tu comprobante de pago.",
+    professional_revert_required:
+      "Para cambiar tu membresía actual, primero solicita a administración que revierta tu cuenta a profesional.",
+    same_profile_type: "El perfil solicitado debe ser distinto al actual.",
+    upgrade_requirements_not_met: "Faltan documentos requeridos para este upgrade.",
+  };
+
+  if (code && codeMappings[code]) {
+    return codeMappings[code];
+  }
+
   const normalized = message.toLowerCase();
   const mappings: Array<[string, string]> = [
     ["invalid credentials", "Correo o contraseña inválidos."],
     ["email not verified", "Debes verificar tu correo antes de iniciar sesión."],
+    ["email is already registered", "El correo ya está registrado."],
     ["email already registered", "El correo ya está registrado."],
     ["event not found", "Evento no encontrado."],
     ["request not found", "Solicitud no encontrada."],
@@ -78,6 +132,9 @@ const humanizeError = (message: string, status: number) => {
     ["duplicate scan", "Escaneo duplicado."],
     ["ticket not found", "El boleto no es válido para este evento."],
     ["payment proof is required", "Debes subir tu comprobante de pago."],
+    ["student upgrade requires school identification", "Debes subir tu identificación escolar."],
+    ["associated student upgrade requires school identification", "Debes subir tu identificación escolar."],
+    ["upgrade into an associated profile requires payment proof", "Debes subir tu comprobante de pago."],
     ["event registration is closed", "El registro del evento está cerrado."],
     ["already registered", "Ya estás registrado en este evento."],
     ["resolve registered event members before deleting this event", "No puedes eliminar un evento con usuarios registrados."],
@@ -147,6 +204,7 @@ async function request<T>(
   if (!response.ok) {
     const raw = await response.text();
     let message = raw;
+    let code: string | undefined;
     try {
       const parsed = JSON.parse(raw);
       if (typeof parsed?.detail === "string") {
@@ -157,6 +215,9 @@ async function request<T>(
         typeof parsed.detail.message === "string"
       ) {
         message = parsed.detail.message;
+        if (typeof parsed.detail.code === "string") {
+          code = parsed.detail.code;
+        }
       } else if (Array.isArray(parsed?.detail)) {
         message = parsed.detail
           .map((item: unknown) =>
@@ -172,10 +233,13 @@ async function request<T>(
       } else if (typeof parsed?.message === "string") {
         message = parsed.message;
       }
+      if (!code && typeof parsed?.code === "string") {
+        code = parsed.code;
+      }
     } catch {
       // raw text response
     }
-    throw new Error(humanizeError(message || response.statusText, response.status));
+    throw new Error(humanizeError(message || response.statusText, response.status, code));
   }
 
   if (response.status === 204) {
@@ -258,6 +322,10 @@ export async function listMyEvents(): Promise<MemberEventRegistration[]> {
   return request<MemberEventRegistration[]>("/members/me/events");
 }
 
+export async function getMyEventRegistration(eventId: string): Promise<MemberEventRegistration> {
+  return request<MemberEventRegistration>(`/events/${eventId}/registration/me`);
+}
+
 export async function createEvent(payload: EventUpsertPayload): Promise<Event> {
   return request<Event>("/admin/events", {
     method: "POST",
@@ -276,8 +344,26 @@ export async function deleteEvent(id: string) {
   return request<{ ok: boolean }>(`/admin/events/${id}`, { method: "DELETE" });
 }
 
+export async function getMembershipPrices(): Promise<MembershipPrices> {
+  return request<MembershipPrices>("/membership-prices");
+}
+
+export async function getAdminMembershipPrices(): Promise<MembershipPrices> {
+  return request<MembershipPrices>("/admin/membership-prices");
+}
+
+export async function updateAdminMembershipPrices(
+  payload: Partial<Event["profilePrices"]>
+): Promise<MembershipPrices> {
+  return request<MembershipPrices>("/admin/membership-prices", {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function listMembers(): Promise<Member[]> {
-  return request<Member[]>("/members");
+  const response = await request<ListMembersResponse>("/members");
+  return normalizeMembersResponse(response);
 }
 
 export async function listAdminUsers(): Promise<AdminUser[]> {
@@ -323,21 +409,29 @@ export async function deleteAdminUser(id: string) {
 }
 
 export async function getMemberMe(): Promise<Member> {
-  return request<Member>("/members/me");
+  const response = await request<MemberResponse>("/members/me");
+  return normalizeMember(response);
+}
+
+export async function getMember(id: string): Promise<Member> {
+  const response = await request<MemberResponse>(`/members/${id}`);
+  return normalizeMember(response);
 }
 
 export async function updateMemberMe(payload: MemberUpdatePayload): Promise<Member> {
-  return request<Member>("/members/me", {
+  const response = await request<MemberResponse>("/members/me", {
     method: "PATCH",
     body: JSON.stringify(payload),
   });
+  return normalizeMember(response);
 }
 
 export async function updateMember(id: string, payload: MemberUpdatePayload): Promise<Member | null> {
-  return request<Member>(`/members/${id}`, {
+  const response = await request<MemberResponse>(`/members/${id}`, {
     method: "PATCH",
     body: JSON.stringify(payload),
   });
+  return normalizeMember(response);
 }
 
 export async function deleteMember(id: string) {
@@ -432,13 +526,50 @@ export async function listEventMembers(
   );
 }
 
+export async function getEventMember(id: string): Promise<EventMemberRegistration> {
+  return request<EventMemberRegistration>(`/admin/event-members/${id}`);
+}
+
+export async function deleteEventMember(id: string, comments: string) {
+  return request<{
+    ok: boolean;
+    eventMemberId: string;
+    eventId: string;
+    memberId: string;
+    detachedPaymentProofs: number;
+    unclaimedPresentations: number;
+    emailError?: string;
+  }>(`/admin/event-members/${id}`, {
+    method: "DELETE",
+    body: JSON.stringify({ comments }),
+  });
+}
+
 export async function getEventRequest(id: string): Promise<EventRequest> {
   return request<EventRequest>(`/admin/event-requests/${id}`);
 }
 
-export async function listMyEventRequests(eventId?: string): Promise<EventRequest[]> {
-  const query = eventId ? `?event_id=${eventId}` : "";
-  return request<EventRequest[]>(`/members/me/event-requests${query}`);
+export async function listMyEventRequests(
+  eventId?: string,
+  query = "",
+  page?: number,
+  pageSize?: number,
+  status: RequestStatusFilter = "all"
+): Promise<EventRequest[] | PaginatedResponse<EventRequest>> {
+  const params = new URLSearchParams();
+  if (eventId) params.set("event_id", eventId);
+  if (query.trim()) params.set("query", query.trim());
+  if (page !== undefined) params.set("page", String(page));
+  if (pageSize !== undefined) params.set("pageSize", String(pageSize));
+  if (status !== "all") params.set("status", status);
+  const suffix = params.toString() ? `?${params.toString()}` : "";
+  return request<EventRequest[] | PaginatedResponse<EventRequest>>(
+    `/members/me/event-requests${suffix}`
+  );
+}
+
+export async function getMyEventRequest(id: string): Promise<EventRequest> {
+  return request<EventRequest>(`/members/me/event-requests/${id}`);
 }
 
 export async function approveEventRequest(id: string, comments?: string) {
@@ -459,7 +590,6 @@ export async function createEventRequest(
   payload: Partial<EventRequest> & {
     paymentProofFile?: File | null;
     sectionId?: string | null;
-    isSpeaker?: boolean;
   }
 ) {
   if (!payload.eventId) {
@@ -469,9 +599,6 @@ export async function createEventRequest(
   if (payload.sectionId) {
     form.append("section_id", payload.sectionId);
   }
-  if (payload.isSpeaker) {
-    form.append("is_speaker", "true");
-  }
   if (payload.paymentProofFile) {
     form.append("payment_proof", payload.paymentProofFile);
   }
@@ -479,6 +606,28 @@ export async function createEventRequest(
     method: "POST",
     body: form,
   });
+}
+
+export async function addEventRequestPaymentProof(requestId: string, file: File) {
+  const form = new FormData();
+  form.append("file", file);
+  return request<PaymentProof>(`/event-requests/${requestId}/payment-proofs`, {
+    method: "POST",
+    body: form,
+  });
+}
+
+export async function addMembershipRequestPaymentProof(requestId: string, file: File) {
+  const form = new FormData();
+  form.append("file", file);
+  return request<PaymentProof>(`/membership-requests/${requestId}/payment-proofs`, {
+    method: "POST",
+    body: form,
+  });
+}
+
+export async function deletePaymentProof(proofId: string) {
+  return request<PaymentProof>(`/payment-proofs/${proofId}`, { method: "DELETE" });
 }
 
 export async function createSectionRequest(payload: {
@@ -494,8 +643,21 @@ export async function createSectionRequest(payload: {
   });
 }
 
-export async function listSectionRequests(): Promise<SectionRequest[]> {
-  return request<SectionRequest[]>("/admin/section-requests");
+export async function listSectionRequests(
+  query = "",
+  page?: number,
+  pageSize?: number,
+  status: "pending" | "rejected" | "approved" | "all" = "all"
+): Promise<SectionRequest[] | PaginatedResponse<SectionRequest>> {
+  const params = new URLSearchParams();
+  if (query.trim()) params.set("query", query.trim());
+  if (page !== undefined) params.set("page", String(page));
+  if (pageSize !== undefined) params.set("pageSize", String(pageSize));
+  if (status !== "all") params.set("status", status);
+  const suffix = params.toString() ? `?${params.toString()}` : "";
+  return request<SectionRequest[] | PaginatedResponse<SectionRequest>>(
+    `/admin/section-requests${suffix}`
+  );
 }
 
 export async function approveSectionRequest(id: string) {
@@ -515,6 +677,20 @@ export async function denySectionRequest(id: string) {
 export async function listSections(eventId?: string): Promise<Section[]> {
   const query = eventId ? `?event_id=${eventId}` : "";
   return request<Section[]>(`/sections${query}`);
+}
+
+export async function listAdminSections(
+  query = "",
+  page = 1,
+  pageSize = 20,
+  status: "approved" | "pending" | "rejected" | "all" = "approved"
+): Promise<PaginatedResponse<Section>> {
+  const params = new URLSearchParams();
+  if (query.trim()) params.set("query", query.trim());
+  params.set("page", String(page));
+  params.set("pageSize", String(pageSize));
+  if (status !== "all") params.set("status", status);
+  return request<PaginatedResponse<Section>>(`/admin/sections?${params.toString()}`);
 }
 
 export async function getSection(sectionId: string): Promise<SectionDetail> {
@@ -673,8 +849,25 @@ export async function createMembershipUpgradeRequest(
   });
 }
 
-export async function listMembershipUpgradeRequests() {
-  return request<MembershipRequest[]>("/members/me/upgrade-requests");
+export async function listMembershipUpgradeRequests(
+  query = "",
+  page?: number,
+  pageSize?: number,
+  status: RequestStatusFilter = "all"
+) {
+  const params = new URLSearchParams();
+  if (query.trim()) params.set("query", query.trim());
+  if (page !== undefined) params.set("page", String(page));
+  if (pageSize !== undefined) params.set("pageSize", String(pageSize));
+  if (status !== "all") params.set("status", status);
+  const suffix = params.toString() ? `?${params.toString()}` : "";
+  return request<MembershipRequest[] | PaginatedResponse<MembershipRequest>>(
+    `/members/me/upgrade-requests${suffix}`
+  );
+}
+
+export async function getMyMembershipRequest(id: string): Promise<MembershipRequest> {
+  return request<MembershipRequest>(`/members/me/upgrade-requests/${id}`);
 }
 
 export async function listMyPresentations(eventId: string) {
@@ -684,15 +877,23 @@ export async function listMyPresentations(eventId: string) {
 export async function uploadPresentation(
   eventId: string,
   file: File,
-  payload?: { name?: string; description?: string }
+  payload?: { name?: string; description?: string; presentationType?: "POSTER" | "ORAL" }
 ) {
   const form = new FormData();
   form.append("file", file);
   if (payload?.name) form.append("name", payload.name);
   if (payload?.description) form.append("description", payload.description);
+  if (payload?.presentationType) form.append("presentationType", payload.presentationType);
   return request<Presentation>(`/events/${eventId}/presentations`, {
     method: "POST",
     body: form,
+  });
+}
+
+export async function confirmPresentationCode(eventId: string, code: string) {
+  return request<Presentation>(`/events/${eventId}/presentations/confirm`, {
+    method: "POST",
+    body: JSON.stringify({ code }),
   });
 }
 
@@ -700,8 +901,88 @@ export async function deletePresentation(id: string) {
   return request<{ ok: boolean }>(`/presentations/${id}`, { method: "DELETE" });
 }
 
-export async function listEventSpeakers(eventId: string) {
-  return request<Presentation[]>(`/admin/events/${eventId}/speakers`);
+export async function adminDeletePresentation(id: string) {
+  return request<{ ok: boolean }>(`/admin/presentations/${id}`, { method: "DELETE" });
+}
+
+export async function listEventSpeakers(
+  eventId: string,
+  query = "",
+  page = 1,
+  pageSize = 20
+): Promise<PaginatedResponse<EventMemberRegistration>> {
+  const params = new URLSearchParams();
+  if (query.trim()) params.set("query", query.trim());
+  params.set("page", String(page));
+  params.set("pageSize", String(pageSize));
+  return request<PaginatedResponse<EventMemberRegistration>>(
+    `/admin/events/${eventId}/speakers?${params.toString()}`
+  );
+}
+
+export async function listEventPresentations(
+  eventId: string,
+  query = "",
+  page = 1,
+  pageSize = 20,
+  presentationType?: "poster" | "oral" | "POSTER" | "ORAL" | "",
+  confirmed?: boolean | ""
+): Promise<PaginatedResponse<Presentation>> {
+  const params = new URLSearchParams();
+  params.set("page", String(page));
+  params.set("pageSize", String(pageSize));
+  if (query.trim()) params.set("query", query.trim());
+  if (presentationType) params.set("presentationType", presentationType);
+  if (confirmed !== "" && typeof confirmed === "boolean") {
+    params.set("confirmed", String(confirmed));
+  }
+  return request<PaginatedResponse<Presentation>>(
+    `/admin/events/${eventId}/presentations?${params.toString()}`
+  );
+}
+
+export async function importEventPresentations(eventId: string, file: File) {
+  const form = new FormData();
+  form.append("file", file);
+  return request<PresentationImportResult>(`/admin/events/${eventId}/presentations/import`, {
+    method: "POST",
+    body: form,
+  });
+}
+
+export async function updateEventMemberSpeaker(
+  eventMemberId: string,
+  speakerType: Exclude<SpeakerType, "none">
+) {
+  const form = new FormData();
+  form.append("speakerType", speakerType);
+  return request<EventMemberRegistration>(`/admin/event-members/${eventMemberId}/speaker`, {
+    method: "PATCH",
+    body: form,
+  });
+}
+
+export async function revokeEventMemberSpeaker(eventMemberId: string) {
+  return request<EventMemberRegistration>(`/admin/event-members/${eventMemberId}/speaker`, {
+    method: "DELETE",
+  });
+}
+
+export async function updateMySpeakerProfile(
+  eventId: string,
+  payload: { speakerDescription?: string; speakerPhoto?: File | null }
+) {
+  const form = new FormData();
+  if (typeof payload.speakerDescription === "string") {
+    form.append("speaker_description", payload.speakerDescription);
+  }
+  if (payload.speakerPhoto) {
+    form.append("speaker_photo", payload.speakerPhoto);
+  }
+  return request<MemberEventRegistration>(`/events/${eventId}/speaker-profile/me`, {
+    method: "PATCH",
+    body: form,
+  });
 }
 
 export async function downloadPresentation(presentationId: string) {

@@ -215,6 +215,14 @@ export async function listMyEvents(): Promise<MemberEventRegistration[]> {
   });
 }
 
+export async function getMyEventRegistration(eventId: string): Promise<MemberEventRegistration> {
+  const registration = (await listMyEvents()).find((item) => item.eventId === eventId);
+  if (!registration) {
+    throw new Error("No se encontró tu registro para este evento.");
+  }
+  return registration;
+}
+
 export async function createEvent(payload: EventUpsertPayload) {
   await wait(300);
   const resolvedOpen = payload.open ?? (payload.status ? payload.status === "open" : true);
@@ -265,6 +273,15 @@ export async function deleteEvent(id: string) {
 export async function listMembers() {
   await wait(200);
   return [...members];
+}
+
+export async function getMember(id: string) {
+  await wait(200);
+  const member = members.find((item) => item.id === id);
+  if (!member) {
+    throw new Error("Miembro no encontrado.");
+  }
+  return member;
 }
 
 export async function createAdminUser(payload: AdminUserCreatePayload): Promise<AdminUserCreateResult> {
@@ -399,6 +416,10 @@ export async function getMemberRequest(id: string) {
     throw new Error("Request not found");
   }
   return request;
+}
+
+export async function getMyMembershipRequest(id: string) {
+  return getMemberRequest(id);
 }
 
 export async function createMembershipUpgradeRequest(
@@ -574,39 +595,7 @@ export async function listEventMembers(
   pageSize = 20
 ): Promise<PaginatedResponse<EventMemberRegistration>> {
   await wait(200);
-  const event = events.find((item) => item.id === eventId);
-  if (!event) {
-    throw new Error("Event was not found.");
-  }
-  const approvedRequests = eventRequests.filter(
-    (req) => req.eventId === eventId && req.status === "approved"
-  );
-  const registrations: EventMemberRegistration[] = approvedRequests.map((req) => {
-    const member = members.find((item) => item.id === req.memberId);
-    const attendance = attendanceRecords.some(
-      (record) => record.eventId === eventId && record.memberId === req.memberId
-    );
-    return {
-      id: req.id,
-      eventId,
-      event,
-      memberId: req.memberId ?? "",
-      memberName: req.memberName,
-      memberEmail: req.memberEmail,
-      memberPhoneNumber: req.memberPhoneNumber ?? member?.phoneNumber ?? "",
-      profileType: member?.profileType ?? "",
-      organization: member?.organization ?? "",
-      sectionId: req.sectionId ?? null,
-      sectionName: req.sectionName,
-      ticketToken: `TICKET-${req.id}`,
-      cost: req.calculatedCost ?? 0,
-      isSpeaker: req.isSpeaker ?? false,
-      attended: attendance,
-      approvedAt: req.decidedAt ?? req.createdAt,
-      approvedById: req.decidedById ?? null,
-      approvedByName: req.decidedByName ?? "Administración AMECA",
-    };
-  });
+  const registrations = buildEventMemberRegistrations(eventId);
   const search = query.trim().toLowerCase();
   const filtered = search
     ? registrations.filter((registration) =>
@@ -633,6 +622,42 @@ export async function listEventMembers(
   };
 }
 
+const buildEventMemberRegistrations = (eventId: string): EventMemberRegistration[] => {
+  const event = events.find((item) => item.id === eventId);
+  if (!event) {
+    throw new Error("Event was not found.");
+  }
+  const approvedRequests = eventRequests.filter(
+    (req) => req.eventId === eventId && req.status === "approved"
+  );
+  return approvedRequests.map((req) => {
+    const member = members.find((item) => item.id === req.memberId);
+    const attendance = attendanceRecords.some(
+      (record) => record.eventId === eventId && record.memberId === req.memberId
+    );
+    return {
+      id: req.id,
+      eventId,
+      event,
+      memberId: req.memberId ?? "",
+      memberName: req.memberName,
+      memberEmail: req.memberEmail,
+      memberPhoneNumber: req.memberPhoneNumber ?? member?.phoneNumber ?? "",
+      profileType: member?.profileType ?? "",
+      organization: member?.organization ?? "",
+      sectionId: req.sectionId ?? null,
+      sectionName: req.sectionName,
+      ticketToken: `TICKET-${req.id}`,
+      cost: req.calculatedCost ?? 0,
+      isSpeaker: req.isSpeaker ?? false,
+      attended: attendance,
+      approvedAt: req.decidedAt ?? req.createdAt,
+      approvedById: req.decidedById ?? null,
+      approvedByName: req.decidedByName ?? "Administración AMECA",
+    };
+  });
+};
+
 export async function getEventRequest(id: string) {
   await wait(180);
   const request = eventRequests.find((item) => item.id === id);
@@ -640,6 +665,38 @@ export async function getEventRequest(id: string) {
     throw new Error("Request not found");
   }
   return request;
+}
+
+export async function getEventMember(id: string) {
+  await wait(180);
+  const registration = events
+    .flatMap((event) => buildEventMemberRegistrations(event.id))
+    .find((item) => item.id === id);
+  if (!registration) {
+    throw new Error("Registration not found");
+  }
+  return {
+    ...registration,
+    paymentProofs: [],
+    presentations: [],
+  };
+}
+
+export async function deleteEventMember(id: string, _comments: string) {
+  await wait(200);
+  eventRequests = eventRequests.filter((item) => item.id !== id);
+  return {
+    ok: true,
+    eventMemberId: id,
+    eventId: "",
+    memberId: "",
+    detachedPaymentProofs: 0,
+    unclaimedPresentations: 0,
+  };
+}
+
+export async function getMyEventRequest(id: string) {
+  return getEventRequest(id);
 }
 
 export async function approveEventRequest(id: string, comments?: string) {
@@ -730,9 +787,30 @@ export async function createSectionRequest(payload: {
   return request;
 }
 
-export async function listSectionRequests() {
+export async function listSectionRequests(
+  query = "",
+  page?: number,
+  pageSize = 20,
+  status: "pending" | "rejected" | "approved" | "all" = "all"
+) {
   await wait(200);
-  return [...sectionRequests];
+  let items = [...sectionRequests];
+  if (status !== "all") {
+    items = items.filter((request) => request.status === status);
+  }
+  const normalizedQuery = query.trim().toLowerCase();
+  if (normalizedQuery) {
+    items = items.filter((request) => request.name.toLowerCase().includes(normalizedQuery));
+  }
+  if (page === undefined) return items;
+  const start = (page - 1) * pageSize;
+  return {
+    items: items.slice(start, start + pageSize),
+    total: items.length,
+    page,
+    pageSize,
+    unfilteredTotal: sectionRequests.length,
+  };
 }
 
 export async function approveSectionRequest(id: string) {
@@ -756,6 +834,31 @@ export async function listSections(eventId?: string) {
   const approvedSections = sections.filter((section) => section.status === "approved");
   if (!eventId) return [...approvedSections];
   return approvedSections.filter((section) => section.eventId === eventId);
+}
+
+export async function listAdminSections(
+  query = "",
+  page = 1,
+  pageSize = 20,
+  status: "approved" | "pending" | "rejected" | "all" = "approved"
+) {
+  await wait(200);
+  let items = [...sections];
+  if (status !== "all") {
+    items = items.filter((section) => section.status === status);
+  }
+  const normalizedQuery = query.trim().toLowerCase();
+  if (normalizedQuery) {
+    items = items.filter((section) => section.name.toLowerCase().includes(normalizedQuery));
+  }
+  const start = (page - 1) * pageSize;
+  return {
+    items: items.slice(start, start + pageSize),
+    total: items.length,
+    page,
+    pageSize,
+    unfilteredTotal: sections.length,
+  };
 }
 
 export async function getSection(sectionId: string): Promise<SectionDetail> {
@@ -1074,9 +1177,10 @@ export async function deletePresentation(_id: string) {
   return { ok: true };
 }
 
-export async function listEventSpeakers(_eventId: string) {
+export async function listEventSpeakers(_eventId: string, _query = "", page = 1, pageSize = 20) {
   await wait(200);
-  return [];
+  void _query;
+  return { items: [], total: 0, page, pageSize, unfilteredTotal: 0 };
 }
 
 export async function downloadPresentation(_presentationId: string) {

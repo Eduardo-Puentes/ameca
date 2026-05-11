@@ -25,14 +25,23 @@ export default function MemberPerfilPage() {
   }, [members, user]);
 
   const [form, setForm] = useState({ fullName: "", email: "" });
+  const [saving, setSaving] = useState(false);
   const expirationDate = formatDate(member?.expirationDate, "Sin vencimiento");
 
   const handleSave = async () => {
     if (!member) return;
-    await updateMemberProfile(member.id, {
-      fullName: form.fullName || member.fullName,
-    });
-    pushToast({ title: "Perfil actualizado", tone: "success" });
+    try {
+      setSaving(true);
+      await updateMemberProfile(member.id, {
+        fullName: form.fullName || member.fullName,
+      });
+      pushToast({ title: "Perfil actualizado", tone: "success" });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "No se pudo guardar el perfil.";
+      pushToast({ title: "Error al guardar", message, tone: "danger" });
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -61,7 +70,9 @@ export default function MemberPerfilPage() {
               />
             </FormField>
           </div>
-          <Button onClick={handleSave}>Guardar cambios</Button>
+          <Button onClick={handleSave} loading={saving} loadingText="Guardando...">
+            Guardar cambios
+          </Button>
         </Card>
 
         <Card className="space-y-4">

@@ -10,7 +10,7 @@ import { Modal } from "@/components/ui/Modal";
 import { EventForm } from "@/components/forms/EventForm";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useToastStore } from "@/components/ui/Toast";
-import { listEventRequests } from "@/lib/data";
+import { listEventMembers, listEventRequests } from "@/lib/data";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { useAppStore } from "@/store";
 import type { Event } from "@/lib/types";
@@ -44,7 +44,7 @@ export default function AdminEventosPage() {
     setDeleteLoading(true);
     try {
       const [approvedResult, pendingResult, rejectedResult] = await Promise.all([
-        listEventRequests(event.id, "approved", "", 1, 1),
+        listEventMembers(event.id, "", 1, 1),
         listEventRequests(event.id, "pending", "", 1, 1),
         listEventRequests(event.id, "rejected", "", 1, 1),
       ]);

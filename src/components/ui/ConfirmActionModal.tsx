@@ -74,8 +74,10 @@ export function ConfirmActionModal({
             variant={confirmVariant}
             onClick={handleConfirm}
             disabled={loading || confirmDisabled}
+            loading={loading}
+            loadingText="Procesando..."
           >
-            {loading ? "Procesando..." : confirmLabel}
+            {confirmLabel}
           </Button>
         </div>
       </div>

@@ -91,12 +91,13 @@ export type EventRequest = {
   decidedAt?: number | string | null;
   decidedById?: string | null;
   decidedByName?: string;
+  paymentProofs?: PaymentProof[];
 };
 
 export type EventMemberRegistration = {
   id: string;
   eventId: string;
-  event: Event;
+  event: Event | null;
   memberId: string;
   memberName: string;
   memberEmail: string;
@@ -108,10 +109,15 @@ export type EventMemberRegistration = {
   ticketToken: string;
   cost: number;
   isSpeaker: boolean;
+  speakerType?: SpeakerType;
+  speakerPhotoUrl?: string;
+  speakerDescription?: string;
   attended: boolean;
   approvedAt: number | string | null;
   approvedById: string | null;
   approvedByName: string;
+  paymentProofs?: PaymentProof[];
+  presentations?: Presentation[];
 };
 
 export type MemberEventRegistration = {
@@ -129,10 +135,15 @@ export type MemberEventRegistration = {
   ticketToken: string;
   cost: number;
   isSpeaker: boolean;
+  speakerType?: SpeakerType;
+  speakerPhotoUrl?: string;
+  speakerDescription?: string;
   attended: boolean;
   approvedAt: number | string | null;
   approvedById: string | null;
   approvedByName: string;
+  paymentProofs?: PaymentProof[];
+  presentations?: Presentation[];
 };
 
 export type SectionRequestStatus = RequestStatus;
@@ -140,6 +151,7 @@ export type SectionRequestStatus = RequestStatus;
 export type Section = {
   id: string;
   eventId: string;
+  eventName?: string;
   name: string;
   representativeName: string;
   pCount: number;
@@ -204,7 +216,30 @@ export type MembershipRequest = {
   decidedAt?: number | string | null;
   decidedById?: string | null;
   decidedByName?: string;
+  paymentProofs?: PaymentProof[];
 };
+
+export type PaymentProof = {
+  id: string;
+  memberId: string;
+  eventMemberRequestId?: string;
+  membershipRequestId?: string;
+  eventMemberId?: string;
+  fileKey: string;
+  fileName: string;
+  contentType?: string;
+  fileUrl: string;
+  uploadedAt: number | string;
+  deletedAt?: number | string | null;
+  deleted?: boolean;
+};
+
+export type MembershipPrices = {
+  profilePrices: EventProfilePrices;
+  items: Array<{ profileType: ProfileType; cost: number }>;
+};
+
+export type SpeakerType = "none" | "keynote" | "plenary";
 
 export type BulkTier = {
   id: string;
@@ -248,6 +283,10 @@ export type Member = {
   role: Role;
   organization?: string;
   organizationId?: string;
+  paymentProofKey?: string;
+  paymentProofUrl?: string;
+  schoolIdentificationKey?: string;
+  schoolIdentificationUrl?: string;
 };
 
 export type MemberUpdatePayload = Partial<
@@ -353,11 +392,27 @@ export type Presentation = {
   memberId: string;
   name?: string;
   description?: string;
-  fileName: string;
+  presenterName?: string;
+  presenterEmail?: string;
+  presentationType?: "poster" | "oral" | "POSTER" | "ORAL";
+  confirmationCode?: string;
+  confirmed?: boolean;
+  confirmedAt?: number | string | null;
+  fileName?: string;
   fileUrl: string;
   uploadedAt: number | string;
+  updatedAt?: number | string;
   memberName?: string;
   memberEmail?: string;
+};
+
+export type PresentationImportResult = {
+  items: Presentation[];
+  errors: Array<{ row: number; error: string }>;
+  emailErrors: Array<{ email: string; error: string }>;
+  count: number;
+  errorCount: number;
+  emailErrorCount: number;
 };
 
 export type RegistrationStatus = {

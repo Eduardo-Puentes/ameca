@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { brand } from "@/lib/brand";
 import { useAppStore } from "@/store";
 import { useToastStore } from "@/components/ui/Toast";
@@ -79,8 +80,7 @@ function LoginPageContent() {
               />
             </FormField>
             <FormField label="Contraseña">
-              <Input
-                type="password"
+              <PasswordInput
                 placeholder="••••••••"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}

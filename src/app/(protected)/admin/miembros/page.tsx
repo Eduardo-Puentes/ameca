@@ -21,6 +21,7 @@ export default function AdminMiembrosPage() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [memberToDelete, setMemberToDelete] = useState<Member | null>(null);
+  const [verifyingMemberId, setVerifyingMemberId] = useState<string | null>(null);
   const pageSize = 10;
   const deferredSearch = useDeferredValue(search);
 
@@ -89,9 +90,19 @@ export default function AdminMiembrosPage() {
               size="sm"
               variant="secondary"
               onClick={async () => {
-                await updateMemberProfile(member.id, { verified: true });
-                pushToast({ title: "Miembro verificado", tone: "success" });
+                try {
+                  setVerifyingMemberId(member.id);
+                  await updateMemberProfile(member.id, { verified: true });
+                  pushToast({ title: "Miembro verificado", tone: "success" });
+                } catch (error) {
+                  const message = error instanceof Error ? error.message : "No se pudo verificar.";
+                  pushToast({ title: "Error al verificar", message, tone: "danger" });
+                } finally {
+                  setVerifyingMemberId(null);
+                }
               }}
+              loading={verifyingMemberId === member.id}
+              loadingText="Marcando..."
             >
               Marcar verificado
             </Button>

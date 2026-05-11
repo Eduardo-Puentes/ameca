@@ -114,8 +114,21 @@ export default function AdminEventRequestDetailPage() {
     }
   };
 
-  const proofUrl = request?.paymentProofUrl ?? "";
-  const isImage = /\.(png|jpe?g|webp)$/i.test(proofUrl);
+  const paymentProofs = request?.paymentProofs?.length
+    ? request.paymentProofs
+    : request?.paymentProofUrl
+      ? [
+          {
+            id: "legacy-payment-proof",
+            memberId: request.memberId ?? "",
+            fileKey: request.paymentProofUrl,
+            fileName: "Comprobante de pago",
+            fileUrl: request.paymentProofUrl,
+            uploadedAt: request.createdAt,
+          },
+        ]
+      : [];
+  const canDecideRequest = request?.status === "pending";
 
   return (
     <div className="space-y-6">
@@ -166,11 +179,6 @@ export default function AdminEventRequestDetailPage() {
                   </>
                 ) : null}
                 <div className="flex flex-wrap items-center gap-2">
-                  {request.isSpeaker ? (
-                    <span className="rounded-full bg-[var(--surface-2)] px-3 py-1 text-xs font-medium text-[var(--ink)]">
-                      Ponente
-                    </span>
-                  ) : null}
                   <span className="text-sm text-[var(--muted)]">
                     Costo calculado:{" "}
                     <span className="text-[var(--ink)]">
@@ -198,23 +206,53 @@ export default function AdminEventRequestDetailPage() {
           </Card>
 
           <Card className="space-y-4">
-            <div className="text-lg font-semibold text-[var(--ink)]">Comprobante</div>
-            {proofUrl ? (
-              <div className="space-y-3">
-                {isImage ? (
-                  <img
-                    src={proofUrl}
-                    alt="Comprobante de pago"
-                    className="max-h-[28rem] w-full rounded-xl border border-[var(--border)] object-contain"
-                  />
-                ) : (
-                  <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface-2)] p-4 text-sm text-[var(--muted)]">
-                    Archivo disponible para revisión.
-                  </div>
-                )}
-                <a href={proofUrl} target="_blank" rel="noreferrer" className="text-sm font-medium text-[var(--accent)]">
-                  Abrir comprobante
-                </a>
+            <div className="text-lg font-semibold text-[var(--ink)]">
+              Comprobantes{paymentProofs.length > 1 ? ` (${paymentProofs.length})` : ""}
+            </div>
+            {paymentProofs.length ? (
+              <div className="space-y-4">
+                {paymentProofs.map((proof, index) => {
+                  const proofUrl = proof.fileUrl;
+                  const isImage =
+                    /^image\//i.test(proof.contentType ?? "") || /\.(png|jpe?g|webp)$/i.test(proofUrl);
+
+                  return (
+                    <div
+                      key={proof.id}
+                      className="space-y-3 rounded-xl border border-[var(--border)] bg-[var(--surface)] p-4"
+                    >
+                      <div className="flex flex-wrap items-start justify-between gap-2">
+                        <div>
+                          <div className="text-sm font-semibold text-[var(--ink)]">
+                            {proof.fileName || `Comprobante ${index + 1}`}
+                          </div>
+                          <div className="text-xs text-[var(--muted)]">
+                            Subido: {formatDate(proof.uploadedAt)}
+                          </div>
+                        </div>
+                        <a
+                          href={proofUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-sm font-medium text-[var(--accent)]"
+                        >
+                          Abrir comprobante
+                        </a>
+                      </div>
+                      {isImage ? (
+                        <img
+                          src={proofUrl}
+                          alt={`Comprobante de pago ${index + 1}`}
+                          className="max-h-[28rem] w-full rounded-xl border border-[var(--border)] object-contain"
+                        />
+                      ) : (
+                        <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface-2)] p-4 text-sm text-[var(--muted)]">
+                          Archivo disponible para revisión.
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             ) : (
               <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface-2)] p-4 text-sm text-[var(--muted)]">
@@ -227,7 +265,9 @@ export default function AdminEventRequestDetailPage() {
             <div>
               <div className="text-lg font-semibold text-[var(--ink)]">Decisión</div>
               <div className="text-sm text-[var(--muted)]">
-                Registra el comentario de revisión. Para rechazar, el motivo es obligatorio.
+                {canDecideRequest
+                  ? "Registra el comentario de revisión. Para rechazar, el motivo es obligatorio."
+                  : "Esta solicitud ya fue decidida y no puede cambiar de estado."}
               </div>
             </div>
 
@@ -235,21 +275,25 @@ export default function AdminEventRequestDetailPage() {
               placeholder="Comentario o motivo del rechazo"
               value={comment}
               onChange={(event) => setComment(event.target.value)}
-              disabled={saving}
+              disabled={saving || !canDecideRequest}
             />
 
-            <div className="flex flex-wrap justify-end gap-2">
-              {request.status !== "approved" ? (
-                <Button onClick={handleApprove} disabled={saving}>
+            {canDecideRequest ? (
+              <div className="flex flex-wrap justify-end gap-2">
+                <Button onClick={handleApprove} loading={saving} loadingText="Procesando...">
                   Aprobar
                 </Button>
-              ) : null}
-              {request.status !== "rejected" ? (
-                <Button variant="danger" onClick={handleReject} disabled={saving || !comment.trim()}>
+                <Button
+                  variant="danger"
+                  onClick={handleReject}
+                  disabled={!comment.trim()}
+                  loading={saving}
+                  loadingText="Procesando..."
+                >
                   Rechazar
                 </Button>
-              ) : null}
-            </div>
+              </div>
+            ) : null}
           </Card>
         </>
       )}

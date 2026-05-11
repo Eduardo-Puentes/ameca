@@ -51,6 +51,7 @@ export type RequestsSlice = {
   eventRequestStatusCounts: RequestStatusCounts;
   eventRequestsQuery: string;
   eventRequestsCostType: CostType;
+  eventRequestsStatus: RequestStatusFilter;
   dashboardEventRequests: EventRequest[];
   dashboardEventRequestsPage: number;
   dashboardEventRequestsTotal: number;
@@ -79,10 +80,11 @@ export type RequestsSlice = {
     schoolIdentification?: File | null
   ) => Promise<void>;
   loadEventRequests: (
-    eventId: string,
+    eventId?: string,
     page?: number,
     query?: string,
-    costType?: CostType
+    costType?: CostType,
+    status?: RequestStatusFilter
   ) => Promise<void>;
   createMemberEventRequest: (
     payload: Partial<EventRequest> & { paymentProofFile?: File | null }
@@ -110,6 +112,7 @@ export const createRequestsSlice: StateCreator<AuthSlice & RequestsSlice, [], []
   eventRequestStatusCounts: EMPTY_STATUS_COUNTS,
   eventRequestsQuery: "",
   eventRequestsCostType: "all",
+  eventRequestsStatus: "all",
   dashboardEventRequests: [],
   dashboardEventRequestsPage: 1,
   dashboardEventRequestsTotal: 0,
@@ -147,15 +150,23 @@ export const createRequestsSlice: StateCreator<AuthSlice & RequestsSlice, [], []
       });
       return;
     }
-    const data = ensureArray(await listMembershipUpgradeRequests());
+    const result = await listMembershipUpgradeRequests(
+      requestedQuery,
+      requestedPage,
+      get().requestPageSize,
+      requestedStatus
+    );
+    const data = ensureArray(result);
     set({
       membershipRequests: data,
-      membershipRequestsPage: 1,
-      membershipRequestsTotal: data.length,
-      membershipRequestsQuery: "",
+      membershipRequestsPage: Array.isArray(result) ? 1 : result.page,
+      membershipRequestsTotal: Array.isArray(result) ? data.length : result.total,
+      membershipRequestsQuery: requestedQuery,
       membershipRequestsCostType: "all",
-      membershipRequestsStatus: "pending",
-      membershipRequestStatusCounts: getStatusCounts(data),
+      membershipRequestsStatus: requestedStatus,
+      membershipRequestStatusCounts: Array.isArray(result)
+        ? getStatusCounts(data)
+        : result.statusCounts ?? EMPTY_STATUS_COUNTS,
       requestsLoading: false,
     });
   },
@@ -195,52 +206,75 @@ export const createRequestsSlice: StateCreator<AuthSlice & RequestsSlice, [], []
   },
   createMembershipRequest: async (profileType, paymentProof, schoolIdentification) => {
     set({ requestsLoading: true });
-    await createMembershipUpgradeRequest(profileType, paymentProof, schoolIdentification);
-    const data = ensureArray(await listMembershipUpgradeRequests());
-    set({
-      membershipRequests: data,
-      membershipRequestsPage: 1,
-      membershipRequestsTotal: data.length,
-      membershipRequestStatusCounts: getStatusCounts(data),
-      requestsLoading: false,
-    });
+    try {
+      await createMembershipUpgradeRequest(profileType, paymentProof, schoolIdentification);
+      const data = ensureArray(await listMembershipUpgradeRequests());
+      set({
+        membershipRequests: data,
+        membershipRequestsPage: 1,
+        membershipRequestsTotal: data.length,
+        membershipRequestStatusCounts: getStatusCounts(data),
+      });
+    } finally {
+      set({ requestsLoading: false });
+    }
   },
-  loadEventRequests: async (eventId, page, query, costType) => {
+  loadEventRequests: async (eventId, page, query, costType, status) => {
     set({ requestsLoading: true });
     const role = get().role;
     const requestedPage = page ?? get().eventRequestsPage;
     const requestedQuery = query ?? get().eventRequestsQuery;
     const requestedCostType = costType ?? get().eventRequestsCostType;
+    const requestedStatus = status ?? get().eventRequestsStatus;
     if (role === "admin" || role === "treasurer" || role === "superadmin") {
-      const result = await listEventRequests(
-        eventId,
-        undefined,
-        requestedQuery,
-        requestedPage,
-        get().requestPageSize,
-        requestedCostType
-      );
+      const result = eventId
+        ? await listEventRequests(
+            eventId,
+            undefined,
+            requestedQuery,
+            requestedPage,
+            get().requestPageSize,
+            requestedCostType
+          )
+        : await listAdminEventRequests(
+            undefined,
+            requestedQuery,
+            requestedPage,
+            get().requestPageSize,
+            requestedCostType
+          );
       set({
         eventRequests: result.items,
         eventRequestsPage: result.page,
         eventRequestsTotal: result.total,
         eventRequestsQuery: requestedQuery,
         eventRequestsCostType: requestedCostType,
+        eventRequestsStatus: requestedStatus,
         eventRequestStatusCounts: result.statusCounts ?? EMPTY_STATUS_COUNTS,
-        currentEventRequestsEventId: eventId,
+        currentEventRequestsEventId: eventId ?? null,
         requestsLoading: false,
       });
       return;
     }
-    const data = ensureArray(await listMyEventRequests(eventId));
+    const result = await listMyEventRequests(
+      eventId,
+      requestedQuery,
+      requestedPage,
+      get().requestPageSize,
+      requestedStatus
+    );
+    const data = ensureArray(result);
     set({
       eventRequests: data,
-      eventRequestsPage: 1,
-      eventRequestsTotal: data.length,
-      eventRequestsQuery: "",
+      eventRequestsPage: Array.isArray(result) ? 1 : result.page,
+      eventRequestsTotal: Array.isArray(result) ? data.length : result.total,
+      eventRequestsQuery: requestedQuery,
       eventRequestsCostType: "all",
-      eventRequestStatusCounts: getStatusCounts(data),
-      currentEventRequestsEventId: eventId,
+      eventRequestsStatus: requestedStatus,
+      eventRequestStatusCounts: Array.isArray(result)
+        ? getStatusCounts(data)
+        : result.statusCounts ?? EMPTY_STATUS_COUNTS,
+      currentEventRequestsEventId: eventId ?? null,
       requestsLoading: false,
     });
   },

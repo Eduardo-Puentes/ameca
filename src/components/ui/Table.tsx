@@ -11,10 +11,10 @@ export function Table({
   ...props
 }: TableProps) {
   return (
-    <div className={cn("overflow-x-auto", containerClassName)}>
+    <div className={cn("w-full max-w-full overflow-x-auto", containerClassName)}>
       <table
         className={cn(
-          "w-full border-separate border-spacing-y-2 text-left text-sm",
+          "w-full min-w-max border-separate border-spacing-y-2 text-left text-sm",
           className
         )}
         {...props}

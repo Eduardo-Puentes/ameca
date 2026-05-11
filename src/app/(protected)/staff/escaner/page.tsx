@@ -14,17 +14,26 @@ export default function StaffEscanerPage() {
   const { events, selectedEventId, selectEvent, scanToken } = useAppStore();
   const pushToast = useToastStore((state) => state.pushToast);
   const [token, setToken] = useState("");
+  const [scanning, setScanning] = useState(false);
   const event = events.find((item) => item.id === selectedEventId);
 
   const handleScan = async () => {
     if (!selectedEventId || !token.trim()) return;
-    const record = await scanToken(selectedEventId, token.trim());
-    if (record.status === "duplicate") {
-      pushToast({ title: "Escaneo duplicado", tone: "danger" });
-    } else {
-      pushToast({ title: "Asistencia registrada", tone: "success" });
+    try {
+      setScanning(true);
+      const record = await scanToken(selectedEventId, token.trim());
+      if (record.status === "duplicate") {
+        pushToast({ title: "Escaneo duplicado", tone: "danger" });
+      } else {
+        pushToast({ title: "Asistencia registrada", tone: "success" });
+      }
+      setToken("");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "No se pudo registrar la asistencia.";
+      pushToast({ title: "Error de asistencia", message, tone: "danger" });
+    } finally {
+      setScanning(false);
     }
-    setToken("");
   };
 
   return (
@@ -63,7 +72,14 @@ export default function StaffEscanerPage() {
             />
           </div>
         </div>
-        <Button onClick={handleScan}>Registrar asistencia</Button>
+        <Button
+          onClick={handleScan}
+          disabled={!selectedEventId || !token.trim()}
+          loading={scanning}
+          loadingText="Registrando..."
+        >
+          Registrar asistencia
+        </Button>
         <div className="rounded-xl bg-[var(--surface-2)] p-4 text-sm text-[var(--muted)]">
           Modo escaneo activo • Último evento: {event?.name ?? "Sin seleccionar"}
         </div>

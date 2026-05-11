@@ -48,11 +48,6 @@ export default function AdminEventRequestsPage() {
         typeof req.calculatedCost === "number" ? `${req.calculatedCost}` : "--",
     },
     {
-      header: "Ponente",
-      accessor: "isSpeaker",
-      render: (req: EventRequest) => (req.isSpeaker ? "Sí" : "No"),
-    },
-    {
       header: "Estado",
       accessor: "status",
       render: (req: EventRequest) => <StatusBadge status={req.status} />,
