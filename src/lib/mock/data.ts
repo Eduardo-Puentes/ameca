@@ -175,6 +175,7 @@ export const mockEventRequests: EventRequest[] = [
     createdAt: "2026-02-17",
     decidedAt: "2026-02-18",
     decidedByName: "Administración AMECA",
+    isSpeaker: true,
   },
   {
     id: "req-1003",

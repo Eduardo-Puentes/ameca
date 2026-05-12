@@ -42,7 +42,7 @@ export function SiteNavigation() {
 
   const congressItems = useMemo(
     () =>
-      events.slice(0, 5).map((event) => ({
+      events.map((event) => ({
         label: event.name,
         href: `/eventos/${event.id}`,
         description: describeEvent(event),
@@ -97,8 +97,8 @@ function NavGroup({
         <ChevronDown className="h-4 w-4 transition group-hover:rotate-180" />
       </button>
 
-      <div className="invisible absolute left-0 top-full z-20 w-72 pt-2 opacity-0 transition duration-200 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
-        <div className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-3 shadow-[0_24px_60px_-32px_rgba(27,29,27,0.45)]">
+      <div className="invisible absolute left-0 top-full z-50 w-72 pt-2 opacity-0 transition duration-200 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+        <div className="max-h-[70vh] overflow-y-auto rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-3 shadow-[0_24px_60px_-32px_rgba(27,29,27,0.45)]">
           {items.length > 0 ? (
             items.map((item) => (
               <Link

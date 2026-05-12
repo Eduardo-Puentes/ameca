@@ -122,7 +122,7 @@ export default function MemberMembershipRequestDetailPage() {
       ) : (
         <>
           <Card className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-3">
               <div className="space-y-2">
                 <div className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">Cambio solicitado</div>
                 <div className="text-sm text-[var(--muted)]">
@@ -230,6 +230,27 @@ export default function MemberMembershipRequestDetailPage() {
                 ) : (
                   <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface-2)] p-4 text-sm text-[var(--muted)]">
                     No se adjuntó identificación escolar.
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-3">
+                <div className="text-sm font-medium text-[var(--ink)]">CV</div>
+                {request.cvUrl ? (
+                  <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
+                    <div className="text-sm text-[var(--muted)]">Archivo disponible para revisión.</div>
+                    <a
+                      href={request.cvUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-2 inline-flex text-sm font-medium text-[var(--accent)]"
+                    >
+                      Abrir CV
+                    </a>
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface-2)] p-4 text-sm text-[var(--muted)]">
+                    No se adjuntó CV.
                   </div>
                 )}
               </div>

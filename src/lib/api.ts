@@ -21,6 +21,7 @@ import type {
   PaymentProof,
   Presentation,
   PresentationImportResult,
+  PublicEventSpeaker,
   RequestStatusFilter,
   Section,
   SectionDetail,
@@ -134,6 +135,7 @@ const humanizeError = (message: string, status: number, code?: string) => {
     ["payment proof is required", "Debes subir tu comprobante de pago."],
     ["student upgrade requires school identification", "Debes subir tu identificación escolar."],
     ["associated student upgrade requires school identification", "Debes subir tu identificación escolar."],
+    ["associated professional upgrade requires cv", "Debes subir tu CV."],
     ["upgrade into an associated profile requires payment proof", "Debes subir tu comprobante de pago."],
     ["event registration is closed", "El registro del evento está cerrado."],
     ["already registered", "Ya estás registrado en este evento."],
@@ -312,6 +314,10 @@ export async function listEvents(): Promise<Event[]> {
 
 export async function getEvent(id: string): Promise<Event | null> {
   return request<Event>(`/events/${id}`, {}, false);
+}
+
+export async function listPublicEventSpeakers(eventId: string): Promise<PublicEventSpeaker[]> {
+  return request<PublicEventSpeaker[]>(`/events/${eventId}/speakers`, {}, false);
 }
 
 export async function getMyTicket(eventId: string) {
@@ -833,7 +839,8 @@ export async function searchAttendance(query?: string) {
 export async function createMembershipUpgradeRequest(
   profileType: ProfileType | string,
   paymentProof?: File | null,
-  schoolIdentification?: File | null
+  schoolIdentification?: File | null,
+  cv?: File | null
 ) {
   const form = new FormData();
   form.append("profile_type", profileType);
@@ -842,6 +849,9 @@ export async function createMembershipUpgradeRequest(
   }
   if (schoolIdentification) {
     form.append("school_identification", schoolIdentification);
+  }
+  if (cv) {
+    form.append("cv", cv);
   }
   return request<MembershipRequest>("/members/me/upgrade-requests", {
     method: "POST",

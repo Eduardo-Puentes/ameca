@@ -170,6 +170,18 @@ export async function getEvent(id: string) {
   return events.find((event) => event.id === id) ?? null;
 }
 
+export async function listPublicEventSpeakers(eventId: string) {
+  await wait(200);
+  return buildEventMemberRegistrations(eventId)
+    .filter((registration) => registration.isSpeaker)
+    .map((registration) => ({
+      id: registration.id,
+      name: registration.memberName,
+      speakerType: registration.speakerType ?? "plenary",
+      photoUrl: registration.speakerPhotoUrl ?? "",
+    }));
+}
+
 export async function getMyTicket(eventId: string) {
   await wait(150);
   return { token: `TCK-${eventId}-member`, event_id: eventId };
@@ -296,7 +308,20 @@ export async function createAdminUser(payload: AdminUserCreatePayload): Promise<
 
 export async function updateMember(id: string, payload: MemberUpdatePayload) {
   await wait(200);
-  members = members.map((member) => (member.id === id ? { ...member, ...payload } : member));
+  members = members.map((member) => {
+    if (member.id !== id) return member;
+    const updated = { ...member, ...payload };
+    if (payload.profileType === "professional") {
+      updated.expirationDate = null;
+      updated.paymentProofKey = "";
+      updated.paymentProofUrl = "";
+      updated.schoolIdentificationKey = "";
+      updated.schoolIdentificationUrl = "";
+      updated.cvKey = "";
+      updated.cvUrl = "";
+    }
+    return updated;
+  });
   return members.find((member) => member.id === id) ?? null;
 }
 
@@ -424,7 +449,9 @@ export async function getMyMembershipRequest(id: string) {
 
 export async function createMembershipUpgradeRequest(
   profileType: string,
-  _paymentProof?: File | null
+  _paymentProof?: File | null,
+  _schoolIdentification?: File | null,
+  _cv?: File | null
 ) {
   await wait(220);
   const newRequest: MembershipRequest = {
@@ -437,6 +464,8 @@ export async function createMembershipUpgradeRequest(
     profileType,
     status: "pending",
     paymentProofUrl: "#",
+    schoolIdentificationUrl: _schoolIdentification ? "#" : undefined,
+    cvUrl: _cv ? "#" : undefined,
     comments: "",
     createdAt: new Date().toISOString().split("T")[0],
   };

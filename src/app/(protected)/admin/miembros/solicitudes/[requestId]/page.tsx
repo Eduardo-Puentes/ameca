@@ -111,6 +111,7 @@ export default function AdminMembershipRequestDetailPage() {
 
   const proofUrl = request?.paymentProofUrl ?? "";
   const schoolIdUrl = request?.schoolIdentificationUrl ?? "";
+  const cvUrl = request?.cvUrl ?? "";
   const isProofImage = /\.(png|jpe?g|webp)$/i.test(proofUrl);
   const isSchoolIdImage = /\.(png|jpe?g|webp)$/i.test(schoolIdUrl);
   const isPaidRequest = (request?.upgradeCost ?? 0) > 0;
@@ -142,7 +143,7 @@ export default function AdminMembershipRequestDetailPage() {
       ) : (
         <>
           <Card className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-3">
               <div className="space-y-2">
                 <div className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">Solicitante</div>
                 <div className="text-lg font-semibold text-[var(--ink)]">{request.memberName}</div>
@@ -234,6 +235,24 @@ export default function AdminMembershipRequestDetailPage() {
                 ) : (
                   <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface-2)] p-4 text-sm text-[var(--muted)]">
                     No se adjuntó identificación escolar.
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-3">
+                <div className="text-sm font-medium text-[var(--ink)]">CV</div>
+                {cvUrl ? (
+                  <>
+                    <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface-2)] p-4 text-sm text-[var(--muted)]">
+                      Archivo disponible para revisión.
+                    </div>
+                    <a href={cvUrl} target="_blank" rel="noreferrer" className="text-sm font-medium text-[var(--accent)]">
+                      Abrir archivo
+                    </a>
+                  </>
+                ) : (
+                  <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface-2)] p-4 text-sm text-[var(--muted)]">
+                    No se adjuntó CV.
                   </div>
                 )}
               </div>

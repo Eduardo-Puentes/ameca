@@ -40,6 +40,7 @@ export const authMe: typeof api.authMe = () => {
 };
 export const listEvents = pick(api.listEvents, mock.listEvents);
 export const getEvent = pick(api.getEvent, mock.getEvent);
+export const listPublicEventSpeakers = pick(api.listPublicEventSpeakers, mock.listPublicEventSpeakers);
 export const getMyTicket = pick(api.getMyTicket, mock.getMyTicket);
 export const listMyEvents = pick(api.listMyEvents, mock.listMyEvents);
 export const getMyEventRegistration = pick(api.getMyEventRegistration, mock.getMyEventRegistration);

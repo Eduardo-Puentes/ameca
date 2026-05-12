@@ -120,6 +120,11 @@ export default function AdminMemberProfilePage() {
       url: member.schoolIdentificationUrl,
       key: member.schoolIdentificationKey,
     },
+    {
+      label: "CV",
+      url: member.cvUrl,
+      key: member.cvKey,
+    },
   ].filter((document) => document.url || document.key);
 
   return (

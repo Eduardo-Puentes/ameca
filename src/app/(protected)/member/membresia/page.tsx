@@ -25,10 +25,23 @@ export default function MemberMembresiaPage() {
   const [requestedType, setRequestedType] = useState<ProfileType>("student");
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [schoolIdFile, setSchoolIdFile] = useState<File | null>(null);
+  const [cvFile, setCvFile] = useState<File | null>(null);
 
   useEffect(() => {
     loadMembers();
   }, [loadMembers]);
+
+  useEffect(() => {
+    if (requestedType !== "associated_professional" && requestedType !== "associated_student") {
+      setProofFile(null);
+    }
+    if (requestedType !== "student" && requestedType !== "associated_student") {
+      setSchoolIdFile(null);
+    }
+    if (requestedType !== "associated_professional") {
+      setCvFile(null);
+    }
+  }, [requestedType]);
 
   const member = useMemo(() => {
     return members.find((item) => item.email === user?.email) ?? members[0];
@@ -84,8 +97,31 @@ export default function MemberMembresiaPage() {
       return;
     }
 
+    if (requestedType === "associated_professional" && !cvFile) {
+      pushToast({
+        title: "CV requerido",
+        message: "Sube tu CV antes de enviar la solicitud.",
+        tone: "warning",
+      });
+      return;
+    }
+
     try {
-      await createMembershipRequest(requestedType, proofFile, schoolIdFile);
+      const paymentProofForRequest =
+        requestedType === "associated_professional" || requestedType === "associated_student"
+          ? proofFile
+          : null;
+      const schoolIdForRequest =
+        requestedType === "student" || requestedType === "associated_student"
+          ? schoolIdFile
+          : null;
+      const cvForRequest = requestedType === "associated_professional" ? cvFile : null;
+      await createMembershipRequest(
+        requestedType,
+        paymentProofForRequest,
+        schoolIdForRequest,
+        cvForRequest
+      );
       pushToast({
         title: "Solicitud enviada",
         message: "Un administrador revisará tu solicitud.",
@@ -93,6 +129,7 @@ export default function MemberMembresiaPage() {
       });
       setProofFile(null);
       setSchoolIdFile(null);
+      setCvFile(null);
     } catch (error) {
       const message = error instanceof Error ? error.message : "No se pudo enviar la solicitud.";
       pushToast({ title: "No se pudo enviar", message, tone: "danger" });
@@ -162,6 +199,13 @@ export default function MemberMembresiaPage() {
               label="Identificación escolar"
               accept=".pdf,.png,.jpg"
               onChange={setSchoolIdFile}
+            />
+          ) : null}
+          {requestedType === "associated_professional" ? (
+            <FileUpload
+              label="CV"
+              accept=".pdf,.doc,.docx"
+              onChange={setCvFile}
             />
           ) : null}
           <Button

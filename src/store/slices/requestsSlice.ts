@@ -77,7 +77,8 @@ export type RequestsSlice = {
   createMembershipRequest: (
     profileType: string,
     paymentProof?: File | null,
-    schoolIdentification?: File | null
+    schoolIdentification?: File | null,
+    cv?: File | null
   ) => Promise<void>;
   loadEventRequests: (
     eventId?: string,
@@ -204,10 +205,10 @@ export const createRequestsSlice: StateCreator<AuthSlice & RequestsSlice, [], []
       requestsLoading: false,
     });
   },
-  createMembershipRequest: async (profileType, paymentProof, schoolIdentification) => {
+  createMembershipRequest: async (profileType, paymentProof, schoolIdentification, cv) => {
     set({ requestsLoading: true });
     try {
-      await createMembershipUpgradeRequest(profileType, paymentProof, schoolIdentification);
+      await createMembershipUpgradeRequest(profileType, paymentProof, schoolIdentification, cv);
       const data = ensureArray(await listMembershipUpgradeRequests());
       set({
         membershipRequests: data,

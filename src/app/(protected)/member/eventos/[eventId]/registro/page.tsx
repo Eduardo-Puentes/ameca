@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { QRCodeBlock } from "@/components/ui/QRCodeBlock";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { Textarea } from "@/components/ui/Textarea";
 import { useToastStore } from "@/components/ui/Toast";
 import {
   confirmPresentationCode,
@@ -270,17 +271,18 @@ export default function MemberEventoRegistroPage() {
             <div className="text-lg font-semibold text-[var(--ink)]">Perfil de ponente</div>
             <div className="text-sm text-[var(--muted)]">Actualiza la información que verá el equipo organizador.</div>
           </div>
-          <Input
-            placeholder="Descripción breve"
-            value={speakerDescription}
-            onChange={(event) => setSpeakerDescription(event.target.value)}
-          />
           <FileUpload label="Foto de ponente" accept=".png,.jpg,.jpeg" onChange={setSpeakerPhoto} />
           {registration.speakerPhotoUrl ? (
             <a className="inline-flex text-sm text-[var(--accent)]" href={registration.speakerPhotoUrl} target="_blank" rel="noreferrer">
               Ver foto actual
             </a>
           ) : null}
+          <Textarea
+            placeholder="Escribe una semblanza breve para tu perfil de ponente"
+            value={speakerDescription}
+            onChange={(event) => setSpeakerDescription(event.target.value)}
+            className="min-h-[140px]"
+          />
           <Button onClick={handleSaveSpeakerProfile} loading={savingSpeakerProfile} loadingText="Guardando...">
             Guardar perfil
           </Button>

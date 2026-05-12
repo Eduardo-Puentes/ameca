@@ -56,6 +56,13 @@ export type Event = {
   status: "open" | "closed";
 };
 
+export type PublicEventSpeaker = {
+  id: string;
+  name: string;
+  speakerType: SpeakerType;
+  photoUrl: string;
+};
+
 export type EventProfilePrices = {
   professional: number;
   student: number;
@@ -209,6 +216,7 @@ export type MembershipRequest = {
   profileType: string;
   status: RequestStatus;
   schoolIdentificationUrl?: string;
+  cvUrl?: string;
   upgradeCost?: number;
   paymentProofUrl?: string;
   comments?: string;
@@ -287,6 +295,8 @@ export type Member = {
   paymentProofUrl?: string;
   schoolIdentificationKey?: string;
   schoolIdentificationUrl?: string;
+  cvKey?: string;
+  cvUrl?: string;
 };
 
 export type MemberUpdatePayload = Partial<
