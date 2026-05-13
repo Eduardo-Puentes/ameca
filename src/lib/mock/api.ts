@@ -291,7 +291,7 @@ export async function getMember(id: string) {
   await wait(200);
   const member = members.find((item) => item.id === id);
   if (!member) {
-    throw new Error("Miembro no encontrado.");
+    throw new Error("Socio no encontrado.");
   }
   return member;
 }
@@ -345,7 +345,7 @@ export async function createOrganizationJoinRequest(orgId: string) {
   await wait(250);
   const org = organizations.find((item) => item.id === orgId);
   if (!org) {
-    throw new Error("Organization not found");
+    throw new Error("Organización no encontrada");
   }
   const req: OrganizationRequest = {
     id: generateId("org-req"),
@@ -438,7 +438,7 @@ export async function getMemberRequest(id: string) {
   await wait(180);
   const request = membershipRequests.find((item) => item.id === id);
   if (!request) {
-    throw new Error("Request not found");
+    throw new Error("Solicitud no encontrada");
   }
   return request;
 }
@@ -457,7 +457,7 @@ export async function createMembershipUpgradeRequest(
   const newRequest: MembershipRequest = {
     id: generateId("mem"),
     memberId: members[0]?.id ?? "member-000",
-    memberName: members[0]?.fullName ?? "Miembro",
+    memberName: members[0]?.fullName ?? "Socio",
     memberEmail: members[0]?.email ?? "",
     memberPhoneNumber: members[0]?.phoneNumber ?? "",
     currentProfileType: members[0]?.profileType ?? "",
@@ -484,7 +484,7 @@ export async function approveMemberRequest(id: string, comments?: string) {
   const request = membershipRequests.find((req) => req.id === id);
   if ((request?.upgradeCost ?? 0) > 0 && matchedRole !== "treasurer" && matchedRole !== "superadmin") {
     throw new Error(
-      "Only a treasurer or superuser can approve a membership request with an associated cost."
+      "Solo tesorería o superadmin puede aprobar una solicitud de membresía con costo asociado."
     );
   }
   membershipRequests = membershipRequests.map((req) =>
@@ -654,7 +654,7 @@ export async function listEventMembers(
 const buildEventMemberRegistrations = (eventId: string): EventMemberRegistration[] => {
   const event = events.find((item) => item.id === eventId);
   if (!event) {
-    throw new Error("Event was not found.");
+    throw new Error("Evento no encontrado");
   }
   const approvedRequests = eventRequests.filter(
     (req) => req.eventId === eventId && req.status === "approved"
@@ -691,7 +691,7 @@ export async function getEventRequest(id: string) {
   await wait(180);
   const request = eventRequests.find((item) => item.id === id);
   if (!request) {
-    throw new Error("Request not found");
+    throw new Error("Solicitud no encontrada");
   }
   return request;
 }
@@ -702,7 +702,7 @@ export async function getEventMember(id: string) {
     .flatMap((event) => buildEventMemberRegistrations(event.id))
     .find((item) => item.id === id);
   if (!registration) {
-    throw new Error("Registration not found");
+    throw new Error("Registro no encontrado");
   }
   return {
     ...registration,
@@ -769,7 +769,7 @@ export async function createEventRequest(
     eventId: payload.eventId ?? "",
     eventName: payload.eventName ?? "Evento",
     memberId: payload.memberId ?? members[0]?.id ?? "",
-    memberName: payload.memberName ?? "Miembro",
+    memberName: payload.memberName ?? "Socio",
     memberEmail: payload.memberEmail ?? "",
     memberPhoneNumber: payload.memberPhoneNumber ?? members[0]?.phoneNumber ?? "",
     sectionName: payload.sectionName ?? "General",
@@ -790,7 +790,7 @@ export async function createSectionRequest(payload: {
   await wait(200);
   const event = events.find((item) => item.id === payload.eventId);
   if (!event) {
-    throw new Error("Event was not found.");
+    throw new Error("Evento no encontrado");
   }
   if (!event.open) {
     throw new Error("Event registration is closed.");
@@ -807,7 +807,7 @@ export async function createSectionRequest(payload: {
     eventId: event.id,
     eventName: event.name,
     name: payload.name,
-    representativeName: representative?.fullName ?? "Miembro",
+    representativeName: representative?.fullName ?? "Socio",
     status: "pending",
     comments: "",
     createdAt: new Date().toISOString().split("T")[0],
@@ -863,6 +863,37 @@ export async function listSections(eventId?: string) {
   const approvedSections = sections.filter((section) => section.status === "approved");
   if (!eventId) return [...approvedSections];
   return approvedSections.filter((section) => section.eventId === eventId);
+}
+
+export async function searchUsersForSection(_sectionId: string, query: string, limit = 8) {
+  await wait(200);
+  const normalizedQuery = query.trim().toLowerCase();
+  return mockMembers
+    .filter((member) => {
+      if (!normalizedQuery) return true;
+      return (
+        member.fullName.toLowerCase().includes(normalizedQuery) ||
+        member.email.toLowerCase().includes(normalizedQuery)
+      );
+    })
+    .slice(0, limit);
+}
+
+export async function listMySections(eventId?: string) {
+  await wait(200);
+  const approvedSections = sections.filter((section) => section.status === "approved");
+  const mySections = approvedSections.filter(
+    (section) => section.representativeName === "Dra. Riley Shaw" || section.id === "section-103"
+  );
+  const scopedSections = eventId
+    ? mySections.filter((section) => section.eventId === eventId)
+    : mySections;
+  return scopedSections.map((section) => ({
+    ...section,
+    membershipId: `${section.id}-membership`,
+    joinedAt: "2026-02-10",
+    isRepresentative: section.representativeName === "Dra. Riley Shaw",
+  }));
 }
 
 export async function listAdminSections(
@@ -942,7 +973,7 @@ export async function deleteSection(id: string) {
     throw new Error("Sección no encontrada.");
   }
   if (section.pCount > 1) {
-    throw new Error("Remove all section members before deleting this section.");
+    throw new Error("Retira primero a todos los socios de la sección.");
   }
   sections = sections.filter((item) => item.id !== id);
   return { ok: true };
@@ -956,7 +987,7 @@ export async function removeSectionMember(sectionId: string, memberId: string): 
   }
   const representativeMember = mockMembers[0];
   if (representativeMember?.id === memberId) {
-    throw new Error("Transfer the section representative before removing this member.");
+    throw new Error("Transfiere la representación antes de retirar a este socio.");
   }
   const nextCount = Math.max(1, section.pCount - 1);
   sections = sections.map((item) =>
@@ -1052,7 +1083,7 @@ export async function generateDiplomas(eventId: string, minRequiredDays: number)
         id: generateId("dip"),
         eventId,
         memberId,
-        memberName: member?.fullName ?? "Miembro",
+        memberName: member?.fullName ?? "Socio",
         memberEmail: member?.email ?? "",
         attendedDays,
         minRequiredDays,

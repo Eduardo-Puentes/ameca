@@ -162,7 +162,7 @@ export default function AdminAdministradoresPage() {
               onChange={(event) => setFullName(event.target.value)}
             />
           </FormField>
-          <FormField label="Email">
+          <FormField label="Correo">
             <Input
               placeholder="correo@dominio.com"
               value={email}

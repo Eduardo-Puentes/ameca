@@ -13,6 +13,7 @@ import { Pagination } from "@/components/ui/Pagination";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useAppStore } from "@/store";
 import type { EventRequest, MembershipRequest } from "@/lib/types";
+import { formatProfileType } from "@/lib/utils";
 
 export default function AdminDashboardPage() {
   const {
@@ -69,8 +70,12 @@ export default function AdminDashboardPage() {
     "flex h-10 w-full items-center justify-center rounded-xl bg-[var(--accent-soft)] px-4 text-sm font-semibold text-[var(--accent-strong)] shadow-[0_16px_30px_-18px_rgba(1,122,31,0.55)] transition duration-150 hover:bg-[var(--accent)] hover:text-white hover:shadow-[0_18px_32px_-16px_rgba(1,122,31,0.65)] active:scale-[0.985] active:translate-y-px";
 
   const membershipColumns = [
-    { header: "Miembro", accessor: "memberName" },
-    { header: "Perfil", accessor: "profileType" },
+    { header: "Socio", accessor: "memberName" },
+    {
+      header: "Perfil",
+      accessor: "profileType",
+      render: (req: MembershipRequest) => formatProfileType(req.profileType),
+    },
     {
       header: "Estado",
       accessor: "status",
@@ -82,7 +87,7 @@ export default function AdminDashboardPage() {
       className: "w-40 px-3 py-4 text-center",
       render: (req: MembershipRequest) => (
         <Link
-          href={`/admin/miembros/solicitudes/${req.id}`}
+          href={`/admin/socios/solicitudes/${req.id}`}
           className={viewActionClassName}
         >
           Ver
@@ -93,7 +98,7 @@ export default function AdminDashboardPage() {
 
   const eventColumns = [
     { header: "Evento", accessor: "eventName" },
-    { header: "Miembro", accessor: "memberName" },
+    { header: "Socio", accessor: "memberName" },
     { header: "Sección", accessor: "sectionName" },
     {
       header: "Estado",
@@ -140,7 +145,7 @@ export default function AdminDashboardPage() {
           <Input
             value={membershipSearch}
             onChange={(event) => setMembershipSearch(event.target.value)}
-            placeholder="Buscar por miembro, correo, teléfono o perfil"
+            placeholder="Buscar por socio, correo, teléfono o perfil"
             className="md:max-w-xl"
           />
           <CostTypeFilter value={membershipCostType} onChange={setMembershipCostType} />
@@ -191,7 +196,7 @@ export default function AdminDashboardPage() {
           <Input
             value={eventSearch}
             onChange={(event) => setEventSearch(event.target.value)}
-            placeholder="Buscar por miembro, correo, sección o comentarios"
+            placeholder="Buscar por socio, correo, sección o comentarios"
             className="md:max-w-xl"
           />
           <CostTypeFilter value={eventCostType} onChange={setEventCostType} />

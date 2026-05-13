@@ -46,7 +46,7 @@ export default function MemberEventoDetallePage() {
   const existingRequest = eventRequests.find(
     (req) => req.eventId === eventId && req.memberEmail === member?.email
   );
-  const registrationDetailHref = `/member/eventos/${eventId}/registro`;
+  const registrationDetailHref = `/socio/eventos/${eventId}/registro`;
 
   useEffect(() => {
     if (!eventId) return;
@@ -88,7 +88,7 @@ export default function MemberEventoDetallePage() {
   if (!event) {
     return (
       <div className="space-y-6">
-        <PageHeader title="Evento" subtitle="No encontrado" breadcrumb={["Miembro", "Eventos"]} />
+        <PageHeader title="Evento" subtitle="No encontrado" breadcrumb={["Socio", "Eventos"]} />
         <Card>Evento no encontrado.</Card>
       </div>
     );
@@ -99,7 +99,7 @@ export default function MemberEventoDetallePage() {
       <PageHeader
         title={event.name}
         subtitle="Detalles y registro"
-        breadcrumb={["Miembro", "Eventos", event.name]}
+        breadcrumb={["Socio", "Eventos", event.name]}
       />
 
       <div className="grid gap-6 lg:grid-cols-[1.3fr_1fr]">
@@ -140,7 +140,7 @@ export default function MemberEventoDetallePage() {
                 Comentario: {existingRequest.comments || "Sin comentarios"}
               </div>
               <Link
-                href={`/member/solicitudes/eventos/${existingRequest.id}`}
+                href={`/socio/solicitudes/eventos/${existingRequest.id}`}
                 className="inline-flex h-9 items-center justify-center rounded-lg bg-[var(--surface-2)] px-3 text-sm font-medium text-[var(--ink)] transition hover:bg-[var(--surface-3)]"
               >
                 Ver solicitud

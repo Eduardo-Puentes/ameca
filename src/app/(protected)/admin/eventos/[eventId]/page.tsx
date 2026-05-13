@@ -37,7 +37,7 @@ import type {
   Section,
   SpeakerType,
 } from "@/lib/types";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatCurrency, formatDate, formatProfileType, formatSpeakerType } from "@/lib/utils";
 
 export default function AdminEventoDetallePage() {
   const params = useParams();
@@ -128,7 +128,7 @@ export default function AdminEventoDetallePage() {
       .catch((error) => {
         if (!active) return;
         const message =
-          error instanceof Error ? error.message : "No se pudieron cargar los miembros.";
+          error instanceof Error ? error.message : "No se pudieron cargar los socios.";
         setEventMembersError(message);
         setEventMembers([]);
         setEventMembersTotal(0);
@@ -252,8 +252,8 @@ export default function AdminEventoDetallePage() {
     "inline-flex h-10 items-center justify-center rounded-lg bg-[var(--accent-soft)] px-4 text-sm font-semibold text-[var(--accent-strong)] transition hover:bg-[var(--accent)] hover:text-white";
   const registrationLabel = event?.open ? "Aceptando solicitudes" : "Registro cerrado";
   const requestColumns = [
-    { header: "Miembro", accessor: "memberName" },
-    { header: "Email", accessor: "memberEmail" },
+    { header: "Socio", accessor: "memberName" },
+    { header: "Correo", accessor: "memberEmail" },
     { header: "Sección", accessor: "sectionName" },
     {
       header: "Estado",
@@ -275,9 +275,14 @@ export default function AdminEventoDetallePage() {
     },
   ];
   const memberColumns = [
-    { header: "Miembro", accessor: "memberName" },
-    { header: "Email", accessor: "memberEmail" },
-    { header: "Perfil", accessor: "profileType" },
+    { header: "Socio", accessor: "memberName" },
+    { header: "Correo", accessor: "memberEmail" },
+    {
+      header: "Perfil",
+      accessor: "profileType",
+      render: (registration: EventMemberRegistration) =>
+        formatProfileType(String(registration.profileType)),
+    },
     { header: "Sección", accessor: "sectionName" },
     {
       header: "Costo",
@@ -301,11 +306,11 @@ export default function AdminEventoDetallePage() {
       ),
     },
     {
-      header: "Speaker",
+      header: "Ponente",
       accessor: "speakerStatus",
       render: (registration: EventMemberRegistration) => (
         <Badge tone={registration.isSpeaker ? "info" : "neutral"}>
-          {registration.isSpeaker ? registration.speakerType ?? "plenary" : "No"}
+          {registration.isSpeaker ? formatSpeakerType(registration.speakerType ?? "plenary") : "No"}
         </Badge>
       ),
     },
@@ -331,22 +336,26 @@ export default function AdminEventoDetallePage() {
               );
             }}
           >
-            {registration.isSpeaker ? registration.speakerType ?? "plenary" : "Invitar"}
+            {registration.isSpeaker ? formatSpeakerType(registration.speakerType ?? "plenary") : "Invitar"}
           </Button>
         </div>
       ),
     },
   ];
   const speakerColumns = [
-    { header: "Speaker", accessor: "memberName" },
-    { header: "Email", accessor: "memberEmail" },
-    { header: "Type", accessor: "speakerType" },
+    { header: "Ponente", accessor: "memberName" },
+    { header: "Correo", accessor: "memberEmail" },
+    {
+      header: "Tipo",
+      accessor: "speakerType",
+      render: (registration: EventMemberRegistration) => formatSpeakerType(registration.speakerType),
+    },
     { header: "Sección", accessor: "sectionName" },
   ];
   const presentationColumns = [
     { header: "Título", accessor: "name" },
-    { header: "Speaker", accessor: "presenterName" },
-    { header: "Email", accessor: "presenterEmail" },
+    { header: "Ponente", accessor: "presenterName" },
+    { header: "Correo", accessor: "presenterEmail" },
     { header: "Tipo", accessor: "presentationType" },
     {
       header: "Código",
@@ -492,10 +501,10 @@ export default function AdminEventoDetallePage() {
       );
       await refreshSpeakerAndPresentationData();
       setSpeakerModalRegistration(null);
-      pushToast({ title: "Speaker updated", tone: "success" });
+      pushToast({ title: "Ponente actualizado", tone: "success" });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "No se pudo actualizar el speaker.";
-      pushToast({ title: "Error updating speaker", message, tone: "danger" });
+      const message = error instanceof Error ? error.message : "No se pudo actualizar el ponente.";
+      pushToast({ title: "Error al actualizar ponente", message, tone: "danger" });
     } finally {
       setSpeakerSaving(false);
     }
@@ -590,7 +599,7 @@ export default function AdminEventoDetallePage() {
           <Input
             value={requestSearch}
             onChange={(inputEvent) => setRequestSearch(inputEvent.target.value)}
-            placeholder="Buscar por miembro, correo, sección o comentarios"
+            placeholder="Buscar por socio, correo, sección o comentarios"
             className="md:max-w-xl"
           />
           <CostTypeFilter value={requestCostType} onChange={setRequestCostType} />
@@ -613,9 +622,9 @@ export default function AdminEventoDetallePage() {
       <Card className="space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="space-y-1">
-            <div className="text-lg font-semibold text-[var(--ink)]">Speakers</div>
+            <div className="text-lg font-semibold text-[var(--ink)]">Ponentes</div>
             <div className="text-sm text-[var(--muted)]">
-              Invita miembros registrados como plenarios o magistrales.
+              Invita socios registrados como plenarios o magistrales.
             </div>
           </div>
           <Badge tone="neutral">{speakersTotal} activo(s)</Badge>
@@ -635,9 +644,9 @@ export default function AdminEventoDetallePage() {
           </div>
         ) : null}
         {speakersLoading ? (
-          <div className="text-sm text-[var(--muted)]">Cargando speakers...</div>
+          <div className="text-sm text-[var(--muted)]">Cargando ponentes...</div>
         ) : speakers.length === 0 ? (
-          <div className="text-sm text-[var(--muted)]">No hay speakers invitados.</div>
+          <div className="text-sm text-[var(--muted)]">No hay ponentes invitados.</div>
         ) : (
           <DataTable
             columns={speakerColumns}
@@ -681,7 +690,7 @@ export default function AdminEventoDetallePage() {
               setPresentationsSearch(event.target.value);
               setPresentationsPage(1);
             }}
-            placeholder="Buscar por título, código, speaker o correo"
+            placeholder="Buscar por título, código, ponente o correo"
           />
           <Select
             value={presentationTypeFilter}
@@ -747,9 +756,9 @@ export default function AdminEventoDetallePage() {
 
       <Card className="space-y-4">
         <div className="space-y-1">
-          <div className="text-lg font-semibold text-[var(--ink)]">Miembros registrados</div>
+          <div className="text-lg font-semibold text-[var(--ink)]">Socios registrados</div>
           <div className="text-sm text-[var(--muted)]">
-            Registros aprobados para este evento, con búsqueda por datos del miembro, sección o boleto.
+            Registros aprobados para este evento, con búsqueda por datos del socio, sección o boleto.
           </div>
         </div>
         <Input
@@ -769,7 +778,7 @@ export default function AdminEventoDetallePage() {
         {eventMembersLoading ? (
           <div className="text-sm text-[var(--muted)]">Cargando registros...</div>
         ) : eventMembers.length === 0 ? (
-          <div className="text-sm text-[var(--muted)]">No hay miembros registrados.</div>
+          <div className="text-sm text-[var(--muted)]">No hay socios registrados.</div>
         ) : (
           <DataTable
             columns={memberColumns}
@@ -865,7 +874,7 @@ export default function AdminEventoDetallePage() {
         onClose={() => {
           if (!speakerSaving) setSpeakerModalRegistration(null);
         }}
-        title="Speaker"
+        title="Ponente"
       >
         {speakerModalRegistration ? (
           <div className="space-y-4">
@@ -876,12 +885,14 @@ export default function AdminEventoDetallePage() {
               <div className="text-sm text-[var(--muted)]">
                 {speakerModalRegistration.memberEmail}
               </div>
-              <div className="mt-3 text-xs uppercase text-[var(--muted)]">Current type</div>
-              <div className="text-sm font-medium text-[var(--ink)]">{speakerCurrentType}</div>
+              <div className="mt-3 text-xs uppercase text-[var(--muted)]">Tipo actual</div>
+              <div className="text-sm font-medium text-[var(--ink)]">
+                {formatSpeakerType(speakerCurrentType)}
+              </div>
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-[var(--ink)]" htmlFor="speaker-type">
-                Speaker type
+                Tipo de ponente
               </label>
               <Select
                 id="speaker-type"
@@ -889,9 +900,9 @@ export default function AdminEventoDetallePage() {
                 onChange={(event) => setSpeakerModalType(event.target.value as SpeakerType)}
                 disabled={speakerSaving}
               >
-                <option value="none">none</option>
-                <option value="plenary">plenary</option>
-                <option value="keynote">keynote</option>
+                <option value="none">Sin ponencia</option>
+                <option value="plenary">Plenaria</option>
+                <option value="keynote">Magistral</option>
               </Select>
             </div>
             <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

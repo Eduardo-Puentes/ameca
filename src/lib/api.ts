@@ -26,6 +26,7 @@ import type {
   Section,
   SectionDetail,
   SectionInvite,
+  MySection,
   SectionRequest,
   SpeakerType,
 } from "@/lib/types";
@@ -125,7 +126,7 @@ const humanizeError = (message: string, status: number, code?: string) => {
     ["email already registered", "El correo ya está registrado."],
     ["event not found", "Evento no encontrado."],
     ["request not found", "Solicitud no encontrada."],
-    ["member not found", "Miembro no encontrado."],
+    ["member not found", "Socio no encontrado."],
     ["section not found", "Sección no encontrada."],
     ["invalid token", "El enlace no es válido."],
     ["token expired", "El enlace ha expirado."],
@@ -139,20 +140,20 @@ const humanizeError = (message: string, status: number, code?: string) => {
     ["upgrade into an associated profile requires payment proof", "Debes subir tu comprobante de pago."],
     ["event registration is closed", "El registro del evento está cerrado."],
     ["already registered", "Ya estás registrado en este evento."],
-    ["resolve registered event members before deleting this event", "No puedes eliminar un evento con usuarios registrados."],
+    ["resolve registered event members before deleting this event", "No puedes eliminar un evento con socios registrados."],
     ["email verification cannot be revoked by admins", "La verificación por correo no puede retirarse desde administración."],
     ["profile type must be changed", "El tipo de membresía se cambia desde una solicitud de upgrade."],
-    ["member must accept the section invite", "Debes aceptar la invitación antes de usar esta sección."],
-    ["member already belongs to another section", "Ya perteneces a otra sección de este evento."],
-    ["remove all section members before deleting this section", "Retira primero a todos los integrantes de la sección. Debe quedar solo el representante."],
-    ["transfer the section representative before removing this member", "Transfiere la representación antes de retirar a este integrante."],
+    ["member must accept the section invite", "El socio debe aceptar la invitación antes de usar esta sección."],
+    ["member already belongs to another section", "El socio ya pertenece a otra sección de este evento."],
+    ["remove all section members before deleting this section", "Retira primero a todos los socios de la sección. Debe quedar solo el representante."],
+    ["transfer the section representative before removing this member", "Transfiere la representación antes de retirar a este socio."],
     ["only a treasurer or superuser can approve a membership request with an associated cost", "Solo tesorería o superadmin puede aprobar solicitudes de membresía con costo."],
     ["same profile", "El perfil solicitado debe ser distinto al actual."],
     ["upgrade requirements", "Faltan documentos requeridos para este upgrade."],
     ["error parsing the body", "No se pudo procesar la solicitud."],
     ["token invalido", "Token inválido."],
     ["email no autorizado", "El correo no está autorizado."],
-    ["already a member", "Ya perteneces a esa organización."],
+    ["already a member", "Ya eres socio de esa organización."],
     ["rejection comment required", "El comentario es obligatorio para rechazar."],
     ["rejection comment locked", "El comentario del rechazo ya fue enviado y no puede cambiarse."],
   ];
@@ -683,6 +684,24 @@ export async function denySectionRequest(id: string) {
 export async function listSections(eventId?: string): Promise<Section[]> {
   const query = eventId ? `?event_id=${eventId}` : "";
   return request<Section[]>(`/sections${query}`);
+}
+
+export async function searchUsersForSection(
+  sectionId: string,
+  query: string,
+  limit = 8
+): Promise<Member[]> {
+  const params = new URLSearchParams({
+    sectionId,
+    query,
+    limit: String(limit),
+  });
+  return request<Member[]>(`/users/search?${params.toString()}`);
+}
+
+export async function listMySections(eventId?: string): Promise<MySection[]> {
+  const query = eventId ? `?event_id=${eventId}` : "";
+  return request<MySection[]>(`/members/me/sections${query}`);
 }
 
 export async function listAdminSections(

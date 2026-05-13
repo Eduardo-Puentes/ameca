@@ -10,7 +10,7 @@ import { RequestStatusFilter } from "@/components/ui/RequestStatusFilter";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useAppStore } from "@/store";
 import type { EventRequest, MembershipRequest, RequestStatusFilter as RequestStatusFilterValue } from "@/lib/types";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatProfileType } from "@/lib/utils";
 
 export default function MemberSolicitudesPage() {
   const {
@@ -39,7 +39,11 @@ export default function MemberSolicitudesPage() {
   }, [eventStatus, loadEventRequests]);
 
   const membershipColumns = [
-    { header: "Tipo", accessor: "profileType" },
+    {
+      header: "Tipo",
+      accessor: "profileType",
+      render: (req: MembershipRequest) => formatProfileType(req.profileType),
+    },
     {
       header: "Fecha",
       accessor: "createdAt",
@@ -55,7 +59,7 @@ export default function MemberSolicitudesPage() {
       accessor: "actions",
       render: (req: MembershipRequest) => (
         <Link
-          href={`/member/solicitudes/membresia/${req.id}`}
+          href={`/socio/solicitudes/membresia/${req.id}`}
           className="inline-flex h-9 items-center justify-center rounded-lg bg-[var(--surface-2)] px-3 text-sm font-medium text-[var(--ink)] transition hover:bg-[var(--surface-3)]"
         >
           Ver
@@ -77,7 +81,7 @@ export default function MemberSolicitudesPage() {
       accessor: "actions",
       render: (req: EventRequest) => (
         <Link
-          href={`/member/solicitudes/eventos/${req.id}`}
+          href={`/socio/solicitudes/eventos/${req.id}`}
           className="inline-flex h-9 items-center justify-center rounded-lg bg-[var(--surface-2)] px-3 text-sm font-medium text-[var(--ink)] transition hover:bg-[var(--surface-3)]"
         >
           Ver
@@ -91,7 +95,7 @@ export default function MemberSolicitudesPage() {
       <PageHeader
         title="Solicitudes"
         subtitle="Historial de membresía y registros"
-        breadcrumb={["Miembro", "Solicitudes"]}
+        breadcrumb={["Socio", "Solicitudes"]}
       />
 
       <Card className="space-y-4">

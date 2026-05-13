@@ -13,22 +13,13 @@ import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { getSection, removeSectionMember } from "@/lib/data";
 import type { SectionDetail, SectionMember } from "@/lib/types";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatCurrency, formatDate, formatProfileType } from "@/lib/utils";
 
 type SectionLoadState = {
   sectionId: string;
   section: SectionDetail | null;
   error: string | null;
 };
-
-const profileLabels: Record<string, string> = {
-  professional: "Profesional",
-  student: "Estudiante",
-  associated_professional: "Asociado profesional",
-  associated_student: "Asociado estudiante",
-};
-
-const displayProfile = (profileType: string) => profileLabels[profileType] ?? profileType;
 
 export default function AdminSectionDetailPage() {
   const params = useParams();
@@ -93,7 +84,7 @@ export default function AdminSectionDetailPage() {
 
   const memberColumns = [
     {
-      header: "Miembro",
+      header: "Socio",
       accessor: "memberName",
       render: (member: SectionMember) => (
         <div>
@@ -106,7 +97,7 @@ export default function AdminSectionDetailPage() {
     {
       header: "Perfil",
       accessor: "profileType",
-      render: (member: SectionMember) => displayProfile(String(member.profileType)),
+      render: (member: SectionMember) => formatProfileType(String(member.profileType)),
     },
     { header: "Organización", accessor: "organization" },
     {
@@ -230,7 +221,7 @@ export default function AdminSectionDetailPage() {
               </div>
               <div className="grid gap-2 text-sm text-[var(--muted)] sm:grid-cols-2">
                 <div>Teléfono: {representative.phoneNumber || "Sin teléfono"}</div>
-                <div>Perfil: {displayProfile(String(representative.profileType))}</div>
+                <div>Perfil: {formatProfileType(String(representative.profileType))}</div>
                 <div className="sm:col-span-2">
                   Organización: {representative.organization || "Sin organización"}
                 </div>
@@ -246,7 +237,7 @@ export default function AdminSectionDetailPage() {
         <div className="space-y-1">
           <div className="text-lg font-semibold text-[var(--ink)]">Integrantes</div>
           <div className="text-sm text-[var(--muted)]">
-            Miembros asociados a esta sección para el evento.
+            Socios asociados a esta sección para el evento.
           </div>
         </div>
         {section.members.length === 0 ? (

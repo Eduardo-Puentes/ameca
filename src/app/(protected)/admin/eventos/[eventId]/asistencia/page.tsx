@@ -49,7 +49,7 @@ export default function AdminAsistenciaPage() {
   };
 
   const columns = [
-    { header: "Miembro", accessor: "memberName" },
+    { header: "Socio", accessor: "memberName" },
     { header: "Correo", accessor: "memberEmail" },
     {
       header: "Estado",

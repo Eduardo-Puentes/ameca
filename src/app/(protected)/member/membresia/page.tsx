@@ -9,13 +9,13 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Select } from "@/components/ui/Select";
 import { useToastStore } from "@/components/ui/Toast";
 import { useAppStore } from "@/store";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatProfileType } from "@/lib/utils";
 import type { ProfileType } from "@/lib/types";
 
 const PROFILE_OPTIONS: Array<{ value: ProfileType; label: string }> = [
   { value: "student", label: "Estudiante" },
-  { value: "associated_professional", label: "Asociado profesional" },
-  { value: "associated_student", label: "Asociado estudiante" },
+  { value: "associated_professional", label: "Socio profesional" },
+  { value: "associated_student", label: "Socio estudiante" },
 ];
 
 export default function MemberMembresiaPage() {
@@ -141,7 +141,7 @@ export default function MemberMembresiaPage() {
       <PageHeader
         title="Membresía"
         subtitle="Estado actual y solicitud de actualización"
-        breadcrumb={["Miembro", "Membresía"]}
+        breadcrumb={["Socio", "Membresía"]}
       />
 
       <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr]">
@@ -150,7 +150,9 @@ export default function MemberMembresiaPage() {
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-[var(--muted)]">Tipo</span>
-              <span className="font-semibold text-[var(--ink)]">{member?.profileType}</span>
+              <span className="font-semibold text-[var(--ink)]">
+                {formatProfileType(String(member?.profileType ?? ""))}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-[var(--muted)]">Verificación</span>

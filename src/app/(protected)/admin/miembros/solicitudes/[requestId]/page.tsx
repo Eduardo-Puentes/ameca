@@ -16,6 +16,7 @@ import {
 } from "@/lib/data";
 import { useAppStore } from "@/store";
 import type { MembershipRequest } from "@/lib/types";
+import { formatProfileType } from "@/lib/utils";
 
 const formatDate = (value?: number | string | null) => {
   if (!value) return "Sin registro";
@@ -123,12 +124,12 @@ export default function AdminMembershipRequestDetailPage() {
       <PageHeader
         title="Solicitud de membresía"
         subtitle="Vista detallada para revisar y decidir la solicitud"
-        breadcrumb={["Admin", "Miembros", "Solicitudes", "Detalle"]}
+        breadcrumb={["Admin", "Socios", "Solicitudes", "Detalle"]}
       />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
-          href="/admin/miembros/solicitudes"
+          href="/admin/socios/solicitudes"
           className="text-sm font-medium text-[var(--accent)]"
         >
           Volver al listado
@@ -155,10 +156,14 @@ export default function AdminMembershipRequestDetailPage() {
               <div className="space-y-2">
                 <div className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">Cambio solicitado</div>
                 <div className="text-sm text-[var(--muted)]">
-                  Perfil actual: <span className="text-[var(--ink)]">{request.currentProfileType || "Sin registro"}</span>
+                  Perfil actual:{" "}
+                  <span className="text-[var(--ink)]">
+                    {formatProfileType(request.currentProfileType, "Sin registro")}
+                  </span>
                 </div>
                 <div className="text-sm text-[var(--muted)]">
-                  Nuevo perfil: <span className="text-[var(--ink)]">{request.profileType}</span>
+                  Nuevo perfil:{" "}
+                  <span className="text-[var(--ink)]">{formatProfileType(request.profileType)}</span>
                 </div>
                 <div className="text-sm text-[var(--muted)]">
                   Costo:{" "}

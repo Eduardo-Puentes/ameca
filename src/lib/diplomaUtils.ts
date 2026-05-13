@@ -9,7 +9,7 @@ import type {
 
 export const diplomaFieldLabels: Record<DiplomaFieldKey, string> = {
   "participant.full_name": "Nombre completo",
-  "participant.email": "Email",
+  "participant.email": "Correo",
   "event.name": "Nombre del evento",
   "event.start_date": "Fecha del evento",
   organization: "Organización / Sección",

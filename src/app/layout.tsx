@@ -19,7 +19,7 @@ const amecaMono = IBM_Plex_Mono({
 
 export const metadata: Metadata = {
   title: "Plataforma AMECA",
-  description: "Experiencia de administración y miembros para eventos AMECA",
+  description: "Experiencia de administración y socios para eventos AMECA",
 };
 
 export default function RootLayout({

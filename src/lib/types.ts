@@ -165,6 +165,12 @@ export type Section = {
   status: SectionRequestStatus;
 };
 
+export type MySection = Section & {
+  membershipId: string;
+  joinedAt: number | string;
+  isRepresentative: boolean;
+};
+
 export type SectionRepresentative = {
   id: string;
   name: string;

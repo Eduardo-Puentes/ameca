@@ -114,7 +114,7 @@ export default function MemberDiplomasPage() {
         fullName: previewRecord.memberName,
         email: previewRecord.memberEmail,
         phoneNumber: "",
-        profileType: "Miembro",
+        profileType: "Socio",
         verified: true,
         expirationDate: "",
         role: "member",
@@ -137,7 +137,7 @@ export default function MemberDiplomasPage() {
       <PageHeader
         title="Diplomas"
         subtitle="Consulta y descarga tus certificados"
-        breadcrumb={["Miembro", "Diplomas"]}
+        breadcrumb={["Socio", "Diplomas"]}
       />
 
       {myDiplomas.length === 0 ? (
@@ -145,7 +145,7 @@ export default function MemberDiplomasPage() {
           title="Sin diplomas disponibles"
           description="Cuando completes la asistencia, aquí aparecerán tus certificados."
           actionLabel="Ver eventos"
-          onAction={() => router.push("/member/eventos")}
+          onAction={() => router.push("/socio/eventos")}
         />
       ) : (
         <Card>

@@ -11,6 +11,7 @@ import { ConfirmActionModal } from "@/components/ui/ConfirmActionModal";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { getMember } from "@/lib/data";
 import type { Member } from "@/lib/types";
+import { formatProfileType } from "@/lib/utils";
 import { useAppStore } from "@/store";
 
 const formatDate = (value?: number | string | null) => {
@@ -63,9 +64,9 @@ export default function AdminMemberProfilePage() {
     return (
       <div className="space-y-6">
         <PageHeader
-          title="Perfil del miembro"
+          title="Perfil del socio"
           subtitle="Cargando información"
-          breadcrumb={["Admin", "Miembros", "Perfil"]}
+          breadcrumb={["Admin", "Socios", "Perfil"]}
         />
         <Card>
           <div className="text-sm text-[var(--muted)]">Cargando perfil...</div>
@@ -78,33 +79,34 @@ export default function AdminMemberProfilePage() {
     return (
       <div className="space-y-6">
         <PageHeader
-          title="Perfil del miembro"
+          title="Perfil del socio"
           subtitle="No encontrado"
-          breadcrumb={["Admin", "Miembros", "Perfil"]}
+          breadcrumb={["Admin", "Socios", "Perfil"]}
         />
         <Card className="space-y-3">
-          <div className="text-lg font-semibold text-[var(--ink)]">Miembro no encontrado</div>
+          <div className="text-lg font-semibold text-[var(--ink)]">Socio no encontrado</div>
           <div className="text-sm text-[var(--muted)]">
-            No pudimos encontrar la información de este miembro.
+            No pudimos encontrar la información de este socio.
           </div>
           <Link
-            href="/admin/miembros"
+            href="/admin/socios"
             className="inline-flex h-10 items-center justify-center rounded-lg bg-[var(--surface-2)] px-4 text-sm font-semibold text-[var(--ink)] transition hover:bg-[var(--surface-3)]"
           >
-            Volver a miembros
+            Volver a socios
           </Link>
         </Card>
       </div>
     );
   }
 
+  const roleLabel = member.role === "member" ? "socio" : member.role || "Sin rol";
   const fields = [
     { label: "ID", value: member.id },
     { label: "Nombre completo", value: member.fullName },
     { label: "Correo", value: member.email },
     { label: "Teléfono", value: member.phoneNumber || "Sin teléfono" },
-    { label: "Perfil", value: member.profileType || "Sin perfil" },
-    { label: "Rol", value: member.role || "member" },
+    { label: "Perfil", value: formatProfileType(String(member.profileType ?? "")) },
+    { label: "Rol", value: roleLabel },
     { label: "Vencimiento", value: formatDate(member.expirationDate) },
     { label: "Verificación", value: member.verified ? "Verificado" : "Pendiente" },
   ];
@@ -131,15 +133,15 @@ export default function AdminMemberProfilePage() {
     <div className="space-y-6">
       <PageHeader
         title={member.fullName}
-        subtitle="Vista administrativa del perfil del miembro"
-        breadcrumb={["Admin", "Miembros", "Perfil"]}
+        subtitle="Vista administrativa del perfil del socio"
+        breadcrumb={["Admin", "Socios", "Perfil"]}
       />
 
       <Card className="space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <div className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">
-              Estado del miembro
+              Estado del socio
             </div>
             <div className="mt-2 text-2xl font-semibold text-[var(--ink)]">{member.fullName}</div>
             <div className="text-sm text-[var(--muted)]">{member.email}</div>
@@ -169,7 +171,7 @@ export default function AdminMemberProfilePage() {
                   Revertir membresía
                 </div>
                 <div className="mt-1 text-sm text-[var(--muted)]">
-                  Cambia este perfil a professional y permite que el miembro solicite un nuevo
+                  Cambia este perfil a professional y permite que el socio solicite un nuevo
                   upgrade desde su panel.
                 </div>
               </div>
@@ -187,7 +189,7 @@ export default function AdminMemberProfilePage() {
                 Documentos de membresía
               </div>
               <div className="mt-1 text-sm text-[var(--muted)]">
-                Archivos asociados al perfil del miembro.
+                Archivos asociados al perfil del socio.
               </div>
             </div>
             <div className="grid w-full gap-2 sm:w-auto sm:grid-cols-2">
@@ -221,10 +223,10 @@ export default function AdminMemberProfilePage() {
 
         <div className="flex justify-end">
           <Link
-            href="/admin/miembros"
+            href="/admin/socios"
             className="inline-flex h-10 items-center justify-center rounded-lg bg-[var(--surface-2)] px-4 text-sm font-semibold text-[var(--ink)] transition hover:bg-[var(--surface-3)]"
           >
-            Volver a miembros
+            Volver a socios
           </Link>
         </div>
       </Card>
@@ -236,7 +238,7 @@ export default function AdminMemberProfilePage() {
           <>
             Vas a cambiar el perfil de{" "}
             <span className="font-semibold text-[var(--ink)]">{member.fullName}</span> a
-            professional. Se limpiara el vencimiento actual y el miembro debera enviar una nueva
+            professional. Se limpiara el vencimiento actual y el socio debera enviar una nueva
             solicitud si quiere recuperar una membresia estudiantil o asociada.
           </>
         }

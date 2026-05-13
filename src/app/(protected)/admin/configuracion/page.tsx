@@ -133,7 +133,7 @@ export default function AdminConfiguracionPage() {
                 Membresías asociadas
               </div>
               <label className="space-y-2 text-sm text-[var(--ink)]">
-                <span>Asociado profesional</span>
+                <span>Socio profesional</span>
                 <Input
                   type="number"
                   min={0}
@@ -142,7 +142,7 @@ export default function AdminConfiguracionPage() {
                 />
               </label>
               <label className="space-y-2 text-sm text-[var(--ink)]">
-                <span>Asociado estudiante</span>
+                <span>Socio estudiante</span>
                 <Input
                   type="number"
                   min={0}

@@ -105,11 +105,11 @@ export default function MemberEventRequestDetailPage() {
       <PageHeader
         title="Solicitud de evento"
         subtitle="Detalle de tu registro"
-        breadcrumb={["Miembro", "Solicitudes", "Evento"]}
+        breadcrumb={["Socio", "Solicitudes", "Evento"]}
       />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Link href="/member/solicitudes" className="text-sm font-medium text-[var(--accent)]">
+        <Link href="/socio/solicitudes" className="text-sm font-medium text-[var(--accent)]">
           Volver a solicitudes
         </Link>
         {request ? <StatusBadge status={request.status} /> : null}

@@ -73,7 +73,7 @@ export const getMemberMe: typeof api.getMemberMe = async () => {
   if (!useMock) return api.getMemberMe();
   const [first] = await mock.listMembers();
   if (!first) {
-    throw new Error("Member not found");
+    throw new Error("Socio no encontrado");
   }
   return first;
 };
@@ -82,11 +82,11 @@ export const updateMemberMe: typeof api.updateMemberMe = async (payload) => {
   if (!useMock) return api.updateMemberMe(payload);
   const [first] = await mock.listMembers();
   if (!first) {
-    throw new Error("Member not found");
+    throw new Error("Socio no encontrado");
   }
   const updated = await mock.updateMember(first.id, payload);
   if (!updated) {
-    throw new Error("Member not found");
+    throw new Error("Socio no encontrado");
   }
   return updated;
 };
@@ -119,6 +119,8 @@ export const approveSectionRequest = pick(
 );
 export const denySectionRequest = pick(api.denySectionRequest, mock.denySectionRequest);
 export const listSections = pick(api.listSections, mock.listSections);
+export const searchUsersForSection = pick(api.searchUsersForSection, mock.searchUsersForSection);
+export const listMySections = pick(api.listMySections, mock.listMySections);
 export const listAdminSections = pick(api.listAdminSections, mock.listAdminSections);
 export const getSection = pick(api.getSection, mock.getSection);
 export const updateSection = pick(api.updateSection, mock.updateSection);

@@ -56,3 +56,20 @@ export function formatCurrency(value: number, fallback = "Sin costo") {
     maximumFractionDigits: 0,
   }).format(value);
 }
+
+export function formatSpeakerType(value: string | null | undefined) {
+  if (value === "keynote") return "Magistral";
+  if (value === "plenary") return "Plenaria";
+  return "Sin ponencia";
+}
+
+export function formatProfileType(value: string | null | undefined, fallback = "Sin perfil") {
+  if (!value) return fallback;
+  const labels: Record<string, string> = {
+    professional: "Profesional",
+    student: "Estudiante",
+    associated_professional: "Socio profesional",
+    associated_student: "Socio estudiante",
+  };
+  return labels[value] ?? value;
+}

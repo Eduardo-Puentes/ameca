@@ -59,8 +59,8 @@ export default function AdminDiplomasPage() {
     !!template?.templateAssetUrl && (template?.fields?.length ?? 0) > 0;
 
   const columns = [
-    { header: "Miembro", accessor: "memberName" },
-    { header: "Email", accessor: "memberEmail" },
+    { header: "Socio", accessor: "memberName" },
+    { header: "Correo", accessor: "memberEmail" },
     { header: "Días asistidos", accessor: "attendedDays" },
     {
       header: "Estado",
@@ -99,7 +99,7 @@ export default function AdminDiplomasPage() {
         fullName: previewRecord.memberName,
         email: previewRecord.memberEmail,
         phoneNumber: "",
-        profileType: "Miembro",
+        profileType: "Socio",
         verified: true,
         expirationDate: "",
         role: "member",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/layout/PageMetaContext";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -17,9 +17,11 @@ import {
   createSectionInvite,
   declineSectionInvite,
   listMySectionInvites,
+  listMySections,
   listSectionInvites,
+  searchUsersForSection,
 } from "@/lib/data";
-import type { SectionInvite } from "@/lib/types";
+import type { Member, MySection, SectionInvite } from "@/lib/types";
 import { formatDateTime } from "@/lib/utils";
 import { useAppStore } from "@/store";
 
@@ -37,11 +39,15 @@ function toBadge(inviteStatus: SectionInvite["status"]) {
 }
 
 export default function MemberSeccionesPage() {
-  const { sections, loadSections, selectedEventId, user, events, loadEvents, members, loadMembers } =
+  const { selectedEventId, user, events, loadEvents, members, loadMembers } =
     useAppStore();
   const pushToast = useToastStore((state) => state.pushToast);
+  const [mySections, setMySections] = useState<MySection[]>([]);
   const [selectedSectionId, setSelectedSectionId] = useState("");
-  const [inviteMemberId, setInviteMemberId] = useState("");
+  const [inviteSearch, setInviteSearch] = useState("");
+  const [inviteResults, setInviteResults] = useState<Member[]>([]);
+  const [inviteSearchLoading, setInviteSearchLoading] = useState(false);
+  const [selectedInviteMember, setSelectedInviteMember] = useState<Member | null>(null);
   const [invitesLoading, setInvitesLoading] = useState(false);
   const [inviteActionLoading, setInviteActionLoading] = useState(false);
   const [respondingInviteId, setRespondingInviteId] = useState<string | null>(null);
@@ -52,11 +58,17 @@ export default function MemberSeccionesPage() {
   const [sectionInvites, setSectionInvites] = useState<SectionInvite[]>([]);
   const [myInvites, setMyInvites] = useState<SectionInvite[]>([]);
 
+  const refreshMySections = useCallback(() => {
+    listMySections()
+      .then((data) => setMySections(data))
+      .catch(() => setMySections([]));
+  }, []);
+
   useEffect(() => {
-    loadSections(selectedEventId ?? undefined);
+    refreshMySections();
     loadEvents();
     loadMembers();
-  }, [loadEvents, loadMembers, loadSections, selectedEventId]);
+  }, [loadEvents, loadMembers, refreshMySections]);
 
   const member = useMemo(() => {
     return members.find((item) => item.email === user?.email) ?? members[0];
@@ -68,13 +80,10 @@ export default function MemberSeccionesPage() {
     [myInvites]
   );
 
-  const myManagedSections = useMemo(() => {
-    const myName = user?.name?.trim().toLowerCase();
-    if (!myName) return [];
-    return sections.filter(
-      (section) => section.representativeName.trim().toLowerCase() === myName
-    );
-  }, [sections, user?.name]);
+  const myManagedSections = useMemo(
+    () => mySections.filter((section) => section.isRepresentative),
+    [mySections]
+  );
 
   useEffect(() => {
     if (!myManagedSections.length) {
@@ -92,11 +101,32 @@ export default function MemberSeccionesPage() {
   useEffect(() => {
     if (!selectedSectionId) return;
     setInvitesLoading(true);
+    setInviteSearch("");
+    setInviteResults([]);
+    setSelectedInviteMember(null);
     listSectionInvites(selectedSectionId)
       .then((data) => setSectionInvites(data))
       .catch(() => setSectionInvites([]))
       .finally(() => setInvitesLoading(false));
   }, [selectedSectionId]);
+
+  useEffect(() => {
+    if (!selectedSectionId || inviteSearch.trim().length < 2 || selectedInviteMember) {
+      setInviteResults([]);
+      setInviteSearchLoading(false);
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      setInviteSearchLoading(true);
+      searchUsersForSection(selectedSectionId, inviteSearch.trim())
+        .then((data) => setInviteResults(data))
+        .catch(() => setInviteResults([]))
+        .finally(() => setInviteSearchLoading(false));
+    }, 250);
+
+    return () => window.clearTimeout(timeout);
+  }, [inviteSearch, selectedInviteMember, selectedSectionId]);
 
   useEffect(() => {
     listMySectionInvites()
@@ -105,16 +135,18 @@ export default function MemberSeccionesPage() {
   }, []);
 
   const sendInvite = async () => {
-    if (!selectedSectionId || !inviteMemberId.trim()) return;
+    if (!selectedSectionId || !selectedInviteMember) return;
     setInviteActionLoading(true);
     try {
-      await createSectionInvite(selectedSectionId, inviteMemberId.trim());
+      await createSectionInvite(selectedSectionId, selectedInviteMember.id);
       const updatedInvites = await listSectionInvites(selectedSectionId);
       setSectionInvites(updatedInvites);
-      setInviteMemberId("");
+      setInviteSearch("");
+      setInviteResults([]);
+      setSelectedInviteMember(null);
       pushToast({
         title: "Invitación enviada",
-        message: "La invitación quedó pendiente para el miembro.",
+        message: "La invitación quedó pendiente para el socio.",
         tone: "success",
       });
     } catch (error) {
@@ -141,7 +173,7 @@ export default function MemberSeccionesPage() {
         title: response === "accept" ? "Invitación aceptada" : "Invitación declinada",
         tone: response === "accept" ? "success" : "info",
       });
-      loadSections(selectedEventId ?? undefined);
+      refreshMySections();
     } catch (error) {
       const message = error instanceof Error ? error.message : "No se pudo responder la invitación.";
       pushToast({ title: "Error", message, tone: "danger" });
@@ -179,7 +211,7 @@ export default function MemberSeccionesPage() {
   };
 
   const inviteColumns = [
-    { header: "Miembro", accessor: "invitedMemberName" },
+    { header: "Socio", accessor: "invitedMemberName" },
     { header: "Correo", accessor: "invitedMemberEmail" },
     { header: "Estado", accessor: "status", render: (invite: SectionInvite) => toBadge(invite.status) },
     {
@@ -236,7 +268,7 @@ export default function MemberSeccionesPage() {
       <PageHeader
         title="Secciones"
         subtitle="Información de tu sección e integrantes"
-        breadcrumb={["Miembro", "Secciones"]}
+        breadcrumb={["Socio", "Secciones"]}
       />
 
       <Card className="space-y-4">
@@ -244,7 +276,7 @@ export default function MemberSeccionesPage() {
           <div>
             <div className="text-lg font-semibold text-[var(--ink)]">Solicitar sección</div>
             <div className="text-sm text-[var(--muted)]">
-              Cualquier miembro verificado puede pedir abrir una sección para un evento abierto.
+              Cualquier socio verificado puede pedir abrir una sección para un evento abierto.
             </div>
           </div>
           <Button
@@ -279,6 +311,41 @@ export default function MemberSeccionesPage() {
 
       <Card className="space-y-4">
         <div>
+          <div className="text-lg font-semibold text-[var(--ink)]">Secciones donde participas</div>
+          <div className="text-sm text-[var(--muted)]">
+            Aquí aparecen las secciones de las que eres integrante o representante.
+          </div>
+        </div>
+        {mySections.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface-2)] p-5 text-sm text-[var(--muted)]">
+            Aún no perteneces a ninguna sección.
+          </div>
+        ) : (
+          <div className="grid gap-3 md:grid-cols-2">
+            {mySections.map((section) => (
+              <div
+                key={section.membershipId}
+                className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-4"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <div className="font-semibold text-[var(--ink)]">{section.name}</div>
+                    <div className="mt-1 text-sm text-[var(--muted)]">
+                      {section.eventName || "Evento"} · {section.pCount} integrante(s)
+                    </div>
+                  </div>
+                  <Badge tone={section.isRepresentative ? "success" : "info"}>
+                    {section.isRepresentative ? "Representante" : "Integrante"}
+                  </Badge>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+
+      <Card className="space-y-4">
+        <div>
           <div className="text-lg font-semibold text-[var(--ink)]">Invitaciones recibidas</div>
           <div className="text-sm text-[var(--muted)]">
             Acepta o rechaza invitaciones para unirte a una sección de evento.
@@ -298,7 +365,7 @@ export default function MemberSeccionesPage() {
           <div className="space-y-1">
             <h2 className="text-lg font-semibold text-[var(--ink)]">Invitar integrantes</h2>
             <p className="text-sm text-[var(--muted)]">
-              Envía una invitación por correo para que otro miembro se una a tu sección.
+              Envía una invitación por correo para que otro socio se una a tu sección.
             </p>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
@@ -315,16 +382,57 @@ export default function MemberSeccionesPage() {
                 ))}
               </select>
             </FormField>
-            <FormField label="ID del miembro">
-              <Input
-                placeholder="ID del miembro invitado"
-                value={inviteMemberId}
-                onChange={(event) => setInviteMemberId(event.target.value)}
-              />
+            <FormField label="Buscar socio">
+              <div className="relative">
+                <Input
+                  placeholder="Nombre o correo del socio"
+                  value={inviteSearch}
+                  onChange={(event) => {
+                    setInviteSearch(event.target.value);
+                    setSelectedInviteMember(null);
+                  }}
+                />
+                {selectedInviteMember ? (
+                  <div className="mt-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-3 text-sm">
+                    <div className="font-semibold text-[var(--ink)]">
+                      {selectedInviteMember.fullName}
+                    </div>
+                    <div className="text-[var(--muted)]">{selectedInviteMember.email}</div>
+                  </div>
+                ) : inviteSearch.trim().length >= 2 ? (
+                  <div className="absolute z-20 mt-2 max-h-64 w-full overflow-auto rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-[0_18px_40px_-28px_rgba(27,29,27,0.45)]">
+                    {inviteSearchLoading ? (
+                      <div className="p-3 text-sm text-[var(--muted)]">Buscando...</div>
+                    ) : inviteResults.length === 0 ? (
+                      <div className="p-3 text-sm text-[var(--muted)]">
+                        No hay socios disponibles con esa búsqueda.
+                      </div>
+                    ) : (
+                      inviteResults.map((result) => (
+                        <button
+                          key={result.id}
+                          type="button"
+                          className="block w-full px-3 py-2 text-left text-sm transition hover:bg-[var(--surface-2)]"
+                          onClick={() => {
+                            setSelectedInviteMember(result);
+                            setInviteSearch(`${result.fullName} · ${result.email}`);
+                            setInviteResults([]);
+                          }}
+                        >
+                          <span className="block font-semibold text-[var(--ink)]">
+                            {result.fullName}
+                          </span>
+                          <span className="block text-[var(--muted)]">{result.email}</span>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                ) : null}
+              </div>
             </FormField>
           </div>
           <div className="flex justify-end">
-            <Button onClick={sendInvite} disabled={inviteActionLoading || !inviteMemberId.trim()}>
+            <Button onClick={sendInvite} disabled={inviteActionLoading || !selectedInviteMember}>
               Enviar invitación
             </Button>
           </div>

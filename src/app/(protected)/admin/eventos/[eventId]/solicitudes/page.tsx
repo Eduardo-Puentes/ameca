@@ -39,8 +39,8 @@ export default function AdminEventRequestsPage() {
   const currentRequests = useMemo(() => eventRequests, [eventRequests]);
 
   const columns = [
-    { header: "Miembro", accessor: "memberName" },
-    { header: "Email", accessor: "memberEmail" },
+    { header: "Socio", accessor: "memberName" },
+    { header: "Correo", accessor: "memberEmail" },
     {
       header: "Costo",
       accessor: "calculatedCost",
@@ -100,7 +100,7 @@ export default function AdminEventRequestsPage() {
           <Input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Buscar por miembro, correo, sección o comentarios"
+            placeholder="Buscar por socio, correo, sección o comentarios"
             className="md:max-w-xl"
           />
           <CostTypeFilter value={costType} onChange={setCostType} />

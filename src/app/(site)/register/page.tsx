@@ -62,7 +62,7 @@ export default function RegisterPage() {
               Cuenta nueva en {brand.brandName}
             </div>
             <h1 className="text-3xl font-semibold text-[var(--ink)]">
-              Registro de miembro
+              Registro de socio
             </h1>
             <p className="text-sm text-[var(--muted)]">
               Crea tu cuenta para solicitar membresía y gestionar tu participación en eventos.

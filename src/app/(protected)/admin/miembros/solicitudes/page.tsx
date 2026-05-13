@@ -12,7 +12,7 @@ import { RequestStatusFilter } from "@/components/ui/RequestStatusFilter";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useAppStore } from "@/store";
 import type { MembershipRequest } from "@/lib/types";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatProfileType } from "@/lib/utils";
 
 export default function AdminSolicitudesMembresiaPage() {
   const {
@@ -37,9 +37,17 @@ export default function AdminSolicitudesMembresiaPage() {
   }, [costType, deferredSearch, loadMembershipRequests, status]);
 
   const columns = [
-    { header: "Miembro", accessor: "memberName" },
-    { header: "Perfil actual", accessor: "currentProfileType" },
-    { header: "Perfil", accessor: "profileType" },
+    { header: "Socio", accessor: "memberName" },
+    {
+      header: "Perfil actual",
+      accessor: "currentProfileType",
+      render: (req: MembershipRequest) => formatProfileType(req.currentProfileType, "Sin registro"),
+    },
+    {
+      header: "Perfil",
+      accessor: "profileType",
+      render: (req: MembershipRequest) => formatProfileType(req.profileType),
+    },
     {
       header: "Fecha",
       accessor: "createdAt",
@@ -56,7 +64,7 @@ export default function AdminSolicitudesMembresiaPage() {
       className: "w-40 px-3 py-4 text-center",
       render: (req: MembershipRequest) => (
         <Link
-          href={`/admin/miembros/solicitudes/${req.id}`}
+          href={`/admin/socios/solicitudes/${req.id}`}
           className={viewActionClassName}
         >
           Ver
@@ -70,7 +78,7 @@ export default function AdminSolicitudesMembresiaPage() {
       <PageHeader
         title="Solicitudes de membresía"
         subtitle="Aprobaciones pendientes y comprobantes"
-        breadcrumb={["Admin", "Miembros", "Solicitudes"]}
+        breadcrumb={["Admin", "Socios", "Solicitudes"]}
       />
 
       <Card>
@@ -78,7 +86,7 @@ export default function AdminSolicitudesMembresiaPage() {
           <Input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Buscar por miembro, correo, teléfono o perfil"
+            placeholder="Buscar por socio, correo, teléfono o perfil"
             className="md:max-w-xl"
           />
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">

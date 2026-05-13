@@ -11,7 +11,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useToastStore } from "@/components/ui/Toast";
 import { addMembershipRequestPaymentProof, deletePaymentProof, getMyMembershipRequest } from "@/lib/data";
 import type { MembershipRequest } from "@/lib/types";
-import { formatCurrency, formatDateTime } from "@/lib/utils";
+import { formatCurrency, formatDateTime, formatProfileType } from "@/lib/utils";
 
 export default function MemberMembershipRequestDetailPage() {
   const params = useParams();
@@ -105,11 +105,11 @@ export default function MemberMembershipRequestDetailPage() {
       <PageHeader
         title="Solicitud de membresía"
         subtitle="Detalle de tu solicitud"
-        breadcrumb={["Miembro", "Solicitudes", "Membresía"]}
+        breadcrumb={["Socio", "Solicitudes", "Membresía"]}
       />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Link href="/member/solicitudes" className="text-sm font-medium text-[var(--accent)]">
+        <Link href="/socio/solicitudes" className="text-sm font-medium text-[var(--accent)]">
           Volver a solicitudes
         </Link>
         {request ? <StatusBadge status={request.status} /> : null}
@@ -126,10 +126,14 @@ export default function MemberMembershipRequestDetailPage() {
               <div className="space-y-2">
                 <div className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">Cambio solicitado</div>
                 <div className="text-sm text-[var(--muted)]">
-                  Perfil actual: <span className="text-[var(--ink)]">{request.currentProfileType || "Sin registro"}</span>
+                  Perfil actual:{" "}
+                  <span className="text-[var(--ink)]">
+                    {formatProfileType(request.currentProfileType, "Sin registro")}
+                  </span>
                 </div>
                 <div className="text-sm text-[var(--muted)]">
-                  Nuevo perfil: <span className="text-[var(--ink)]">{request.profileType}</span>
+                  Nuevo perfil:{" "}
+                  <span className="text-[var(--ink)]">{formatProfileType(request.profileType)}</span>
                 </div>
                 <div className="text-sm text-[var(--muted)]">
                   Costo:{" "}

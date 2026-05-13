@@ -124,7 +124,7 @@ export default function MemberEventoRegistroPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <PageHeader title="Registro" subtitle="Cargando registro" breadcrumb={["Miembro", "Eventos"]} />
+        <PageHeader title="Registro" subtitle="Cargando registro" breadcrumb={["Socio", "Eventos"]} />
         <Card>Cargando registro...</Card>
       </div>
     );
@@ -133,10 +133,10 @@ export default function MemberEventoRegistroPage() {
   if (error || !registration) {
     return (
       <div className="space-y-6">
-        <PageHeader title="Registro" subtitle="No disponible" breadcrumb={["Miembro", "Eventos"]} />
+        <PageHeader title="Registro" subtitle="No disponible" breadcrumb={["Socio", "Eventos"]} />
         <Card className="space-y-4">
           <div className="text-sm text-[var(--muted)]">{error ?? "No tienes registro aprobado para este evento."}</div>
-          <Link href="/member/dashboard">
+          <Link href="/socio/dashboard">
             <Button variant="secondary">Volver al panel</Button>
           </Link>
         </Card>
@@ -149,7 +149,7 @@ export default function MemberEventoRegistroPage() {
       <PageHeader
         title={registration.event.name}
         subtitle="Registro aprobado"
-        breadcrumb={["Miembro", "Eventos", "Registro"]}
+        breadcrumb={["Socio", "Eventos", "Registro"]}
       />
 
       <div className="grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
@@ -196,7 +196,7 @@ export default function MemberEventoRegistroPage() {
             <QrCode className="h-4 w-4" />
             Generar QR
           </Button>
-          <Link href={`/member/eventos/${registration.eventId}`}>
+          <Link href={`/socio/eventos/${registration.eventId}`}>
             <Button variant="secondary">
               <Ticket className="h-4 w-4" />
               Ver evento

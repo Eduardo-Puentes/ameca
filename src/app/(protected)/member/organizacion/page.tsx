@@ -9,7 +9,7 @@ export default function MemberOrganizationPage() {
       <PageHeader
         title="Organización"
         subtitle="Funcionalidad retirada"
-        breadcrumb={["Miembro", "Organización"]}
+        breadcrumb={["Socio", "Organización"]}
       />
       <Card>
         <div className="text-sm text-[var(--muted)]">

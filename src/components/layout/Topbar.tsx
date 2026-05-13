@@ -18,7 +18,7 @@ export function Topbar({
     user?.role === "staff"
       ? "personal"
       : user?.role === "member"
-      ? "miembro"
+      ? "socio"
       : user?.role === "representative"
       ? "representante"
       : user?.role === "admin"

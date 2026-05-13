@@ -11,6 +11,18 @@ const nextConfig: NextConfig = {
     root: projectRoot,
   },
   outputFileTracingRoot: projectRoot,
+  async rewrites() {
+    return [
+      {
+        source: "/socio/:path*",
+        destination: "/member/:path*",
+      },
+      {
+        source: "/admin/socios/:path*",
+        destination: "/admin/miembros/:path*",
+      },
+    ];
+  },
 };
 
 export default nextConfig;

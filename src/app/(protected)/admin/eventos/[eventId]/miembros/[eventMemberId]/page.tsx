@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/Textarea";
 import { useToastStore } from "@/components/ui/Toast";
 import { deleteEventMember, getEventMember } from "@/lib/data";
 import type { EventMemberRegistration } from "@/lib/types";
-import { formatCurrency, formatDateTime } from "@/lib/utils";
+import { formatCurrency, formatDateTime, formatProfileType, formatSpeakerType } from "@/lib/utils";
 import { useAppStore } from "@/store";
 
 export default function AdminEventMemberDetailPage() {
@@ -62,8 +62,8 @@ export default function AdminEventMemberDetailPage() {
     <div className="space-y-6">
       <PageHeader
         title="Registro de evento"
-        subtitle="Detalle del miembro registrado"
-        breadcrumb={["Admin", "Eventos", "Miembros", "Detalle"]}
+        subtitle="Detalle del socio registrado"
+        breadcrumb={["Admin", "Eventos", "Socios", "Detalle"]}
       />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -86,14 +86,17 @@ export default function AdminEventMemberDetailPage() {
           <Card className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <div className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">Miembro</div>
+                <div className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">Socio</div>
                 <div className="text-lg font-semibold text-[var(--ink)]">{registration.memberName}</div>
                 <div className="text-sm text-[var(--muted)]">{registration.memberEmail}</div>
                 <div className="text-sm text-[var(--muted)]">
                   Teléfono: {registration.memberPhoneNumber || "Sin teléfono"}
                 </div>
                 <div className="text-sm text-[var(--muted)]">
-                  Perfil: <span className="text-[var(--ink)]">{registration.profileType || "Sin perfil"}</span>
+                  Perfil:{" "}
+                  <span className="text-[var(--ink)]">
+                    {formatProfileType(String(registration.profileType))}
+                  </span>
                 </div>
                 <div className="text-sm text-[var(--muted)]">
                   Organización: <span className="text-[var(--ink)]">{registration.organization || "Sin registro"}</span>
@@ -132,9 +135,9 @@ export default function AdminEventMemberDetailPage() {
                 </div>
               </div>
               <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
-                <div className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">Speaker</div>
+                <div className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">Ponente</div>
                 <div className="mt-2 text-sm font-semibold text-[var(--ink)]">
-                  {registration.isSpeaker ? registration.speakerType ?? "plenary" : "No"}
+                  {registration.isSpeaker ? formatSpeakerType(registration.speakerType ?? "plenary") : "No"}
                 </div>
               </div>
             </div>
@@ -224,7 +227,7 @@ export default function AdminEventMemberDetailPage() {
               <div>
                 <div className="text-lg font-semibold text-[var(--ink)]">Cancelar registro</div>
                 <div className="text-sm text-[var(--muted)]">
-                  Al cancelar, se desvinculan comprobantes y ponencias, se registra auditoría y se notifica al miembro.
+                  Al cancelar, se desvinculan comprobantes y ponencias, se registra auditoría y se notifica al socio.
                 </div>
               </div>
               <Button variant="danger" onClick={() => setCancelOpen(true)}>
