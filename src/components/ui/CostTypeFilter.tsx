@@ -27,7 +27,7 @@ export function CostTypeFilter({
       role="group"
       aria-label={ariaLabel}
       className={cn(
-        "inline-grid grid-cols-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-1",
+        "grid w-full grid-cols-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-1 sm:inline-grid sm:w-auto",
         className
       )}
     >
@@ -40,7 +40,7 @@ export function CostTypeFilter({
             aria-pressed={active}
             onClick={() => onChange(option.value)}
             className={cn(
-              "h-9 min-w-24 rounded-md px-3 text-sm font-medium transition",
+              "h-9 min-w-0 rounded-md px-2 text-xs font-medium transition sm:min-w-24 sm:px-3 sm:text-sm",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]",
               active
                 ? "bg-white text-[var(--ink)] shadow-sm"
