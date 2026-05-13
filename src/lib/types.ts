@@ -1,8 +1,9 @@
-export type BackendRole = "superuser" | "admin" | "staff" | "member";
+export type BackendRole = "superuser" | "admin" | "treasurer" | "staff" | "member";
 
 export type Role =
   | "superadmin"
   | "admin"
+  | "treasurer"
   | "staff"
   | "member"
   | "representative";
@@ -40,7 +41,7 @@ export type User = {
   role: Role;
 };
 
-export type AdminRole = Extract<BackendRole, "admin" | "staff">;
+export type AdminRole = Extract<BackendRole, "admin" | "treasurer" | "staff">;
 
 export type Event = {
   id: string;
@@ -51,10 +52,27 @@ export type Event = {
   location: string;
   description: string;
   capacity: number;
+  profilePrices: EventProfilePrices;
   status: "open" | "closed";
 };
 
+export type PublicEventSpeaker = {
+  id: string;
+  name: string;
+  speakerType: SpeakerType;
+  photoUrl: string;
+};
+
+export type EventProfilePrices = {
+  professional: number;
+  student: number;
+  associatedProfessional: number;
+  associatedStudent: number;
+};
+
 export type RequestStatus = "pending" | "approved" | "rejected";
+export type CostType = "all" | "paid" | "free";
+export type RequestStatusFilter = "all" | RequestStatus;
 export type ProfileType =
   | "professional"
   | "student"
@@ -80,6 +98,59 @@ export type EventRequest = {
   decidedAt?: number | string | null;
   decidedById?: string | null;
   decidedByName?: string;
+  paymentProofs?: PaymentProof[];
+};
+
+export type EventMemberRegistration = {
+  id: string;
+  eventId: string;
+  event: Event | null;
+  memberId: string;
+  memberName: string;
+  memberEmail: string;
+  memberPhoneNumber: string;
+  profileType: ProfileType | string;
+  organization: string;
+  sectionId: string | null;
+  sectionName: string;
+  ticketToken: string;
+  cost: number;
+  isSpeaker: boolean;
+  speakerType?: SpeakerType;
+  speakerPhotoUrl?: string;
+  speakerDescription?: string;
+  attended: boolean;
+  approvedAt: number | string | null;
+  approvedById: string | null;
+  approvedByName: string;
+  paymentProofs?: PaymentProof[];
+  presentations?: Presentation[];
+};
+
+export type MemberEventRegistration = {
+  id: string;
+  eventId: string;
+  event: Event;
+  memberId: string;
+  memberName: string;
+  memberEmail: string;
+  memberPhoneNumber?: string;
+  profileType?: ProfileType | string;
+  organization?: string;
+  sectionId: string | null;
+  sectionName: string;
+  ticketToken: string;
+  cost: number;
+  isSpeaker: boolean;
+  speakerType?: SpeakerType;
+  speakerPhotoUrl?: string;
+  speakerDescription?: string;
+  attended: boolean;
+  approvedAt: number | string | null;
+  approvedById: string | null;
+  approvedByName: string;
+  paymentProofs?: PaymentProof[];
+  presentations?: Presentation[];
 };
 
 export type SectionRequestStatus = RequestStatus;
@@ -87,18 +158,55 @@ export type SectionRequestStatus = RequestStatus;
 export type Section = {
   id: string;
   eventId: string;
+  eventName?: string;
   name: string;
   representativeName: string;
   pCount: number;
   status: SectionRequestStatus;
 };
 
+export type MySection = Section & {
+  membershipId: string;
+  joinedAt: number | string;
+  isRepresentative: boolean;
+};
+
+export type SectionRepresentative = {
+  id: string;
+  name: string;
+  email: string;
+  phoneNumber: string;
+  profileType: ProfileType | string;
+  organization: string;
+};
+
+export type SectionMember = {
+  id: string;
+  sectionId: string;
+  eventId: string;
+  memberId: string;
+  memberName: string;
+  memberEmail: string;
+  memberPhoneNumber: string;
+  profileType: ProfileType | string;
+  organization: string;
+  isRepresentative: boolean;
+  createdAt: number | string;
+};
+
+export type SectionDetail = Section & {
+  event: Event | null;
+  representative: SectionRepresentative | null;
+  memberCount: number;
+  members: SectionMember[];
+};
+
 export type SectionRequest = {
   id: string;
   eventId: string;
   eventName: string;
+  name: string;
   representativeName: string;
-  pCount: number;
   status: SectionRequestStatus;
   comments?: string;
   createdAt: number | string;
@@ -114,6 +222,7 @@ export type MembershipRequest = {
   profileType: string;
   status: RequestStatus;
   schoolIdentificationUrl?: string;
+  cvUrl?: string;
   upgradeCost?: number;
   paymentProofUrl?: string;
   comments?: string;
@@ -121,7 +230,30 @@ export type MembershipRequest = {
   decidedAt?: number | string | null;
   decidedById?: string | null;
   decidedByName?: string;
+  paymentProofs?: PaymentProof[];
 };
+
+export type PaymentProof = {
+  id: string;
+  memberId: string;
+  eventMemberRequestId?: string;
+  membershipRequestId?: string;
+  eventMemberId?: string;
+  fileKey: string;
+  fileName: string;
+  contentType?: string;
+  fileUrl: string;
+  uploadedAt: number | string;
+  deletedAt?: number | string | null;
+  deleted?: boolean;
+};
+
+export type MembershipPrices = {
+  profilePrices: EventProfilePrices;
+  items: Array<{ profileType: ProfileType; cost: number }>;
+};
+
+export type SpeakerType = "none" | "keynote" | "plenary";
 
 export type BulkTier = {
   id: string;
@@ -165,6 +297,12 @@ export type Member = {
   role: Role;
   organization?: string;
   organizationId?: string;
+  paymentProofKey?: string;
+  paymentProofUrl?: string;
+  schoolIdentificationKey?: string;
+  schoolIdentificationUrl?: string;
+  cvKey?: string;
+  cvUrl?: string;
 };
 
 export type MemberUpdatePayload = Partial<
@@ -199,7 +337,18 @@ export type AdminUserCreateResult = {
 export type AdminUserUpdatePayload = Partial<AdminUserCreatePayload>;
 
 export type EventUpsertPayload = Partial<
-  Pick<Event, "name" | "startDate" | "duration" | "open" | "location" | "description" | "capacity" | "status">
+  Pick<
+    Event,
+    | "name"
+    | "startDate"
+    | "duration"
+    | "open"
+    | "location"
+    | "description"
+    | "capacity"
+    | "profilePrices"
+    | "status"
+  >
 >;
 
 export type OrganizationStatus = "pending" | "approved" | "rejected";
@@ -239,6 +388,7 @@ export type SectionInvite = {
   id: string;
   sectionId: string;
   eventId: string;
+  eventName?: string;
   sectionName?: string;
   invitedMemberId: string;
   invitedMemberName?: string;
@@ -258,11 +408,27 @@ export type Presentation = {
   memberId: string;
   name?: string;
   description?: string;
-  fileName: string;
+  presenterName?: string;
+  presenterEmail?: string;
+  presentationType?: "poster" | "oral" | "POSTER" | "ORAL";
+  confirmationCode?: string;
+  confirmed?: boolean;
+  confirmedAt?: number | string | null;
+  fileName?: string;
   fileUrl: string;
   uploadedAt: number | string;
+  updatedAt?: number | string;
   memberName?: string;
   memberEmail?: string;
+};
+
+export type PresentationImportResult = {
+  items: Presentation[];
+  errors: Array<{ row: number; error: string }>;
+  emailErrors: Array<{ email: string; error: string }>;
+  count: number;
+  errorCount: number;
+  emailErrorCount: number;
 };
 
 export type RegistrationStatus = {

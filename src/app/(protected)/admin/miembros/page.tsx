@@ -6,19 +6,22 @@ import { PageHeader } from "@/components/layout/PageMetaContext";
 import { Card } from "@/components/ui/Card";
 import { DataTable } from "@/components/ui/DataTable";
 import { Button } from "@/components/ui/Button";
+import { ConfirmActionModal } from "@/components/ui/ConfirmActionModal";
 import { Input } from "@/components/ui/Input";
 import { Pagination } from "@/components/ui/Pagination";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useToastStore } from "@/components/ui/Toast";
 import { useAppStore } from "@/store";
 import type { Member } from "@/lib/types";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatProfileType } from "@/lib/utils";
 
 export default function AdminMiembrosPage() {
   const { members, loadMembers, updateMemberProfile, removeMember } = useAppStore();
   const pushToast = useToastStore((state) => state.pushToast);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [memberToDelete, setMemberToDelete] = useState<Member | null>(null);
+  const [verifyingMemberId, setVerifyingMemberId] = useState<string | null>(null);
   const pageSize = 10;
   const deferredSearch = useDeferredValue(search);
 
@@ -48,7 +51,7 @@ export default function AdminMiembrosPage() {
 
   const columns = [
     {
-      header: "Miembro",
+      header: "Socio",
       accessor: "fullName",
       render: (member: Member) => (
         <div>
@@ -57,7 +60,11 @@ export default function AdminMiembrosPage() {
         </div>
       ),
     },
-    { header: "Tipo", accessor: "profileType" },
+    {
+      header: "Tipo",
+      accessor: "profileType",
+      render: (member: Member) => formatProfileType(String(member.profileType)),
+    },
     {
       header: "Estado",
       accessor: "verified",
@@ -77,7 +84,7 @@ export default function AdminMiembrosPage() {
       render: (member: Member) => (
         <div className="flex flex-wrap gap-2">
           <Link
-            href={`/admin/miembros/${member.id}`}
+            href={`/admin/socios/${member.id}`}
             className="inline-flex h-9 items-center justify-center rounded-lg bg-[var(--accent-soft)] px-3 text-sm font-semibold text-[var(--accent-strong)] transition hover:bg-[var(--accent)] hover:text-white"
           >
             Ver perfil
@@ -87,9 +94,19 @@ export default function AdminMiembrosPage() {
               size="sm"
               variant="secondary"
               onClick={async () => {
-                await updateMemberProfile(member.id, { verified: true });
-                pushToast({ title: "Miembro verificado", tone: "success" });
+                try {
+                  setVerifyingMemberId(member.id);
+                  await updateMemberProfile(member.id, { verified: true });
+                  pushToast({ title: "Socio verificado", tone: "success" });
+                } catch (error) {
+                  const message = error instanceof Error ? error.message : "No se pudo verificar.";
+                  pushToast({ title: "Error al verificar", message, tone: "danger" });
+                } finally {
+                  setVerifyingMemberId(null);
+                }
               }}
+              loading={verifyingMemberId === member.id}
+              loadingText="Marcando..."
             >
               Marcar verificado
             </Button>
@@ -97,16 +114,7 @@ export default function AdminMiembrosPage() {
           <Button
             size="sm"
             variant="danger"
-            onClick={async () => {
-              try {
-                await removeMember(member.id);
-                pushToast({ title: "Miembro eliminado", tone: "success" });
-              } catch (error) {
-                const message =
-                  error instanceof Error ? error.message : "No se pudo eliminar el miembro.";
-                pushToast({ title: "Error al eliminar", message, tone: "danger" });
-              }
-            }}
+            onClick={() => setMemberToDelete(member)}
           >
             Eliminar
           </Button>
@@ -118,16 +126,16 @@ export default function AdminMiembrosPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Miembros"
-        subtitle="Directorio de miembros verificados"
-        breadcrumb={["Admin", "Miembros"]}
+        title="Socios"
+        subtitle="Directorio de socios verificados"
+        breadcrumb={["Admin", "Socios"]}
       />
 
       <Card className="space-y-4">
         <div>
-          <div className="text-lg font-semibold text-[var(--ink)]">Miembros registrados</div>
+          <div className="text-lg font-semibold text-[var(--ink)]">Socios registrados</div>
           <div className="text-sm text-[var(--muted)]">
-            Solo se muestran miembros verificados y correctamente registrados en la app.
+            Solo se muestran socios verificados y correctamente registrados en la app.
           </div>
         </div>
         <Input
@@ -146,6 +154,28 @@ export default function AdminMiembrosPage() {
           onPageChange={setPage}
         />
       </Card>
+
+      <ConfirmActionModal
+        open={!!memberToDelete}
+        title="Eliminar socio"
+        description={
+          <>
+            Estas a punto de eliminar{" "}
+            <span className="font-semibold text-[var(--ink)]">
+              {memberToDelete?.fullName}
+            </span>
+            . Esta accion no se puede deshacer.
+          </>
+        }
+        confirmLabel="Eliminar socio"
+        onClose={() => setMemberToDelete(null)}
+        onConfirm={async () => {
+          if (!memberToDelete) return;
+          await removeMember(memberToDelete.id);
+        }}
+        successToast={{ title: "Socio eliminado", tone: "success" }}
+        errorTitle="Error al eliminar"
+      />
     </div>
   );
 }

@@ -9,37 +9,139 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Select } from "@/components/ui/Select";
 import { useToastStore } from "@/components/ui/Toast";
 import { useAppStore } from "@/store";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatProfileType } from "@/lib/utils";
 import type { ProfileType } from "@/lib/types";
 
 const PROFILE_OPTIONS: Array<{ value: ProfileType; label: string }> = [
   { value: "student", label: "Estudiante" },
-  { value: "associated_professional", label: "Asociado profesional" },
-  { value: "associated_student", label: "Asociado estudiante" },
+  { value: "associated_professional", label: "Socio profesional" },
+  { value: "associated_student", label: "Socio estudiante" },
 ];
 
 export default function MemberMembresiaPage() {
-  const { members, loadMembers, createMembershipRequest } = useAppStore();
+  const { members, loadMembers, createMembershipRequest, requestsLoading } = useAppStore();
   const user = useAppStore((state) => state.user);
   const pushToast = useToastStore((state) => state.pushToast);
   const [requestedType, setRequestedType] = useState<ProfileType>("student");
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [schoolIdFile, setSchoolIdFile] = useState<File | null>(null);
+  const [cvFile, setCvFile] = useState<File | null>(null);
 
   useEffect(() => {
     loadMembers();
   }, [loadMembers]);
 
+  useEffect(() => {
+    if (requestedType !== "associated_professional" && requestedType !== "associated_student") {
+      setProofFile(null);
+    }
+    if (requestedType !== "student" && requestedType !== "associated_student") {
+      setSchoolIdFile(null);
+    }
+    if (requestedType !== "associated_professional") {
+      setCvFile(null);
+    }
+  }, [requestedType]);
+
   const member = useMemo(() => {
     return members.find((item) => item.email === user?.email) ?? members[0];
   }, [members, user]);
+
+  const handleSubmit = async () => {
+    if (!member) {
+      pushToast({
+        title: "Perfil no disponible",
+        message: "Espera a que cargue tu información antes de enviar la solicitud.",
+        tone: "warning",
+      });
+      return;
+    }
+
+    if (member.profileType === requestedType) {
+      pushToast({
+        title: "Selecciona otro tipo",
+        message: "Ya tienes ese tipo de membresía.",
+        tone: "warning",
+      });
+      return;
+    }
+
+    if (member.profileType !== "professional") {
+      pushToast({
+        title: "Cambio no disponible",
+        message:
+          "Para cambiar tu membresía actual, primero solicita a administración que revierta tu cuenta a profesional.",
+        tone: "warning",
+      });
+      return;
+    }
+
+    if (
+      (requestedType === "associated_professional" || requestedType === "associated_student") &&
+      !proofFile
+    ) {
+      pushToast({
+        title: "Comprobante requerido",
+        message: "Sube tu comprobante de pago antes de enviar la solicitud.",
+        tone: "warning",
+      });
+      return;
+    }
+
+    if ((requestedType === "student" || requestedType === "associated_student") && !schoolIdFile) {
+      pushToast({
+        title: "Identificación requerida",
+        message: "Sube tu identificación escolar antes de enviar la solicitud.",
+        tone: "warning",
+      });
+      return;
+    }
+
+    if (requestedType === "associated_professional" && !cvFile) {
+      pushToast({
+        title: "CV requerido",
+        message: "Sube tu CV antes de enviar la solicitud.",
+        tone: "warning",
+      });
+      return;
+    }
+
+    try {
+      const paymentProofForRequest =
+        requestedType === "associated_professional" || requestedType === "associated_student"
+          ? proofFile
+          : null;
+      const schoolIdForRequest =
+        requestedType === "student" || requestedType === "associated_student"
+          ? schoolIdFile
+          : null;
+      const cvForRequest = requestedType === "associated_professional" ? cvFile : null;
+      await createMembershipRequest(
+        requestedType,
+        paymentProofForRequest,
+        schoolIdForRequest,
+        cvForRequest
+      );
+      pushToast({
+        title: "Solicitud enviada",
+        message: "Un administrador revisará tu solicitud.",
+        tone: "info",
+      });
+      setProofFile(null);
+      setSchoolIdFile(null);
+      setCvFile(null);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "No se pudo enviar la solicitud.";
+      pushToast({ title: "No se pudo enviar", message, tone: "danger" });
+    }
+  };
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Membresía"
         subtitle="Estado actual y solicitud de actualización"
-        breadcrumb={["Miembro", "Membresía"]}
+        breadcrumb={["Socio", "Membresía"]}
       />
 
       <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr]">
@@ -48,7 +150,9 @@ export default function MemberMembresiaPage() {
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-[var(--muted)]">Tipo</span>
-              <span className="font-semibold text-[var(--ink)]">{member?.profileType}</span>
+              <span className="font-semibold text-[var(--ink)]">
+                {formatProfileType(String(member?.profileType ?? ""))}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-[var(--muted)]">Verificación</span>
@@ -99,15 +203,17 @@ export default function MemberMembresiaPage() {
               onChange={setSchoolIdFile}
             />
           ) : null}
+          {requestedType === "associated_professional" ? (
+            <FileUpload
+              label="CV"
+              accept=".pdf,.doc,.docx"
+              onChange={setCvFile}
+            />
+          ) : null}
           <Button
-            onClick={async () => {
-              await createMembershipRequest(requestedType, proofFile, schoolIdFile);
-              pushToast({
-                title: "Solicitud enviada",
-                message: "Un administrador revisará tu comprobante.",
-                tone: "info",
-              });
-            }}
+            onClick={handleSubmit}
+            loading={requestsLoading}
+            loadingText="Enviando..."
           >
             Enviar solicitud
           </Button>

@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/Input";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useToastStore } from "@/components/ui/Toast";
 import { useAppStore } from "@/store";
-import { formatDate } from "@/lib/utils";
+import { formatDate, formatProfileType } from "@/lib/utils";
 
 export default function MemberPerfilPage() {
   const { members, loadMembers, updateMemberProfile } = useAppStore();
@@ -25,14 +25,23 @@ export default function MemberPerfilPage() {
   }, [members, user]);
 
   const [form, setForm] = useState({ fullName: "", email: "" });
+  const [saving, setSaving] = useState(false);
   const expirationDate = formatDate(member?.expirationDate, "Sin vencimiento");
 
   const handleSave = async () => {
     if (!member) return;
-    await updateMemberProfile(member.id, {
-      fullName: form.fullName || member.fullName,
-    });
-    pushToast({ title: "Perfil actualizado", tone: "success" });
+    try {
+      setSaving(true);
+      await updateMemberProfile(member.id, {
+        fullName: form.fullName || member.fullName,
+      });
+      pushToast({ title: "Perfil actualizado", tone: "success" });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "No se pudo guardar el perfil.";
+      pushToast({ title: "Error al guardar", message, tone: "danger" });
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -40,7 +49,7 @@ export default function MemberPerfilPage() {
       <PageHeader
         title="Perfil"
         subtitle="Gestiona tus datos personales"
-        breadcrumb={["Miembro", "Perfil"]}
+        breadcrumb={["Socio", "Perfil"]}
       />
 
       <div className="grid gap-6 lg:grid-cols-[1.1fr_1fr]">
@@ -53,7 +62,7 @@ export default function MemberPerfilPage() {
                 onChange={(event) => setForm((prev) => ({ ...prev, fullName: event.target.value }))}
               />
             </FormField>
-            <FormField label="Email">
+            <FormField label="Correo">
               <Input
                 value={form.email || member?.email || ""}
                 onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
@@ -61,7 +70,9 @@ export default function MemberPerfilPage() {
               />
             </FormField>
           </div>
-          <Button onClick={handleSave}>Guardar cambios</Button>
+          <Button onClick={handleSave} loading={saving} loadingText="Guardando...">
+            Guardar cambios
+          </Button>
         </Card>
 
         <Card className="space-y-4">
@@ -69,7 +80,9 @@ export default function MemberPerfilPage() {
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-[var(--muted)]">Tipo</span>
-              <span className="font-semibold text-[var(--ink)]">{member?.profileType}</span>
+              <span className="font-semibold text-[var(--ink)]">
+                {formatProfileType(String(member?.profileType ?? ""))}
+              </span>
             </div>
             <div className="flex justify-between">
               <span className="text-[var(--muted)]">Verificación</span>

@@ -18,7 +18,7 @@ export default function StaffValidacionesPage() {
   }, [loadAttendance]);
 
   const columns = [
-    { header: "Miembro", accessor: "memberName" },
+    { header: "Socio", accessor: "memberName" },
     { header: "Correo", accessor: "memberEmail" },
     { header: "Evento", accessor: "eventId" },
     {
@@ -40,7 +40,7 @@ export default function StaffValidacionesPage() {
 
       <Card className="space-y-4">
         <Input
-          placeholder="Buscar por miembro"
+          placeholder="Buscar por socio"
           value={query}
           onChange={(event) => {
             setQuery(event.target.value);

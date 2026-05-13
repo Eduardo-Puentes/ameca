@@ -35,7 +35,11 @@ export function Sidebar({
   return (
     <aside className="flex h-full w-full flex-col rounded-3xl bg-[var(--surface)] p-6 shadow-[0_28px_56px_-36px_rgba(27,29,27,0.55)]">
       <div className="mb-8">
-        <div className="flex items-center gap-3">
+        <Link
+          href="/"
+          onClick={() => onNavigate?.()}
+          className="flex items-center gap-3 rounded-xl transition hover:bg-[var(--surface-2)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+        >
           <img
             src={brand.logoUrl}
             alt={`Logo ${brand.brandName}`}
@@ -47,7 +51,7 @@ export function Sidebar({
             </div>
             <div className="text-lg font-semibold text-[var(--ink)]">Plataforma</div>
           </div>
-        </div>
+        </Link>
         <div className="mt-3 text-sm text-[var(--muted)]">{brand.tagline}</div>
       </div>
       <nav className="flex flex-1 flex-col gap-2">

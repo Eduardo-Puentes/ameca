@@ -14,7 +14,9 @@ import {
   denyMemberRequest,
   getMemberRequest,
 } from "@/lib/data";
+import { useAppStore } from "@/store";
 import type { MembershipRequest } from "@/lib/types";
+import { formatProfileType } from "@/lib/utils";
 
 const formatDate = (value?: number | string | null) => {
   if (!value) return "Sin registro";
@@ -28,6 +30,7 @@ export default function AdminMembershipRequestDetailPage() {
   const params = useParams();
   const requestId = params?.requestId as string;
   const pushToast = useToastStore((state) => state.pushToast);
+  const role = useAppStore((state) => state.role);
   const [request, setRequest] = useState<MembershipRequest | null>(null);
   const [comment, setComment] = useState("");
   const [loading, setLoading] = useState(true);
@@ -109,20 +112,24 @@ export default function AdminMembershipRequestDetailPage() {
 
   const proofUrl = request?.paymentProofUrl ?? "";
   const schoolIdUrl = request?.schoolIdentificationUrl ?? "";
+  const cvUrl = request?.cvUrl ?? "";
   const isProofImage = /\.(png|jpe?g|webp)$/i.test(proofUrl);
   const isSchoolIdImage = /\.(png|jpe?g|webp)$/i.test(schoolIdUrl);
+  const isPaidRequest = (request?.upgradeCost ?? 0) > 0;
+  const canApproveRequest = !isPaidRequest || role === "treasurer" || role === "superadmin";
+  const canDecideRequest = request?.status === "pending";
 
   return (
     <div className="space-y-6">
       <PageHeader
         title="Solicitud de membresía"
         subtitle="Vista detallada para revisar y decidir la solicitud"
-        breadcrumb={["Admin", "Miembros", "Solicitudes", "Detalle"]}
+        breadcrumb={["Admin", "Socios", "Solicitudes", "Detalle"]}
       />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
-          href="/admin/miembros/solicitudes"
+          href="/admin/socios/solicitudes"
           className="text-sm font-medium text-[var(--accent)]"
         >
           Volver al listado
@@ -137,7 +144,7 @@ export default function AdminMembershipRequestDetailPage() {
       ) : (
         <>
           <Card className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-3">
               <div className="space-y-2">
                 <div className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">Solicitante</div>
                 <div className="text-lg font-semibold text-[var(--ink)]">{request.memberName}</div>
@@ -149,13 +156,17 @@ export default function AdminMembershipRequestDetailPage() {
               <div className="space-y-2">
                 <div className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">Cambio solicitado</div>
                 <div className="text-sm text-[var(--muted)]">
-                  Perfil actual: <span className="text-[var(--ink)]">{request.currentProfileType || "Sin registro"}</span>
+                  Perfil actual:{" "}
+                  <span className="text-[var(--ink)]">
+                    {formatProfileType(request.currentProfileType, "Sin registro")}
+                  </span>
                 </div>
                 <div className="text-sm text-[var(--muted)]">
-                  Nuevo perfil: <span className="text-[var(--ink)]">{request.profileType}</span>
+                  Nuevo perfil:{" "}
+                  <span className="text-[var(--ink)]">{formatProfileType(request.profileType)}</span>
                 </div>
                 <div className="text-sm text-[var(--muted)]">
-                  Costo estimado:{" "}
+                  Costo:{" "}
                   <span className="text-[var(--ink)]">
                     {typeof request.upgradeCost === "number" ? request.upgradeCost : "No disponible"}
                   </span>
@@ -163,18 +174,16 @@ export default function AdminMembershipRequestDetailPage() {
               </div>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-2">
               <div className="rounded-xl bg-[var(--surface-2)] p-4 text-sm text-[var(--muted)]">
                 <div className="text-xs uppercase tracking-[0.2em]">Creada</div>
                 <div className="mt-2 text-[var(--ink)]">{formatDate(request.createdAt)}</div>
               </div>
               <div className="rounded-xl bg-[var(--surface-2)] p-4 text-sm text-[var(--muted)]">
-                <div className="text-xs uppercase tracking-[0.2em]">Decidida</div>
-                <div className="mt-2 text-[var(--ink)]">{formatDate(request.decidedAt)}</div>
-              </div>
-              <div className="rounded-xl bg-[var(--surface-2)] p-4 text-sm text-[var(--muted)]">
-                <div className="text-xs uppercase tracking-[0.2em]">Revisó</div>
-                <div className="mt-2 text-[var(--ink)]">{request.decidedByName || "Pendiente"}</div>
+                <div className="text-xs uppercase tracking-[0.2em]">Estado</div>
+                <div className="mt-2">
+                  <StatusBadge status={request.status} />
+                </div>
               </div>
             </div>
           </Card>
@@ -234,6 +243,24 @@ export default function AdminMembershipRequestDetailPage() {
                   </div>
                 )}
               </div>
+
+              <div className="space-y-3">
+                <div className="text-sm font-medium text-[var(--ink)]">CV</div>
+                {cvUrl ? (
+                  <>
+                    <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface-2)] p-4 text-sm text-[var(--muted)]">
+                      Archivo disponible para revisión.
+                    </div>
+                    <a href={cvUrl} target="_blank" rel="noreferrer" className="text-sm font-medium text-[var(--accent)]">
+                      Abrir archivo
+                    </a>
+                  </>
+                ) : (
+                  <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface-2)] p-4 text-sm text-[var(--muted)]">
+                    No se adjuntó CV.
+                  </div>
+                )}
+              </div>
             </div>
           </Card>
 
@@ -241,7 +268,11 @@ export default function AdminMembershipRequestDetailPage() {
             <div>
               <div className="text-lg font-semibold text-[var(--ink)]">Decisión</div>
               <div className="text-sm text-[var(--muted)]">
-                Usa este espacio para registrar el comentario que acompañará la aprobación o el rechazo.
+                {!canDecideRequest
+                  ? "Esta solicitud ya fue decidida y no puede cambiar de estado."
+                  : isPaidRequest && !canApproveRequest
+                  ? "Esta solicitud tiene costo y requiere aprobación de tesorería o superadmin."
+                  : "Usa este espacio para registrar el comentario que acompañará la aprobación o el rechazo."}
               </div>
             </div>
 
@@ -249,21 +280,27 @@ export default function AdminMembershipRequestDetailPage() {
               placeholder="Comentario para el historial o motivo del rechazo"
               value={comment}
               onChange={(event) => setComment(event.target.value)}
-              disabled={saving}
+              disabled={saving || !canDecideRequest}
             />
 
-            <div className="flex flex-wrap justify-end gap-2">
-              {request.status !== "approved" ? (
-                <Button onClick={handleApprove} disabled={saving}>
-                  Aprobar
-                </Button>
-              ) : null}
-              {request.status !== "rejected" ? (
-                <Button variant="danger" onClick={handleReject} disabled={saving || !comment.trim()}>
+            {canDecideRequest ? (
+              <div className="flex flex-wrap justify-end gap-2">
+                {canApproveRequest ? (
+                  <Button onClick={handleApprove} loading={saving} loadingText="Procesando...">
+                    Aprobar
+                  </Button>
+                ) : null}
+                <Button
+                  variant="danger"
+                  onClick={handleReject}
+                  disabled={!comment.trim()}
+                  loading={saving}
+                  loadingText="Procesando..."
+                >
                   Rechazar
                 </Button>
-              ) : null}
-            </div>
+              </div>
+            ) : null}
           </Card>
         </>
       )}

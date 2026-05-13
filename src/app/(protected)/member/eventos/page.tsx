@@ -20,7 +20,7 @@ export default function MemberEventosPage() {
       <PageHeader
         title="Eventos"
         subtitle="Explora eventos disponibles y solicita registro"
-        breadcrumb={["Miembro", "Eventos"]}
+        breadcrumb={["Socio", "Eventos"]}
       />
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -34,7 +34,7 @@ export default function MemberEventosPage() {
             <div className="text-xs text-[var(--muted)]">
               {event.location} • {formatDate(event.startDate)} • {event.duration} día(s)
             </div>
-            <Link href={`/member/eventos/${event.id}`} className="text-sm text-[var(--accent)]">
+            <Link href={`/socio/eventos/${event.id}`} className="text-sm text-[var(--accent)]">
               Ver detalle
             </Link>
           </Card>

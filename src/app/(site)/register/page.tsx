@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { brand } from "@/lib/brand";
 import { useAppStore } from "@/store";
 import { useToastStore } from "@/components/ui/Toast";
@@ -61,7 +62,7 @@ export default function RegisterPage() {
               Cuenta nueva en {brand.brandName}
             </div>
             <h1 className="text-3xl font-semibold text-[var(--ink)]">
-              Registro de miembro
+              Registro de socio
             </h1>
             <p className="text-sm text-[var(--muted)]">
               Crea tu cuenta para solicitar membresía y gestionar tu participación en eventos.
@@ -92,16 +93,14 @@ export default function RegisterPage() {
               />
             </FormField>
             <FormField label="Contraseña">
-              <Input
-                type="password"
+              <PasswordInput
                 placeholder="Mínimo 8 caracteres"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
               />
             </FormField>
             <FormField label="Confirmar contraseña">
-              <Input
-                type="password"
+              <PasswordInput
                 placeholder="Repite la contraseña"
                 value={confirm}
                 onChange={(event) => setConfirm(event.target.value)}

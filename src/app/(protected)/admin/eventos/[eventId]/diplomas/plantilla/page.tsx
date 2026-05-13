@@ -51,10 +51,10 @@ export default function DiplomaPlantillaPage() {
       <div className="space-y-6">
         <PageHeader
           title="Plantilla de diplomas"
-          subtitle="Sin miembros de referencia"
+          subtitle="Sin socios de referencia"
           breadcrumb={["Admin", "Eventos", event.name, "Plantilla"]}
         />
-        <Card>Necesitas miembros mock para la vista previa.</Card>
+        <Card>Necesitas socios mock para la vista previa.</Card>
       </div>
     );
   }

@@ -8,6 +8,7 @@ import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { Card } from "@/components/ui/Card";
 import { BasicFileUploader } from "@/components/ui/BasicFileUploader";
+import { ConfirmActionModal } from "@/components/ui/ConfirmActionModal";
 import { FieldBox } from "@/components/diplomas/FieldBox";
 import { DiplomaPreviewModal } from "@/components/diplomas/DiplomaPreviewModal";
 import {
@@ -66,6 +67,7 @@ export function DiplomaTemplateEditor({
   const [previewOpen, setPreviewOpen] = useState(false);
   const [fieldPickerOpen, setFieldPickerOpen] = useState(false);
   const [assetFile, setAssetFile] = useState<File | null>(null);
+  const [fieldToDelete, setFieldToDelete] = useState<DiplomaField | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -362,7 +364,14 @@ export function DiplomaTemplateEditor({
                 >
                   <div className="flex items-center justify-between">
                     <div className="text-sm font-semibold text-[var(--ink)]">{field.label}</div>
-                    <Button size="sm" variant="ghost" onClick={() => removeField(field.id)}>
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setFieldToDelete(field);
+                      }}
+                    >
                       Eliminar
                     </Button>
                   </div>
@@ -494,6 +503,28 @@ export function DiplomaTemplateEditor({
         template={draft}
         data={previewContext}
         title="Vista previa del diploma"
+      />
+
+      <ConfirmActionModal
+        open={!!fieldToDelete}
+        title="Eliminar campo"
+        description={
+          <>
+            Estas a punto de eliminar el campo{" "}
+            <span className="font-semibold text-[var(--ink)]">
+              {fieldToDelete?.label}
+            </span>
+            .
+          </>
+        }
+        confirmLabel="Eliminar campo"
+        onClose={() => setFieldToDelete(null)}
+        onConfirm={() => {
+          if (!fieldToDelete) return;
+          removeField(fieldToDelete.id);
+        }}
+        successToast={{ title: "Campo eliminado", tone: "warning" }}
+        errorTitle="Error al eliminar"
       />
     </div>
   );

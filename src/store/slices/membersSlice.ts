@@ -7,7 +7,7 @@ export type MembersSlice = {
   members: Member[];
   membersLoading: boolean;
   loadMembers: () => Promise<void>;
-  updateMemberProfile: (id: string, payload: Partial<Member>) => Promise<void>;
+  updateMemberProfile: (id: string, payload: Partial<Member>) => Promise<Member | null>;
   removeMember: (id: string) => Promise<void>;
 };
 
@@ -20,20 +20,25 @@ export const createMembersSlice: StateCreator<AuthSlice & MembersSlice, [], [], 
   loadMembers: async () => {
     set({ membersLoading: true });
     const role = get().role;
+    const canListMembers = role === "admin" || role === "superadmin" || role === "treasurer";
     const data =
-      role === "admin" || role === "superadmin" ? await listMembers() : [await getMemberMe()];
+      canListMembers ? await listMembers() : [await getMemberMe()];
     set({ members: data, membersLoading: false });
   },
   updateMemberProfile: async (id, payload) => {
     const role = get().role;
+    const canUpdateMembers = role === "admin" || role === "superadmin";
     const updated =
-      role === "admin" || role === "superadmin"
+      canUpdateMembers
         ? await updateMember(id, payload)
         : await updateMemberMe(payload);
-    if (!updated) return;
+    if (!updated) return null;
     set({
-      members: get().members.map((member) => (member.id === id ? updated : member)),
+      members: get().members.some((member) => member.id === updated.id)
+        ? get().members.map((member) => (member.id === updated.id ? updated : member))
+        : [updated, ...get().members],
     });
+    return updated;
   },
   removeMember: async (id) => {
     await deleteMember(id);

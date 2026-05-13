@@ -4,16 +4,40 @@ import Link from "next/link";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { PageHeader } from "@/components/layout/PageMetaContext";
+import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { ConfirmActionModal } from "@/components/ui/ConfirmActionModal";
+import { CostTypeFilter } from "@/components/ui/CostTypeFilter";
 import { DataTable } from "@/components/ui/DataTable";
+import { EventForm } from "@/components/forms/EventForm";
+import { FileUpload } from "@/components/ui/FileUpload";
 import { Input } from "@/components/ui/Input";
+import { Modal } from "@/components/ui/Modal";
 import { Pagination } from "@/components/ui/Pagination";
+import { Select } from "@/components/ui/Select";
 import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useToastStore } from "@/components/ui/Toast";
 import { useAppStore } from "@/store";
-import type { EventRequest } from "@/lib/types";
-import { formatDate } from "@/lib/utils";
+import {
+  adminDeletePresentation,
+  importEventPresentations,
+  listEventMembers,
+  listEventPresentations,
+  listEventSpeakers,
+  revokeEventMemberSpeaker,
+  updateEventMemberSpeaker,
+} from "@/lib/data";
+import type {
+  Event,
+  EventMemberRegistration,
+  EventRequest,
+  Presentation,
+  Section,
+  SpeakerType,
+} from "@/lib/types";
+import { formatCurrency, formatDate, formatProfileType, formatSpeakerType } from "@/lib/utils";
 
 export default function AdminEventoDetallePage() {
   const params = useParams();
@@ -24,23 +48,60 @@ export default function AdminEventoDetallePage() {
     eventRequestsPage,
     eventRequestsTotal,
     eventRequestsQuery,
+    eventRequestsCostType,
     requestPageSize,
     attendanceRecords,
+    sections,
     editEvent,
+    loadSections,
+    deleteSectionById,
   } = useAppStore();
   const loadEventRequests = useAppStore((state) => state.loadEventRequests);
   const loadAttendance = useAppStore((state) => state.loadAttendance);
   const pushToast = useToastStore((state) => state.pushToast);
   const [toggleLoading, setToggleLoading] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editSaving, setEditSaving] = useState(false);
   const [requestSearch, setRequestSearch] = useState(eventRequestsQuery);
+  const [requestCostType, setRequestCostType] = useState(eventRequestsCostType);
+  const [memberSearch, setMemberSearch] = useState("");
+  const [eventMembers, setEventMembers] = useState<EventMemberRegistration[]>([]);
+  const [eventMembersPage, setEventMembersPage] = useState(1);
+  const [eventMembersTotal, setEventMembersTotal] = useState(0);
+  const [eventMembersLoading, setEventMembersLoading] = useState(false);
+  const [eventMembersError, setEventMembersError] = useState<string | null>(null);
+  const [speakers, setSpeakers] = useState<EventMemberRegistration[]>([]);
+  const [speakersSearch, setSpeakersSearch] = useState("");
+  const [speakersPage, setSpeakersPage] = useState(1);
+  const [speakersTotal, setSpeakersTotal] = useState(0);
+  const [speakersLoading, setSpeakersLoading] = useState(false);
+  const [speakersError, setSpeakersError] = useState<string | null>(null);
+  const [presentations, setPresentations] = useState<Presentation[]>([]);
+  const [presentationsPage, setPresentationsPage] = useState(1);
+  const [presentationsTotal, setPresentationsTotal] = useState(0);
+  const [presentationsSearch, setPresentationsSearch] = useState("");
+  const [presentationTypeFilter, setPresentationTypeFilter] = useState<"" | "oral" | "poster">("");
+  const [presentationConfirmedFilter, setPresentationConfirmedFilter] = useState<"" | "true" | "false">("");
+  const [presentationsLoading, setPresentationsLoading] = useState(false);
+  const [presentationImportFile, setPresentationImportFile] = useState<File | null>(null);
+  const [presentationImporting, setPresentationImporting] = useState(false);
+  const [presentationDeleteModal, setPresentationDeleteModal] = useState<Presentation | null>(null);
+  const [sectionDeleteModal, setSectionDeleteModal] = useState<Section | null>(null);
+  const [speakerModalRegistration, setSpeakerModalRegistration] =
+    useState<EventMemberRegistration | null>(null);
+  const [speakerModalType, setSpeakerModalType] = useState<SpeakerType>("none");
+  const [speakerSaving, setSpeakerSaving] = useState(false);
   const deferredRequestSearch = useDeferredValue(requestSearch);
+  const deferredMemberSearch = useDeferredValue(memberSearch);
+  const deferredSpeakersSearch = useDeferredValue(speakersSearch);
+  const deferredPresentationsSearch = useDeferredValue(presentationsSearch);
 
   useEffect(() => {
     if (eventId) {
-      loadEventRequests(eventId);
       loadAttendance(eventId);
+      loadSections(eventId);
     }
-  }, [eventId, loadEventRequests, loadAttendance]);
+  }, [eventId, loadAttendance, loadSections]);
 
   useEffect(() => {
     setRequestSearch(eventRequestsQuery);
@@ -48,9 +109,130 @@ export default function AdminEventoDetallePage() {
 
   useEffect(() => {
     if (eventId) {
-      loadEventRequests(eventId, 1, deferredRequestSearch);
+      loadEventRequests(eventId, 1, deferredRequestSearch, requestCostType);
     }
-  }, [deferredRequestSearch, eventId, loadEventRequests]);
+  }, [deferredRequestSearch, eventId, loadEventRequests, requestCostType]);
+
+  useEffect(() => {
+    if (!eventId) return;
+    let active = true;
+    setEventMembersLoading(true);
+    setEventMembersError(null);
+    listEventMembers(eventId, deferredMemberSearch, eventMembersPage, requestPageSize)
+      .then((result) => {
+        if (!active) return;
+        setEventMembers(result.items);
+        setEventMembersPage(result.page);
+        setEventMembersTotal(result.total);
+      })
+      .catch((error) => {
+        if (!active) return;
+        const message =
+          error instanceof Error ? error.message : "No se pudieron cargar los socios.";
+        setEventMembersError(message);
+        setEventMembers([]);
+        setEventMembersTotal(0);
+      })
+      .finally(() => {
+        if (active) setEventMembersLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [deferredMemberSearch, eventId, eventMembersPage, requestPageSize]);
+
+  const refreshSpeakerAndPresentationData = async () => {
+    if (!eventId) return;
+    const confirmed =
+      presentationConfirmedFilter === "" ? "" : presentationConfirmedFilter === "true";
+    const [speakerResult, presentationResult] = await Promise.all([
+      listEventSpeakers(eventId, deferredSpeakersSearch, speakersPage, requestPageSize),
+      listEventPresentations(
+        eventId,
+        deferredPresentationsSearch,
+        presentationsPage,
+        requestPageSize,
+        presentationTypeFilter,
+        confirmed
+      ),
+    ]);
+    setSpeakers(speakerResult.items);
+    setSpeakersPage(speakerResult.page);
+    setSpeakersTotal(speakerResult.total);
+    setPresentations(presentationResult.items);
+    setPresentationsPage(presentationResult.page);
+    setPresentationsTotal(presentationResult.total);
+  };
+
+  useEffect(() => {
+    if (!eventId) return;
+    let active = true;
+    setSpeakersLoading(true);
+    setSpeakersError(null);
+    listEventSpeakers(eventId, deferredSpeakersSearch, speakersPage, requestPageSize)
+      .then((speakerResult) => {
+        if (!active) return;
+        setSpeakers(speakerResult.items);
+        setSpeakersPage(speakerResult.page);
+        setSpeakersTotal(speakerResult.total);
+      })
+      .catch((error) => {
+        if (!active) return;
+        const message = error instanceof Error ? error.message : "No se pudieron cargar speakers.";
+        setSpeakersError(message);
+        setSpeakers([]);
+        setSpeakersTotal(0);
+        pushToast({ title: "Error al cargar speakers", message, tone: "danger" });
+      })
+      .finally(() => {
+        if (active) setSpeakersLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [deferredSpeakersSearch, eventId, pushToast, requestPageSize, speakersPage]);
+
+  useEffect(() => {
+    if (!eventId) return;
+    let active = true;
+    setPresentationsLoading(true);
+    const confirmed =
+      presentationConfirmedFilter === "" ? "" : presentationConfirmedFilter === "true";
+    listEventPresentations(
+      eventId,
+      deferredPresentationsSearch,
+      presentationsPage,
+      requestPageSize,
+      presentationTypeFilter,
+      confirmed
+    )
+      .then((presentationResult) => {
+        if (!active) return;
+        setPresentations(presentationResult.items);
+        setPresentationsPage(presentationResult.page);
+        setPresentationsTotal(presentationResult.total);
+      })
+      .catch((error) => {
+        if (!active) return;
+        const message =
+          error instanceof Error ? error.message : "No se pudieron cargar ponencias.";
+        pushToast({ title: "Error al cargar ponencias", message, tone: "danger" });
+      })
+      .finally(() => {
+        if (active) setPresentationsLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [
+    deferredPresentationsSearch,
+    eventId,
+    presentationConfirmedFilter,
+    presentationTypeFilter,
+    presentationsPage,
+    pushToast,
+    requestPageSize,
+  ]);
 
   const event = events.find((item) => item.id === eventId);
   const pendingRequests = eventRequests.filter((req) => req.status === "pending").length;
@@ -62,15 +244,16 @@ export default function AdminEventoDetallePage() {
       { label: "Solicitudes pendientes", value: pendingRequests },
       { label: "Registros aprobados", value: approvedRequests },
       { label: "Asistencias", value: attendanceCount },
+      { label: "Secciones", value: sections.length },
     ],
-    [pendingRequests, approvedRequests, attendanceCount]
+    [attendanceCount, approvedRequests, pendingRequests, sections.length]
   );
   const quickActionClassName =
     "inline-flex h-10 items-center justify-center rounded-lg bg-[var(--accent-soft)] px-4 text-sm font-semibold text-[var(--accent-strong)] transition hover:bg-[var(--accent)] hover:text-white";
   const registrationLabel = event?.open ? "Aceptando solicitudes" : "Registro cerrado";
   const requestColumns = [
-    { header: "Miembro", accessor: "memberName" },
-    { header: "Email", accessor: "memberEmail" },
+    { header: "Socio", accessor: "memberName" },
+    { header: "Correo", accessor: "memberEmail" },
     { header: "Sección", accessor: "sectionName" },
     {
       header: "Estado",
@@ -88,6 +271,160 @@ export default function AdminEventoDetallePage() {
         >
           Ver
         </Link>
+      ),
+    },
+  ];
+  const memberColumns = [
+    { header: "Socio", accessor: "memberName" },
+    { header: "Correo", accessor: "memberEmail" },
+    {
+      header: "Perfil",
+      accessor: "profileType",
+      render: (registration: EventMemberRegistration) =>
+        formatProfileType(String(registration.profileType)),
+    },
+    { header: "Sección", accessor: "sectionName" },
+    {
+      header: "Costo",
+      accessor: "cost",
+      render: (registration: EventMemberRegistration) => formatCurrency(registration.cost),
+    },
+    {
+      header: "Ticket",
+      accessor: "ticketToken",
+      render: (registration: EventMemberRegistration) => (
+        <span className="font-mono text-xs">{registration.ticketToken}</span>
+      ),
+    },
+    {
+      header: "Asistencia",
+      accessor: "attended",
+      render: (registration: EventMemberRegistration) => (
+        <Badge tone={registration.attended ? "success" : "neutral"}>
+          {registration.attended ? "Asistió" : "Sin asistencia"}
+        </Badge>
+      ),
+    },
+    {
+      header: "Ponente",
+      accessor: "speakerStatus",
+      render: (registration: EventMemberRegistration) => (
+        <Badge tone={registration.isSpeaker ? "info" : "neutral"}>
+          {registration.isSpeaker ? formatSpeakerType(registration.speakerType ?? "plenary") : "No"}
+        </Badge>
+      ),
+    },
+    {
+      header: "Acciones",
+      accessor: "speakerActions",
+      className: "w-64 px-3 py-4",
+      render: (registration: EventMemberRegistration) => (
+        <div className="flex flex-wrap gap-2">
+          <Link
+            href={`/admin/eventos/${eventId}/miembros/${registration.id}`}
+            className="inline-flex h-9 items-center justify-center rounded-lg bg-[var(--surface-3)] px-3 text-sm font-medium text-[var(--ink)] transition hover:bg-[var(--surface-2)]"
+          >
+            Ver
+          </Link>
+          <Button
+            size="sm"
+            variant={registration.isSpeaker ? "secondary" : "primary"}
+            onClick={() => {
+              setSpeakerModalRegistration(registration);
+              setSpeakerModalType(
+                registration.isSpeaker ? registration.speakerType ?? "plenary" : "none"
+              );
+            }}
+          >
+            {registration.isSpeaker ? formatSpeakerType(registration.speakerType ?? "plenary") : "Invitar"}
+          </Button>
+        </div>
+      ),
+    },
+  ];
+  const speakerColumns = [
+    { header: "Ponente", accessor: "memberName" },
+    { header: "Correo", accessor: "memberEmail" },
+    {
+      header: "Tipo",
+      accessor: "speakerType",
+      render: (registration: EventMemberRegistration) => formatSpeakerType(registration.speakerType),
+    },
+    { header: "Sección", accessor: "sectionName" },
+  ];
+  const presentationColumns = [
+    { header: "Título", accessor: "name" },
+    { header: "Ponente", accessor: "presenterName" },
+    { header: "Correo", accessor: "presenterEmail" },
+    { header: "Tipo", accessor: "presentationType" },
+    {
+      header: "Código",
+      accessor: "confirmationCode",
+      render: (presentation: Presentation) => (
+        <span className="font-mono text-xs">{presentation.confirmationCode}</span>
+      ),
+    },
+    {
+      header: "Estado",
+      accessor: "confirmed",
+      render: (presentation: Presentation) => (
+        <Badge tone={presentation.confirmed ? "success" : "warning"}>
+          {presentation.confirmed ? "Vinculada" : "Pendiente"}
+        </Badge>
+      ),
+    },
+    {
+      header: "Acciones",
+      accessor: "presentationActions",
+      className: "w-36 px-3 py-4",
+      render: (presentation: Presentation) => (
+        <div className="flex gap-2">
+          {presentation.fileUrl ? (
+            <a
+              className="inline-flex h-9 items-center rounded-lg bg-[var(--surface-3)] px-3 text-sm font-medium text-[var(--ink)]"
+              href={presentation.fileUrl}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Ver
+            </a>
+          ) : null}
+          <Button size="sm" variant="danger" onClick={() => setPresentationDeleteModal(presentation)}>
+            Quitar
+          </Button>
+        </div>
+      ),
+    },
+  ];
+  const sectionColumns = [
+    { header: "Sección", accessor: "name" },
+    { header: "Representante", accessor: "representativeName" },
+    { header: "Integrantes", accessor: "pCount" },
+    {
+      header: "Estado",
+      accessor: "status",
+      render: (section: Section) => <StatusBadge status={section.status} />,
+    },
+    {
+      header: "Acciones",
+      accessor: "actions",
+      className: "w-56 px-3 py-4 text-center",
+      render: (section: Section) => (
+        <div className="flex justify-center gap-2">
+          <Link
+            href={`/admin/eventos/${eventId}/secciones/${section.id}`}
+            className="inline-flex h-9 items-center justify-center rounded-lg bg-[var(--surface-3)] px-3 text-sm font-medium text-[var(--ink)] transition hover:bg-[var(--surface-2)]"
+          >
+            Ver
+          </Link>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={() => setSectionDeleteModal(section)}
+          >
+            Desactivar
+          </Button>
+        </div>
       ),
     },
   ];
@@ -114,6 +451,90 @@ export default function AdminEventoDetallePage() {
     }
   };
 
+  const handleUpdateEvent = async (payload: Partial<Event>) => {
+    if (!event) return;
+    try {
+      setEditSaving(true);
+      await editEvent(event.id, payload);
+      setEditOpen(false);
+      pushToast({
+        title: "Evento actualizado",
+        message: "Los cambios ya están visibles en el panel.",
+        tone: "success",
+      });
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "No se pudo actualizar el evento.";
+      pushToast({ title: "No se pudo guardar", message, tone: "danger" });
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
+  const handleDeleteSection = async (section: Section) => {
+    if (section.pCount > 1) {
+      throw new Error(
+        "Retira primero a todos los integrantes de la sección. Debe quedar solo el representante."
+      );
+    }
+
+    await deleteSectionById(section.id);
+    await loadSections(eventId);
+  };
+
+  const handleSaveSpeakerType = async () => {
+    if (!speakerModalRegistration) return;
+    const registration = speakerModalRegistration;
+    try {
+      setSpeakerSaving(true);
+      const currentType = registration.isSpeaker ? registration.speakerType ?? "plenary" : "none";
+      if (speakerModalType === currentType) {
+        setSpeakerModalRegistration(null);
+        return;
+      }
+      const updated =
+        speakerModalType === "none"
+          ? await revokeEventMemberSpeaker(registration.id)
+          : await updateEventMemberSpeaker(registration.id, speakerModalType);
+      setEventMembers((prev) =>
+        prev.map((item) => (item.id === registration.id ? { ...item, ...updated } : item))
+      );
+      await refreshSpeakerAndPresentationData();
+      setSpeakerModalRegistration(null);
+      pushToast({ title: "Ponente actualizado", tone: "success" });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "No se pudo actualizar el ponente.";
+      pushToast({ title: "Error al actualizar ponente", message, tone: "danger" });
+    } finally {
+      setSpeakerSaving(false);
+    }
+  };
+
+  const handleImportPresentations = async () => {
+    if (!presentationImportFile) return;
+    try {
+      setPresentationImporting(true);
+      const result = await importEventPresentations(eventId, presentationImportFile);
+      setPresentationImportFile(null);
+      await refreshSpeakerAndPresentationData();
+      pushToast({
+        title: "Importación terminada",
+        message: `${result.count} ponencia(s), ${result.errorCount} error(es).`,
+        tone: result.errorCount ? "warning" : "success",
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "No se pudo importar el archivo.";
+      pushToast({ title: "Error al importar", message, tone: "danger" });
+    } finally {
+      setPresentationImporting(false);
+    }
+  };
+
+  const handleDeletePresentation = async (presentation: Presentation) => {
+    await adminDeletePresentation(presentation.id);
+    await refreshSpeakerAndPresentationData();
+  };
+
   if (!event) {
     return (
       <div className="space-y-6">
@@ -122,6 +543,11 @@ export default function AdminEventoDetallePage() {
       </div>
     );
   }
+
+  const speakerCurrentType = speakerModalRegistration?.isSpeaker
+    ? speakerModalRegistration.speakerType ?? "plenary"
+    : "none";
+  const speakerTypeChanged = Boolean(speakerModalRegistration && speakerModalType !== speakerCurrentType);
 
   return (
     <div className="space-y-6">
@@ -132,16 +558,27 @@ export default function AdminEventoDetallePage() {
       />
 
       <Card className="space-y-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <div className="text-xs uppercase tracking-[0.3em] text-[var(--muted)]">Estado</div>
             <div className="text-lg font-semibold text-[var(--ink)]">{event.location}</div>
           </div>
-          <StatusBadge status={event.status} />
+          <div className="flex items-center gap-2">
+            <StatusBadge status={event.status} />
+            <Button size="sm" variant="secondary" onClick={() => setEditOpen(true)}>
+              Editar
+            </Button>
+          </div>
         </div>
         <div className="text-sm text-[var(--muted)]">{event.description}</div>
         <div className="text-xs text-[var(--muted)]">
           {formatDate(event.startDate)} • {event.duration} día(s) • Capacidad {event.capacity}
+        </div>
+        <div className="grid gap-2 border-t border-[var(--border)] pt-3 text-xs text-[var(--muted)] sm:grid-cols-2 lg:grid-cols-4">
+          <div>Profesional: {formatCurrency(event.profilePrices.professional)}</div>
+          <div>Estudiante: {formatCurrency(event.profilePrices.student)}</div>
+          <div>Asoc. profesional: {formatCurrency(event.profilePrices.associatedProfessional)}</div>
+          <div>Asoc. estudiante: {formatCurrency(event.profilePrices.associatedStudent)}</div>
         </div>
       </Card>
 
@@ -158,11 +595,15 @@ export default function AdminEventoDetallePage() {
             Vista completa de solicitudes para este evento, con búsqueda y paginación.
           </div>
         </div>
-        <Input
-          value={requestSearch}
-          onChange={(inputEvent) => setRequestSearch(inputEvent.target.value)}
-          placeholder="Buscar por miembro, correo, sección o comentarios"
-        />
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <Input
+            value={requestSearch}
+            onChange={(inputEvent) => setRequestSearch(inputEvent.target.value)}
+            placeholder="Buscar por socio, correo, sección o comentarios"
+            className="md:max-w-xl"
+          />
+          <CostTypeFilter value={requestCostType} onChange={setRequestCostType} />
+        </div>
         <DataTable
           columns={requestColumns}
           data={eventRequests}
@@ -172,7 +613,184 @@ export default function AdminEventoDetallePage() {
           page={eventRequestsPage}
           pageSize={requestPageSize}
           total={eventRequestsTotal}
-          onPageChange={(page) => loadEventRequests(eventId, page, deferredRequestSearch)}
+          onPageChange={(page) =>
+            loadEventRequests(eventId, page, deferredRequestSearch, requestCostType)
+          }
+        />
+      </Card>
+
+      <Card className="space-y-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="space-y-1">
+            <div className="text-lg font-semibold text-[var(--ink)]">Ponentes</div>
+            <div className="text-sm text-[var(--muted)]">
+              Invita socios registrados como plenarios o magistrales.
+            </div>
+          </div>
+          <Badge tone="neutral">{speakersTotal} activo(s)</Badge>
+        </div>
+        <Input
+          value={speakersSearch}
+          onChange={(event) => {
+            setSpeakersSearch(event.target.value);
+            setSpeakersPage(1);
+          }}
+          placeholder="Buscar por nombre, correo, teléfono, organización, perfil, sección o tipo"
+          className="md:max-w-xl"
+        />
+        {speakersError ? (
+          <div className="rounded-lg border border-[var(--danger)] bg-[var(--danger-soft)] p-3 text-sm text-[var(--danger)]">
+            {speakersError}
+          </div>
+        ) : null}
+        {speakersLoading ? (
+          <div className="text-sm text-[var(--muted)]">Cargando ponentes...</div>
+        ) : speakers.length === 0 ? (
+          <div className="text-sm text-[var(--muted)]">No hay ponentes invitados.</div>
+        ) : (
+          <DataTable
+            columns={speakerColumns}
+            data={speakers}
+            tableContainerClassName="max-h-[22rem] overflow-y-auto pr-1"
+          />
+        )}
+        <Pagination
+          page={speakersPage}
+          pageSize={requestPageSize}
+          total={speakersTotal}
+          onPageChange={setSpeakersPage}
+        />
+      </Card>
+
+      <Card className="space-y-4">
+        <div className="space-y-1">
+          <div className="text-lg font-semibold text-[var(--ink)]">Ponencias</div>
+          <div className="text-sm text-[var(--muted)]">
+            Importa códigos de confirmación y revisa ponencias vinculadas.
+          </div>
+        </div>
+        <div className="grid gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-3 lg:grid-cols-[1fr_auto]">
+          <FileUpload
+            label="CSV o Excel de ponencias"
+            accept=".csv,.xlsx,.xls"
+            onChange={setPresentationImportFile}
+          />
+          <Button
+            className="self-end"
+            onClick={handleImportPresentations}
+            disabled={!presentationImportFile || presentationImporting}
+          >
+            {presentationImporting ? "Importando..." : "Importar"}
+          </Button>
+        </div>
+        <div className="grid gap-3 lg:grid-cols-[1fr_12rem_12rem]">
+          <Input
+            value={presentationsSearch}
+            onChange={(event) => {
+              setPresentationsSearch(event.target.value);
+              setPresentationsPage(1);
+            }}
+            placeholder="Buscar por título, código, ponente o correo"
+          />
+          <Select
+            value={presentationTypeFilter}
+            onChange={(event) => {
+              setPresentationTypeFilter(event.target.value as "" | "oral" | "poster");
+              setPresentationsPage(1);
+            }}
+          >
+            <option value="">Todos los tipos</option>
+            <option value="oral">Oral</option>
+            <option value="poster">Poster</option>
+          </Select>
+          <Select
+            value={presentationConfirmedFilter}
+            onChange={(event) => {
+              setPresentationConfirmedFilter(event.target.value as "" | "true" | "false");
+              setPresentationsPage(1);
+            }}
+          >
+            <option value="">Todos</option>
+            <option value="true">Vinculadas</option>
+            <option value="false">Pendientes</option>
+          </Select>
+        </div>
+        {presentationsLoading ? (
+          <div className="text-sm text-[var(--muted)]">Cargando ponencias...</div>
+        ) : presentations.length === 0 ? (
+          <div className="text-sm text-[var(--muted)]">No hay ponencias registradas.</div>
+        ) : (
+          <DataTable
+            columns={presentationColumns}
+            data={presentations}
+            tableContainerClassName="max-h-[28rem] overflow-y-auto pr-1"
+          />
+        )}
+        <Pagination
+          page={presentationsPage}
+          pageSize={requestPageSize}
+          total={presentationsTotal}
+          onPageChange={setPresentationsPage}
+        />
+      </Card>
+
+      <Card className="space-y-4">
+        <div className="space-y-1">
+          <div className="text-lg font-semibold text-[var(--ink)]">Secciones del evento</div>
+          <div className="text-sm text-[var(--muted)]">
+            Consulta las secciones aprobadas, su representante y sus integrantes.
+          </div>
+        </div>
+        <div className="space-y-3">
+          {sections.length === 0 ? (
+            <div className="text-sm text-[var(--muted)]">No hay secciones aprobadas para este evento.</div>
+          ) : (
+            <DataTable
+              columns={sectionColumns}
+              data={sections}
+              tableContainerClassName="max-h-[22rem] overflow-y-auto pr-1"
+            />
+          )}
+        </div>
+      </Card>
+
+      <Card className="space-y-4">
+        <div className="space-y-1">
+          <div className="text-lg font-semibold text-[var(--ink)]">Socios registrados</div>
+          <div className="text-sm text-[var(--muted)]">
+            Registros aprobados para este evento, con búsqueda por datos del socio, sección o boleto.
+          </div>
+        </div>
+        <Input
+          value={memberSearch}
+          onChange={(inputEvent) => {
+            setMemberSearch(inputEvent.target.value);
+            setEventMembersPage(1);
+          }}
+          placeholder="Buscar por nombre, correo, teléfono, organización, perfil, sección o boleto"
+          className="md:max-w-xl"
+        />
+        {eventMembersError ? (
+          <div className="rounded-lg border border-[var(--danger)] bg-[var(--danger-soft)] p-3 text-sm text-[var(--danger)]">
+            {eventMembersError}
+          </div>
+        ) : null}
+        {eventMembersLoading ? (
+          <div className="text-sm text-[var(--muted)]">Cargando registros...</div>
+        ) : eventMembers.length === 0 ? (
+          <div className="text-sm text-[var(--muted)]">No hay socios registrados.</div>
+        ) : (
+          <DataTable
+            columns={memberColumns}
+            data={eventMembers}
+            tableContainerClassName="max-h-[28rem] overflow-y-auto pr-1"
+          />
+        )}
+        <Pagination
+          page={eventMembersPage}
+          pageSize={requestPageSize}
+          total={eventMembersTotal}
+          onPageChange={setEventMembersPage}
         />
       </Card>
 
@@ -250,6 +868,146 @@ export default function AdminEventoDetallePage() {
           </Link>
         </Card>
       </div>
+
+      <Modal
+        open={!!speakerModalRegistration}
+        onClose={() => {
+          if (!speakerSaving) setSpeakerModalRegistration(null);
+        }}
+        title="Ponente"
+      >
+        {speakerModalRegistration ? (
+          <div className="space-y-4">
+            <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-4">
+              <div className="text-sm font-medium text-[var(--ink)]">
+                {speakerModalRegistration.memberName}
+              </div>
+              <div className="text-sm text-[var(--muted)]">
+                {speakerModalRegistration.memberEmail}
+              </div>
+              <div className="mt-3 text-xs uppercase text-[var(--muted)]">Tipo actual</div>
+              <div className="text-sm font-medium text-[var(--ink)]">
+                {formatSpeakerType(speakerCurrentType)}
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-[var(--ink)]" htmlFor="speaker-type">
+                Tipo de ponente
+              </label>
+              <Select
+                id="speaker-type"
+                value={speakerModalType}
+                onChange={(event) => setSpeakerModalType(event.target.value as SpeakerType)}
+                disabled={speakerSaving}
+              >
+                <option value="none">Sin ponencia</option>
+                <option value="plenary">Plenaria</option>
+                <option value="keynote">Magistral</option>
+              </Select>
+            </div>
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => setSpeakerModalRegistration(null)}
+                disabled={speakerSaving}
+              >
+                Cancelar
+              </Button>
+              <Button
+                type="button"
+                onClick={handleSaveSpeakerType}
+                disabled={speakerSaving || !speakerTypeChanged}
+              >
+                {speakerSaving ? "Guardando..." : "Guardar cambios"}
+              </Button>
+            </div>
+          </div>
+        ) : null}
+      </Modal>
+
+      <Modal
+        open={editOpen}
+        onClose={() => {
+          if (!editSaving) setEditOpen(false);
+        }}
+        title="Editar evento"
+        className="max-w-3xl"
+      >
+        <EventForm
+          key={event.id}
+          initial={event}
+          onSubmit={handleUpdateEvent}
+          submitLabel="Guardar cambios"
+          submitting={editSaving}
+        />
+      </Modal>
+
+      <ConfirmActionModal
+        open={!!sectionDeleteModal}
+        onClose={() => setSectionDeleteModal(null)}
+        title="Desactivar sección"
+        description={
+          sectionDeleteModal ? (
+            <>
+              Estas a punto de desactivar{" "}
+              <span className="font-semibold text-[var(--ink)]">
+                {sectionDeleteModal.name}
+              </span>
+              .
+            </>
+          ) : null
+        }
+        confirmLabel="Desactivar sección"
+        confirmDisabled={!sectionDeleteModal || sectionDeleteModal.pCount > 1}
+        onConfirm={async () => {
+          if (!sectionDeleteModal) return;
+          await handleDeleteSection(sectionDeleteModal);
+        }}
+        successToast={{
+          title: "Sección eliminada",
+          message: "La sección fue desactivada y retirada del evento.",
+          tone: "success",
+        }}
+        errorTitle="No se puede desactivar"
+      >
+        {sectionDeleteModal ? (
+          sectionDeleteModal.pCount > 1 ? (
+            <div className="rounded-xl border border-[var(--warning)]/40 bg-[var(--warning)]/10 p-4 text-[var(--ink)]">
+              Retira primero a todos los integrantes de la sección. Debe quedar solo el
+              representante.
+            </div>
+          ) : (
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-4 text-[var(--ink)]">
+              Confirma solo si esta sección ya no debe aparecer en el evento.
+            </div>
+          )
+        ) : null}
+      </ConfirmActionModal>
+
+      <ConfirmActionModal
+        open={!!presentationDeleteModal}
+        onClose={() => setPresentationDeleteModal(null)}
+        title="Quitar ponencia"
+        description={
+          presentationDeleteModal ? (
+            <>
+              Estas a punto de quitar{" "}
+              <span className="font-semibold text-[var(--ink)]">
+                {presentationDeleteModal.name || presentationDeleteModal.confirmationCode}
+              </span>
+              .
+            </>
+          ) : null
+        }
+        confirmLabel="Quitar ponencia"
+        onConfirm={async () => {
+          if (!presentationDeleteModal) return;
+          await handleDeletePresentation(presentationDeleteModal);
+        }}
+        successToast={{ title: "Ponencia eliminada", tone: "warning" }}
+        errorTitle="No se pudo eliminar"
+      />
     </div>
   );
 }

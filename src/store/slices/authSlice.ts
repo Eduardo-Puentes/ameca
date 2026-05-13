@@ -22,7 +22,7 @@ export type AuthSlice = {
     email: string;
     password: string;
     phoneNumber?: string;
-  }) => Promise<User>;
+  }) => Promise<void>;
   hydrateSession: () => Promise<void>;
   logout: () => Promise<void>;
 };
@@ -71,16 +71,9 @@ export const createAuthSlice: StateCreator<AuthSlice, [], [], AuthSlice> = (set)
   registerMember: async (payload) => {
     set({ authLoading: true });
     try {
-      const response = await authRegister(payload);
-      tokenStorage.set(response.token);
-      set({
-        user: response.user,
-        token: response.token,
-        role: response.user.role,
-        authLoading: false,
-        authReady: true,
-      });
-      return response.user;
+      await authRegister(payload);
+      tokenStorage.clear();
+      set({ user: null, token: null, role: null, authLoading: false, authReady: true });
     } catch (error) {
       set({ authLoading: false, authReady: true });
       throw error;

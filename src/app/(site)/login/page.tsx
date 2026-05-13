@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 import { brand } from "@/lib/brand";
 import { useAppStore } from "@/store";
 import { useToastStore } from "@/components/ui/Toast";
@@ -15,9 +16,10 @@ import type { Role } from "@/lib/types";
 const routeForRole: Record<Role, string> = {
   superadmin: "/admin/dashboard",
   admin: "/admin/dashboard",
+  treasurer: "/admin/dashboard",
   staff: "/staff/escaner",
-  member: "/member/dashboard",
-  representative: "/member/dashboard",
+  member: "/socio/dashboard",
+  representative: "/socio/dashboard",
 };
 
 function LoginPageContent() {
@@ -37,7 +39,7 @@ function LoginPageContent() {
     }
     const nextParam = searchParams.get("next");
     const safeNext = nextParam && nextParam.startsWith("/") ? nextParam : routeForRole[user.role];
-    router.replace(safeNext ?? "/member/dashboard");
+    router.replace(safeNext ?? "/socio/dashboard");
   }, [authReady, router, searchParams, user]);
 
   const handleLogin = async () => {
@@ -46,7 +48,7 @@ function LoginPageContent() {
       const nextParam = searchParams.get("next");
       const safeNext =
         nextParam && nextParam.startsWith("/") ? nextParam : routeForRole[user.role];
-      const nextRoute = safeNext ?? "/member/dashboard";
+      const nextRoute = safeNext ?? "/socio/dashboard";
       router.push(nextRoute);
     } catch (error) {
       const message = error instanceof Error ? error.message : "No se pudo iniciar sesión.";
@@ -78,8 +80,7 @@ function LoginPageContent() {
               />
             </FormField>
             <FormField label="Contraseña">
-              <Input
-                type="password"
+              <PasswordInput
                 placeholder="••••••••"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}

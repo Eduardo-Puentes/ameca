@@ -18,7 +18,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }, [loadEvents, loadMembers]);
 
   return (
-    <RoleGuard allowed={["superadmin", "admin"]}>
+    <RoleGuard allowed={["superadmin", "admin", "treasurer"]}>
       <AppShell
         title={meta.title}
         subtitle={meta.subtitle}
