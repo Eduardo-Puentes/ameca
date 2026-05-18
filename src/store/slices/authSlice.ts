@@ -22,6 +22,9 @@ export type AuthSlice = {
     email: string;
     password: string;
     phoneNumber?: string;
+    academicDegree: string;
+    state: string;
+    institution: string;
   }) => Promise<void>;
   hydrateSession: () => Promise<void>;
   logout: () => Promise<void>;

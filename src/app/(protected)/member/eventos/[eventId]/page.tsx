@@ -10,42 +10,37 @@ import { FileUpload } from "@/components/ui/FileUpload";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useToastStore } from "@/components/ui/Toast";
 import { useAppStore } from "@/store";
-import { listMyEvents } from "@/lib/data";
-import type { MemberEventRegistration } from "@/lib/types";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { getMyEventRegistrationPreview, listMyEvents } from "@/lib/data";
+import type { EventRegistrationPreview, MemberEventRegistration } from "@/lib/types";
+import { formatCurrency, formatDate, formatProfileType } from "@/lib/utils";
 
 export default function MemberEventoDetallePage() {
   const params = useParams();
   const eventId = params?.eventId as string;
   const {
     events,
-    members,
     eventRequests,
     loadEvents,
-    loadMembers,
     loadEventRequests,
     createMemberEventRequest,
   } = useAppStore();
-  const user = useAppStore((state) => state.user);
   const pushToast = useToastStore((state) => state.pushToast);
   const [proofFile, setProofFile] = useState<File | null>(null);
   const [myRegistration, setMyRegistration] = useState<MemberEventRegistration | null>(null);
+  const [requestPreview, setRequestPreview] = useState<EventRegistrationPreview | null>(null);
+  const [previewError, setPreviewError] = useState<string | null>(null);
   const [submittingRequest, setSubmittingRequest] = useState(false);
 
   useEffect(() => {
     loadEvents();
-    loadMembers();
-  }, [loadEvents, loadMembers]);
+  }, [loadEvents]);
 
   useEffect(() => {
     if (eventId) loadEventRequests(eventId);
   }, [eventId, loadEventRequests]);
 
   const event = events.find((item) => item.id === eventId);
-  const member = members.find((item) => item.email === user?.email) ?? members[0];
-  const existingRequest = eventRequests.find(
-    (req) => req.eventId === eventId && req.memberEmail === member?.email
-  );
+  const existingRequest = eventRequests.find((req) => req.eventId === eventId);
   const registrationDetailHref = `/socio/eventos/${eventId}/registro`;
 
   useEffect(() => {
@@ -58,16 +53,31 @@ export default function MemberEventoDetallePage() {
       .catch(() => setMyRegistration(null));
   }, [eventId]);
 
+  useEffect(() => {
+    if (!eventId) return;
+    let active = true;
+    getMyEventRegistrationPreview(eventId)
+      .then((preview) => {
+        if (!active) return;
+        setRequestPreview(preview);
+        setPreviewError(null);
+      })
+      .catch((error) => {
+        if (!active) return;
+        setRequestPreview(null);
+        setPreviewError(error instanceof Error ? error.message : "No se pudo calcular el costo.");
+      });
+    return () => {
+      active = false;
+    };
+  }, [eventId]);
+
   const submitRequest = async () => {
-    if (!event || !member) return;
+    if (!event) return;
     try {
       setSubmittingRequest(true);
       await createMemberEventRequest({
         eventId: event.id,
-        eventName: event.name,
-        memberName: member.fullName,
-        memberEmail: member.email,
-        sectionName: "General",
         paymentProofFile: proofFile,
       });
       await loadEventRequests(eventId);
@@ -102,21 +112,103 @@ export default function MemberEventoDetallePage() {
         breadcrumb={["Socio", "Eventos", event.name]}
       />
 
-      <div className="grid gap-6 lg:grid-cols-[1.3fr_1fr]">
-        <Card className="space-y-4">
-          <div className="text-sm text-[var(--muted)]">{event.description}</div>
-          <div className="text-xs text-[var(--muted)]">
+      <div className="space-y-6">
+        <Card className="w-full space-y-4">
+          <div>
+            <div className="text-lg font-semibold text-[var(--ink)]">Información del evento</div>
+            <div className="mt-2 text-sm text-[var(--muted)]">{event.description}</div>
+          </div>
+          <div className="text-sm text-[var(--muted)]">
             {event.location} • {formatDate(event.startDate)} • {event.duration} día(s)
           </div>
-          <div className="grid gap-2 border-t border-[var(--border)] pt-3 text-xs text-[var(--muted)] sm:grid-cols-2">
-            <div>Profesional: {formatCurrency(event.profilePrices.professional)}</div>
-            <div>Estudiante: {formatCurrency(event.profilePrices.student)}</div>
-            <div>Asoc. profesional: {formatCurrency(event.profilePrices.associatedProfessional)}</div>
-            <div>Asoc. estudiante: {formatCurrency(event.profilePrices.associatedStudent)}</div>
+          <div className="grid gap-3 border-t border-[var(--border)] pt-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-lg bg-[var(--surface-2)] p-3">
+              <div className="text-xs text-[var(--muted)]">Profesional</div>
+              <div className="mt-1 font-semibold text-[var(--ink)]">
+                {formatCurrency(event.profilePrices.professional)}
+              </div>
+            </div>
+            <div className="rounded-lg bg-[var(--surface-2)] p-3">
+              <div className="text-xs text-[var(--muted)]">Estudiante</div>
+              <div className="mt-1 font-semibold text-[var(--ink)]">
+                {formatCurrency(event.profilePrices.student)}
+              </div>
+            </div>
+            <div className="rounded-lg bg-[var(--surface-2)] p-3">
+              <div className="text-xs text-[var(--muted)]">Socio profesional</div>
+              <div className="mt-1 font-semibold text-[var(--ink)]">
+                {formatCurrency(event.profilePrices.associatedProfessional)}
+              </div>
+            </div>
+            <div className="rounded-lg bg-[var(--surface-2)] p-3">
+              <div className="text-xs text-[var(--muted)]">Socio estudiante</div>
+              <div className="mt-1 font-semibold text-[var(--ink)]">
+                {formatCurrency(event.profilePrices.associatedStudent)}
+              </div>
+            </div>
           </div>
         </Card>
 
-        <Card className="space-y-4">
+        <Card className="w-full space-y-4">
+          <div className="text-lg font-semibold text-[var(--ink)]">Costo para tu solicitud</div>
+          {requestPreview ? (
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              <div className="rounded-lg bg-[var(--surface-2)] p-3 text-sm">
+                <div className="text-xs text-[var(--muted)]">Tu perfil</div>
+                <div className="mt-1 font-semibold text-[var(--ink)]">
+                  {formatProfileType(requestPreview.profileType)}
+                </div>
+              </div>
+              <div className="rounded-lg bg-[var(--surface-2)] p-3 text-sm">
+                <div className="text-xs text-[var(--muted)]">Precio base</div>
+                <div className="mt-1 font-semibold text-[var(--ink)]">
+                  {formatCurrency(requestPreview.baseCost)}
+                </div>
+              </div>
+              <div className="rounded-lg bg-[var(--surface-2)] p-3 text-sm">
+                <div className="text-xs text-[var(--muted)]">Descuento de sección</div>
+                <div className="mt-1 font-semibold text-[var(--ink)]">
+                  {requestPreview.sectionDiscountPercent > 0
+                    ? `${requestPreview.sectionDiscountPercent}%`
+                    : "Sin descuento"}
+                </div>
+              </div>
+              <div className="rounded-lg bg-[var(--accent-soft)] p-3 text-sm">
+                <div className="text-xs text-[var(--muted)]">Total a pagar</div>
+                <div className="mt-1 text-lg font-semibold text-[var(--ink)]">
+                  {formatCurrency(requestPreview.calculatedCost)}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-sm text-[var(--muted)]">
+              {previewError ?? "Calculando costo de registro..."}
+            </div>
+          )}
+        </Card>
+
+        {requestPreview?.sectionId ? (
+          <Card className="w-full space-y-4">
+            <div className="text-lg font-semibold text-[var(--ink)]">Tu sección para este evento</div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="rounded-lg bg-[var(--surface-2)] p-3 text-sm sm:col-span-2">
+                <div className="text-xs text-[var(--muted)]">Sección</div>
+                <div className="mt-1 font-semibold text-[var(--ink)]">{requestPreview.sectionName}</div>
+              </div>
+              <div className="rounded-lg bg-[var(--surface-2)] p-3 text-sm">
+                <div className="text-xs text-[var(--muted)]">Integrantes</div>
+                <div className="mt-1 font-semibold text-[var(--ink)]">
+                  {requestPreview.sectionMemberCount ?? 0}
+                </div>
+              </div>
+            </div>
+            <div className="text-sm text-[var(--muted)]">
+              Esta sección se aplicará automáticamente al enviar tu solicitud.
+            </div>
+          </Card>
+        ) : null}
+
+        <Card className="w-full space-y-4">
           <div className="text-lg font-semibold text-[var(--ink)]">Registro</div>
           {myRegistration ? (
             <div className="space-y-3">
@@ -148,8 +240,23 @@ export default function MemberEventoDetallePage() {
             </div>
           ) : (
             <div className="space-y-3">
-              <FileUpload label="Comprobante de pago" accept=".pdf,.png,.jpg" onChange={setProofFile} />
-              <Button onClick={submitRequest} loading={submittingRequest} loadingText="Enviando...">
+              {!requestPreview ? (
+                <div className="text-sm text-[var(--muted)]">
+                  {previewError ?? "Calculando costo de registro..."}
+                </div>
+              ) : requestPreview.paymentProofRequired ? (
+                <FileUpload label="Comprobante de pago" accept=".pdf,.png,.jpg" onChange={setProofFile} />
+              ) : (
+                <div className="text-sm text-[var(--muted)]">
+                  Esta solicitud no requiere comprobante porque el costo calculado es gratuito.
+                </div>
+              )}
+              <Button
+                onClick={submitRequest}
+                disabled={!requestPreview || (requestPreview.paymentProofRequired && !proofFile)}
+                loading={submittingRequest}
+                loadingText="Enviando..."
+              >
                 Enviar solicitud
               </Button>
             </div>

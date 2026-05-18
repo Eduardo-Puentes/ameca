@@ -15,6 +15,19 @@ const DEFAULT_PROFILE_PRICES = {
   associatedStudent: 400,
 };
 
+type NumericInputValue = number | "";
+
+type EventFormState = {
+  name: string;
+  startDate: string;
+  duration: NumericInputValue;
+  open: boolean;
+  location: string;
+  capacity: NumericInputValue;
+  description: string;
+  profilePrices: Record<keyof Event["profilePrices"], NumericInputValue>;
+};
+
 const toDateInputValue = (value: Event["startDate"] | undefined) => {
   if (!value) return "";
   if (typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
@@ -24,6 +37,22 @@ const toDateInputValue = (value: Event["startDate"] | undefined) => {
     : new Date(value);
   return Number.isNaN(parsed.getTime()) ? "" : parsed.toISOString().slice(0, 10);
 };
+
+const toNumericInputValue = (value: number | undefined, fallback: number): NumericInputValue =>
+  value ?? fallback;
+
+const parseNumericInputValue = (
+  value: string,
+  { fallback = 0, min }: { fallback?: number; min?: number } = {}
+): NumericInputValue => {
+  if (value === "") return "";
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  return min === undefined || parsed >= min ? parsed : fallback;
+};
+
+const toSubmitNumber = (value: NumericInputValue, fallback = 0) =>
+  typeof value === "number" && Number.isFinite(value) ? value : fallback;
 
 export function EventForm({
   initial,
@@ -36,13 +65,13 @@ export function EventForm({
   submitLabel?: string;
   submitting?: boolean;
 }) {
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<EventFormState>({
     name: initial?.name ?? "",
     startDate: toDateInputValue(initial?.startDate),
-    duration: initial?.duration ?? 1,
+    duration: toNumericInputValue(initial?.duration, 1),
     open: initial?.open ?? (initial?.status ? initial.status === "open" : true),
     location: initial?.location ?? "",
-    capacity: initial?.capacity ?? 100,
+    capacity: toNumericInputValue(initial?.capacity, 100),
     description: initial?.description ?? "",
     profilePrices: {
       ...DEFAULT_PROFILE_PRICES,
@@ -51,12 +80,11 @@ export function EventForm({
   });
 
   const setProfilePrice = (key: keyof Event["profilePrices"], value: string) => {
-    const parsed = Number(value);
     setForm((prev) => ({
       ...prev,
       profilePrices: {
         ...prev.profilePrices,
-        [key]: Number.isFinite(parsed) && parsed >= 0 ? parsed : 0,
+        [key]: parseNumericInputValue(value, { min: 0 }),
       },
     }));
   };
@@ -66,7 +94,18 @@ export function EventForm({
       className="space-y-4"
       onSubmit={(event) => {
         event.preventDefault();
-        onSubmit({ ...form, status: form.open ? "open" : "closed" });
+        onSubmit({
+          ...form,
+          duration: toSubmitNumber(form.duration),
+          capacity: toSubmitNumber(form.capacity),
+          profilePrices: {
+            professional: toSubmitNumber(form.profilePrices.professional),
+            student: toSubmitNumber(form.profilePrices.student),
+            associatedProfessional: toSubmitNumber(form.profilePrices.associatedProfessional),
+            associatedStudent: toSubmitNumber(form.profilePrices.associatedStudent),
+          },
+          status: form.open ? "open" : "closed",
+        });
       }}
     >
       <div className="grid gap-4 md:grid-cols-2">
@@ -87,9 +126,13 @@ export function EventForm({
         <FormField label="Duración (días)">
           <Input
             type="number"
+            min={1}
             value={form.duration}
             onChange={(event) =>
-              setForm((prev) => ({ ...prev, duration: Number(event.target.value) }))
+              setForm((prev) => ({
+                ...prev,
+                duration: parseNumericInputValue(event.target.value, { min: 1 }),
+              }))
             }
           />
         </FormField>
@@ -114,9 +157,13 @@ export function EventForm({
         <FormField label="Capacidad">
           <Input
             type="number"
+            min={0}
             value={form.capacity}
             onChange={(event) =>
-              setForm((prev) => ({ ...prev, capacity: Number(event.target.value) }))
+              setForm((prev) => ({
+                ...prev,
+                capacity: parseNumericInputValue(event.target.value, { min: 0 }),
+              }))
             }
           />
         </FormField>

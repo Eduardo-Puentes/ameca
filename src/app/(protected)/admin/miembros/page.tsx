@@ -38,7 +38,16 @@ export default function AdminMiembrosPage() {
     const normalized = deferredSearch.trim().toLowerCase();
     if (!normalized) return verifiedMembers;
     return verifiedMembers.filter((member) =>
-      [member.fullName, member.email, member.phoneNumber, member.profileType]
+      [
+        member.fullName,
+        member.email,
+        member.phoneNumber,
+        member.profileType,
+        member.academicDegree,
+        member.state,
+        member.institution,
+        member.title,
+      ]
         .filter(Boolean)
         .some((value) => String(value).toLowerCase().includes(normalized))
     );
@@ -144,7 +153,7 @@ export default function AdminMiembrosPage() {
             setSearch(event.target.value);
             setPage(1);
           }}
-          placeholder="Buscar por nombre, correo, teléfono o perfil"
+          placeholder="Buscar por nombre, correo, teléfono, perfil, grado, estado o institución"
         />
         <DataTable columns={columns} data={paginatedMembers} />
         <Pagination

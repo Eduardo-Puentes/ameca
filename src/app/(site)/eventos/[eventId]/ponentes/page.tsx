@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { EventPublicSidebar } from "@/components/site/EventPublicSidebar";
 import { getEvent, listPublicEventSpeakers } from "@/lib/data";
 import type { Event, PublicEventSpeaker } from "@/lib/types";
+import { formatMemberTitle } from "@/lib/utils";
 
 export default function EventoPonentesPage() {
   const params = useParams();
@@ -102,7 +103,9 @@ export default function EventoPonentesPage() {
                     )}
                   </div>
                   <div className="p-4">
-                    <div className="text-base font-semibold text-[var(--ink)]">{speaker.name}</div>
+                    <div className="text-base font-semibold text-[var(--ink)]">
+                      {speaker.title ? `${formatMemberTitle(speaker.title)} ${speaker.name}` : speaker.name}
+                    </div>
                   </div>
                 </article>
               ))}

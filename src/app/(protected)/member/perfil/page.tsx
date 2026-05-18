@@ -9,7 +9,13 @@ import { Input } from "@/components/ui/Input";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useToastStore } from "@/components/ui/Toast";
 import { useAppStore } from "@/store";
-import { formatDate, formatProfileType } from "@/lib/utils";
+import {
+  formatAcademicDegree,
+  formatDate,
+  formatInstitution,
+  formatMemberState,
+  formatProfileType,
+} from "@/lib/utils";
 
 export default function MemberPerfilPage() {
   const { members, loadMembers, updateMemberProfile } = useAppStore();
@@ -69,6 +75,32 @@ export default function MemberPerfilPage() {
                 disabled
               />
             </FormField>
+            <div className="grid gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-3 text-sm md:grid-cols-3">
+              <div>
+                <div className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">
+                  Grado
+                </div>
+                <div className="mt-1 font-semibold text-[var(--ink)]">
+                  {formatAcademicDegree(member?.academicDegree)}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">
+                  Estado
+                </div>
+                <div className="mt-1 font-semibold text-[var(--ink)]">
+                  {formatMemberState(member?.state)}
+                </div>
+              </div>
+              <div>
+                <div className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">
+                  Institución
+                </div>
+                <div className="mt-1 font-semibold text-[var(--ink)]">
+                  {formatInstitution(member?.institution)}
+                </div>
+              </div>
+            </div>
           </div>
           <Button onClick={handleSave} loading={saving} loadingText="Guardando...">
             Guardar cambios

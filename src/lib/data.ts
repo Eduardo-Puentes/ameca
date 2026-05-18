@@ -44,12 +44,18 @@ export const listPublicEventSpeakers = pick(api.listPublicEventSpeakers, mock.li
 export const getMyTicket = pick(api.getMyTicket, mock.getMyTicket);
 export const listMyEvents = pick(api.listMyEvents, mock.listMyEvents);
 export const getMyEventRegistration = pick(api.getMyEventRegistration, mock.getMyEventRegistration);
+export const getMyEventRegistrationPreview = pick(
+  api.getMyEventRegistrationPreview,
+  mock.getMyEventRegistrationPreview
+);
 export const createEvent = pick(api.createEvent, mock.createEvent);
 export const updateEvent = pick(api.updateEvent, mock.updateEvent);
 export const deleteEvent = pick(api.deleteEvent, mock.deleteEvent);
 export const getMembershipPrices = pick(api.getMembershipPrices);
 export const getAdminMembershipPrices = pick(api.getAdminMembershipPrices);
 export const updateAdminMembershipPrices = pick(api.updateAdminMembershipPrices);
+export const getAdminSectionDiscounts = pick(api.getAdminSectionDiscounts);
+export const updateAdminSectionDiscounts = pick(api.updateAdminSectionDiscounts);
 export const listMembers = pick(api.listMembers, mock.listMembers);
 export const listAdminUsers = pick(api.listAdminUsers);
 export const createAdminUser = pick(api.createAdminUser, mock.createAdminUser);

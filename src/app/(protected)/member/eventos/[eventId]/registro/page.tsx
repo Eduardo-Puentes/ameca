@@ -12,9 +12,11 @@ import { FileUpload } from "@/components/ui/FileUpload";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { QRCodeBlock } from "@/components/ui/QRCodeBlock";
+import { Select } from "@/components/ui/Select";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Textarea } from "@/components/ui/Textarea";
 import { useToastStore } from "@/components/ui/Toast";
+import { memberTitleOptions } from "@/lib/memberProfileOptions";
 import {
   confirmPresentationCode,
   deletePresentation,
@@ -35,6 +37,7 @@ export default function MemberEventoRegistroPage() {
   const [error, setError] = useState<string | null>(null);
   const [qrOpen, setQrOpen] = useState(false);
   const [claimCode, setClaimCode] = useState("");
+  const [speakerTitle, setSpeakerTitle] = useState("");
   const [speakerDescription, setSpeakerDescription] = useState("");
   const [speakerPhoto, setSpeakerPhoto] = useState<File | null>(null);
   const [claimingPresentation, setClaimingPresentation] = useState(false);
@@ -51,6 +54,7 @@ export default function MemberEventoRegistroPage() {
         if (!active) return;
         setRegistration(item);
         setPresentations(item.presentations ?? []);
+        setSpeakerTitle(item.title ?? "");
         setSpeakerDescription(item.speakerDescription ?? "");
         setError(null);
       })
@@ -96,6 +100,7 @@ export default function MemberEventoRegistroPage() {
     try {
       setSavingSpeakerProfile(true);
       const updated = await updateMySpeakerProfile(eventId, {
+        title: speakerTitle || null,
         speakerDescription,
         speakerPhoto,
       });
@@ -277,6 +282,23 @@ export default function MemberEventoRegistroPage() {
               Ver foto actual
             </a>
           ) : null}
+          <div className="max-w-xs">
+            <label className="mb-2 block text-sm font-medium text-[var(--ink)]" htmlFor="speaker-title">
+              Título
+            </label>
+            <Select
+              id="speaker-title"
+              value={speakerTitle}
+              onChange={(event) => setSpeakerTitle(event.target.value)}
+            >
+              <option value="">Sin título</option>
+              {memberTitleOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </Select>
+          </div>
           <Textarea
             placeholder="Escribe una semblanza breve para tu perfil de ponente"
             value={speakerDescription}

@@ -1,3 +1,10 @@
+import {
+  academicDegreeOptions,
+  memberTitleOptions,
+  mexicanInstitutionOptions,
+  mexicanStateOptions,
+} from "@/lib/memberProfileOptions";
+
 export function cn(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
 }
@@ -72,4 +79,29 @@ export function formatProfileType(value: string | null | undefined, fallback = "
     associated_student: "Socio estudiante",
   };
   return labels[value] ?? value;
+}
+
+const labelFromOptions = (
+  options: Array<{ value: string; label: string }>,
+  value: string | null | undefined,
+  fallback: string
+) => {
+  if (!value) return fallback;
+  return options.find((option) => option.value === value)?.label ?? value;
+};
+
+export function formatAcademicDegree(value: string | null | undefined, fallback = "Sin grado") {
+  return labelFromOptions(academicDegreeOptions, value, fallback);
+}
+
+export function formatMemberState(value: string | null | undefined, fallback = "Sin estado") {
+  return labelFromOptions(mexicanStateOptions, value, fallback);
+}
+
+export function formatInstitution(value: string | null | undefined, fallback = "Sin institución") {
+  return labelFromOptions(mexicanInstitutionOptions, value, fallback);
+}
+
+export function formatMemberTitle(value: string | null | undefined, fallback = "Sin título") {
+  return labelFromOptions(memberTitleOptions, value, fallback);
 }

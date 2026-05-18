@@ -8,7 +8,13 @@ import { Card } from "@/components/ui/Card";
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
 import { PasswordInput } from "@/components/ui/PasswordInput";
+import { Select } from "@/components/ui/Select";
 import { brand } from "@/lib/brand";
+import {
+  academicDegreeOptions,
+  mexicanInstitutionOptions,
+  mexicanStateOptions,
+} from "@/lib/memberProfileOptions";
 import { useAppStore } from "@/store";
 import { useToastStore } from "@/components/ui/Toast";
 
@@ -21,11 +27,21 @@ export default function RegisterPage() {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [academicDegree, setAcademicDegree] = useState("");
+  const [state, setState] = useState("");
+  const [institution, setInstitution] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
 
   const handleRegister = async () => {
-    if (!fullName.trim() || !email.trim() || !password) {
+    if (
+      !fullName.trim() ||
+      !email.trim() ||
+      !academicDegree ||
+      !state ||
+      !institution ||
+      !password
+    ) {
       pushToast({ title: "Completa todos los campos", tone: "warning" });
       return;
     }
@@ -40,6 +56,9 @@ export default function RegisterPage() {
         email: email.trim(),
         password,
         phoneNumber: phoneNumber.trim() || undefined,
+        academicDegree,
+        state,
+        institution,
       });
       pushToast({
         title: "Registro exitoso",
@@ -92,6 +111,44 @@ export default function RegisterPage() {
                 onChange={(event) => setPhoneNumber(event.target.value)}
               />
             </FormField>
+            <div className="grid gap-4 md:grid-cols-3">
+              <FormField label="Grado académico">
+                <Select
+                  value={academicDegree}
+                  onChange={(event) => setAcademicDegree(event.target.value)}
+                >
+                  <option value="">Selecciona una opción</option>
+                  {academicDegreeOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </Select>
+              </FormField>
+              <FormField label="Estado">
+                <Select value={state} onChange={(event) => setState(event.target.value)}>
+                  <option value="">Selecciona un estado</option>
+                  {mexicanStateOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </Select>
+              </FormField>
+              <FormField label="Institución">
+                <Select
+                  value={institution}
+                  onChange={(event) => setInstitution(event.target.value)}
+                >
+                  <option value="">Selecciona una institución</option>
+                  {mexicanInstitutionOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </Select>
+              </FormField>
+            </div>
             <FormField label="Contraseña">
               <PasswordInput
                 placeholder="Mínimo 8 caracteres"
