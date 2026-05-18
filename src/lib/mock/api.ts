@@ -7,8 +7,10 @@ import type {
   DiplomaTemplate,
   Event,
   EventMemberRegistration,
+  EventRegistrationPreview,
   EventUpsertPayload,
   EventRequest,
+  Member,
   MemberEventRegistration,
   MemberUpdatePayload,
   MembershipRequest,
@@ -20,6 +22,7 @@ import type {
   Section,
   SectionDetail,
   SectionRequest,
+  ProfileType,
 } from "@/lib/types";
 import { tokenStorage } from "@/lib/authStorage";
 import {
@@ -51,6 +54,25 @@ let diplomaTemplates = [...mockDiplomaTemplates];
 let diplomaRecords = [...mockDiplomaRecords];
 let attendanceRecords = [...mockAttendanceRecords];
 const generateId = (prefix: string) => `${prefix}-${Math.random().toString(36).slice(2, 8)}`;
+
+const getProfileEventPrice = (event: Event, profileType: ProfileType | string) => {
+  if (profileType === "student") return event.profilePrices.student;
+  if (profileType === "associated_professional") return event.profilePrices.associatedProfessional;
+  if (profileType === "associated_student") return event.profilePrices.associatedStudent;
+  return event.profilePrices.professional;
+};
+
+const getSectionDiscountPercent = (memberCount: number | null | undefined) => {
+  if (!memberCount || memberCount <= 0) return 0;
+  return memberCount <= 20 ? 15 : 25;
+};
+
+const calculateEventCost = (event: Event, profileType: ProfileType | string, memberCount?: number | null) => {
+  const baseCost = getProfileEventPrice(event, profileType);
+  const discount = getSectionDiscountPercent(memberCount);
+  return Math.max(Math.round(baseCost * (100 - discount) / 100), 0);
+};
+
 let organizations: Organization[] = [
   {
     id: generateId("org"),
@@ -121,7 +143,14 @@ export async function authLoginWithCredentials(email: string) {
   return authLogin(role);
 }
 
-export async function authRegister(payload: { fullName: string; email: string }) {
+export async function authRegister(payload: {
+  fullName: string;
+  email: string;
+  phoneNumber?: string;
+  academicDegree: string;
+  state: string;
+  institution: string;
+}) {
   await wait(350);
   const role = roleFromEmail(payload.email);
   members = [
@@ -129,13 +158,17 @@ export async function authRegister(payload: { fullName: string; email: string })
       id: generateId("member"),
       fullName: payload.fullName,
       email: payload.email,
-      phoneNumber: "",
-      profileType: "standard",
+      phoneNumber: payload.phoneNumber ?? "",
+      profileType: "professional",
+      academicDegree: payload.academicDegree,
+      state: payload.state,
+      institution: payload.institution,
+      title: null,
       verified: false,
       expirationDate: "",
       role,
       organization: "",
-    },
+    } satisfies Member,
     ...members,
   ];
   return { ok: true };
@@ -177,6 +210,7 @@ export async function listPublicEventSpeakers(eventId: string) {
     .map((registration) => ({
       id: registration.id,
       name: registration.memberName,
+      title: registration.title ?? null,
       speakerType: registration.speakerType ?? "plenary",
       photoUrl: registration.speakerPhotoUrl ?? "",
     }));
@@ -233,6 +267,32 @@ export async function getMyEventRegistration(eventId: string): Promise<MemberEve
     throw new Error("No se encontró tu registro para este evento.");
   }
   return registration;
+}
+
+export async function getMyEventRegistrationPreview(eventId: string): Promise<EventRegistrationPreview> {
+  await wait(200);
+  const event = events.find((item) => item.id === eventId);
+  if (!event) {
+    throw new Error("Evento no encontrado");
+  }
+  const currentMember = members.find((member) => member.email === "jordan.lee@uni.edu") ?? members[0];
+  const mySection = sections.find((section) => section.eventId === eventId && section.status === "approved");
+  const sectionMemberCount = mySection?.pCount ?? null;
+  const profileType = currentMember?.profileType ?? "professional";
+  const baseCost = getProfileEventPrice(event, profileType);
+  const calculatedCost = calculateEventCost(event, profileType, sectionMemberCount);
+
+  return {
+    eventId,
+    profileType,
+    baseCost,
+    calculatedCost,
+    paymentProofRequired: calculatedCost > 0,
+    sectionId: mySection?.id ?? null,
+    sectionName: mySection?.name ?? "",
+    sectionMemberCount,
+    sectionDiscountPercent: getSectionDiscountPercent(sectionMemberCount),
+  };
 }
 
 export async function createEvent(payload: EventUpsertPayload) {
@@ -673,6 +733,7 @@ const buildEventMemberRegistrations = (eventId: string): EventMemberRegistration
       memberEmail: req.memberEmail,
       memberPhoneNumber: req.memberPhoneNumber ?? member?.phoneNumber ?? "",
       profileType: member?.profileType ?? "",
+      title: member?.title ?? null,
       organization: member?.organization ?? "",
       sectionId: req.sectionId ?? null,
       sectionName: req.sectionName,
@@ -764,16 +825,26 @@ export async function createEventRequest(
   payload: Partial<EventRequest> & { paymentProofFile?: File | null }
 ) {
   await wait(300);
+  const event = events.find((item) => item.id === payload.eventId);
+  const currentMember = members.find((member) => member.email === "jordan.lee@uni.edu") ?? members[0];
+  const mySection = sections.find(
+    (section) => section.eventId === payload.eventId && section.status === "approved"
+  );
+  const calculatedCost = event
+    ? calculateEventCost(event, currentMember?.profileType ?? "professional", mySection?.pCount ?? null)
+    : undefined;
   const newRequest: EventRequest = {
     id: generateId("req"),
     eventId: payload.eventId ?? "",
-    eventName: payload.eventName ?? "Evento",
-    memberId: payload.memberId ?? members[0]?.id ?? "",
-    memberName: payload.memberName ?? "Socio",
-    memberEmail: payload.memberEmail ?? "",
-    memberPhoneNumber: payload.memberPhoneNumber ?? members[0]?.phoneNumber ?? "",
-    sectionName: payload.sectionName ?? "General",
+    eventName: payload.eventName ?? event?.name ?? "Evento",
+    memberId: payload.memberId ?? currentMember?.id ?? "",
+    memberName: payload.memberName ?? currentMember?.fullName ?? "Socio",
+    memberEmail: payload.memberEmail ?? currentMember?.email ?? "",
+    memberPhoneNumber: payload.memberPhoneNumber ?? currentMember?.phoneNumber ?? "",
+    sectionId: payload.sectionId ?? mySection?.id ?? null,
+    sectionName: payload.sectionName ?? mySection?.name ?? "General",
     status: "pending",
+    calculatedCost,
     paymentProofUrl: payload.paymentProofUrl,
     comments: "",
     createdAt: new Date().toISOString().split("T")[0],

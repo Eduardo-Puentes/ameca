@@ -13,7 +13,13 @@ import { Textarea } from "@/components/ui/Textarea";
 import { useToastStore } from "@/components/ui/Toast";
 import { deleteEventMember, getEventMember } from "@/lib/data";
 import type { EventMemberRegistration } from "@/lib/types";
-import { formatCurrency, formatDateTime, formatProfileType, formatSpeakerType } from "@/lib/utils";
+import {
+  formatCurrency,
+  formatDateTime,
+  formatMemberTitle,
+  formatProfileType,
+  formatSpeakerType,
+} from "@/lib/utils";
 import { useAppStore } from "@/store";
 
 export default function AdminEventMemberDetailPage() {
@@ -139,6 +145,11 @@ export default function AdminEventMemberDetailPage() {
                 <div className="mt-2 text-sm font-semibold text-[var(--ink)]">
                   {registration.isSpeaker ? formatSpeakerType(registration.speakerType ?? "plenary") : "No"}
                 </div>
+                {registration.isSpeaker && registration.title ? (
+                  <div className="mt-1 text-xs text-[var(--muted)]">
+                    {formatMemberTitle(registration.title)}
+                  </div>
+                ) : null}
               </div>
             </div>
             {registration.speakerDescription ? (

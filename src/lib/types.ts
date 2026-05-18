@@ -59,6 +59,7 @@ export type Event = {
 export type PublicEventSpeaker = {
   id: string;
   name: string;
+  title?: MemberTitle | string | null;
   speakerType: SpeakerType;
   photoUrl: string;
 };
@@ -78,6 +79,60 @@ export type ProfileType =
   | "student"
   | "associated_professional"
   | "associated_student";
+
+export type AcademicDegree =
+  | "doctorado"
+  | "maestria"
+  | "licenciatura"
+  | "bachiller"
+  | "other";
+
+export type MemberState =
+  | "aguascalientes"
+  | "baja_california"
+  | "baja_california_sur"
+  | "campeche"
+  | "chiapas"
+  | "chihuahua"
+  | "ciudad_de_mexico"
+  | "coahuila"
+  | "colima"
+  | "durango"
+  | "estado_de_mexico"
+  | "guanajuato"
+  | "guerrero"
+  | "hidalgo"
+  | "jalisco"
+  | "michoacan"
+  | "morelos"
+  | "nayarit"
+  | "nuevo_leon"
+  | "oaxaca"
+  | "puebla"
+  | "queretaro"
+  | "quintana_roo"
+  | "san_luis_potosi"
+  | "sinaloa"
+  | "sonora"
+  | "tabasco"
+  | "tamaulipas"
+  | "tlaxcala"
+  | "veracruz"
+  | "yucatan"
+  | "zacatecas"
+  | "other";
+
+export type MemberTitle =
+  | "dr"
+  | "dra"
+  | "mtro"
+  | "mtra"
+  | "ing"
+  | "lic"
+  | "sr"
+  | "sra"
+  | "srta"
+  | "other";
 
 export type EventRequest = {
   id: string;
@@ -117,6 +172,7 @@ export type EventMemberRegistration = {
   cost: number;
   isSpeaker: boolean;
   speakerType?: SpeakerType;
+  title?: MemberTitle | string | null;
   speakerPhotoUrl?: string;
   speakerDescription?: string;
   attended: boolean;
@@ -143,6 +199,7 @@ export type MemberEventRegistration = {
   cost: number;
   isSpeaker: boolean;
   speakerType?: SpeakerType;
+  title?: MemberTitle | string | null;
   speakerPhotoUrl?: string;
   speakerDescription?: string;
   attended: boolean;
@@ -151,6 +208,18 @@ export type MemberEventRegistration = {
   approvedByName: string;
   paymentProofs?: PaymentProof[];
   presentations?: Presentation[];
+};
+
+export type EventRegistrationPreview = {
+  eventId: string;
+  profileType: ProfileType | string;
+  baseCost: number;
+  calculatedCost: number;
+  paymentProofRequired: boolean;
+  sectionId: string | null;
+  sectionName: string;
+  sectionMemberCount: number | null;
+  sectionDiscountPercent: number;
 };
 
 export type SectionRequestStatus = RequestStatus;
@@ -253,6 +322,13 @@ export type MembershipPrices = {
   items: Array<{ profileType: ProfileType; cost: number }>;
 };
 
+export type SectionDiscountSettings = {
+  thresholdCount: number;
+  belowThresholdPercent: number;
+  atOrAboveThresholdPercent: number;
+  allowedDiscountPercents: number[];
+};
+
 export type SpeakerType = "none" | "keynote" | "plenary";
 
 export type BulkTier = {
@@ -292,6 +368,10 @@ export type Member = {
   email: string;
   phoneNumber: string;
   profileType: ProfileType | string;
+  academicDegree?: AcademicDegree | string;
+  state?: MemberState | string;
+  institution?: string;
+  title?: MemberTitle | string | null;
   verified: boolean;
   expirationDate?: number | string | null;
   role: Role;
@@ -306,7 +386,18 @@ export type Member = {
 };
 
 export type MemberUpdatePayload = Partial<
-  Pick<Member, "fullName" | "phoneNumber" | "profileType" | "expirationDate" | "verified">
+  Pick<
+    Member,
+    | "fullName"
+    | "phoneNumber"
+    | "profileType"
+    | "academicDegree"
+    | "state"
+    | "institution"
+    | "title"
+    | "expirationDate"
+    | "verified"
+  >
 >;
 
 export type AdminUser = {

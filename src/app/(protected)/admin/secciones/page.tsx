@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/Input";
 import { Pagination } from "@/components/ui/Pagination";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Button } from "@/components/ui/Button";
-import { useToastStore } from "@/components/ui/Toast";
+import { ConfirmActionModal } from "@/components/ui/ConfirmActionModal";
 import { useAppStore } from "@/store";
 import type { Section, SectionRequest } from "@/lib/types";
 import { cn, formatDate } from "@/lib/utils";
@@ -80,8 +80,8 @@ function SectionRequestsPanel({
   onQueryChange: (value: string) => void;
   onStatusChange: (value: SectionRequestFilter) => void;
   onPageChange: (page: number) => void;
-  onApprove: (id: string) => Promise<void>;
-  onReject: (id: string) => Promise<void>;
+  onApprove: (request: SectionRequest) => void;
+  onReject: (request: SectionRequest) => void;
 }) {
   const columns = [
     { header: "Sección", accessor: "name" },
@@ -99,10 +99,10 @@ function SectionRequestsPanel({
         <div className="flex gap-2">
           {req.status === "pending" ? (
             <>
-              <Button size="sm" onClick={() => onApprove(req.id)}>
+              <Button size="sm" onClick={() => onApprove(req)}>
                 Aprobar
               </Button>
-              <Button size="sm" variant="danger" onClick={() => onReject(req.id)}>
+              <Button size="sm" variant="danger" onClick={() => onReject(req)}>
                 Rechazar
               </Button>
             </>
@@ -222,10 +222,13 @@ export default function AdminSeccionesPage() {
     rejectSectionCreation,
     requestPageSize,
   } = useAppStore();
-  const pushToast = useToastStore((state) => state.pushToast);
   const [requestSearch, setRequestSearch] = useState(sectionRequestsQuery);
   const [requestStatus, setRequestStatus] = useState<SectionRequestFilter>(sectionRequestsStatus);
   const [sectionSearch, setSectionSearch] = useState(sectionsQuery);
+  const [decisionModal, setDecisionModal] = useState<{
+    type: "approve" | "reject";
+    request: SectionRequest;
+  } | null>(null);
   const deferredRequestSearch = useDeferredValue(requestSearch);
   const deferredSectionSearch = useDeferredValue(sectionSearch);
 
@@ -237,17 +240,15 @@ export default function AdminSeccionesPage() {
     loadAdminSections(1, deferredSectionSearch);
   }, [deferredSectionSearch, loadAdminSections]);
 
-  const handleApprove = async (id: string) => {
-    await approveSectionCreation(id);
+  const handleApprove = async (request: SectionRequest) => {
+    await approveSectionCreation(request.id);
     await loadSectionRequests(sectionRequestsPage, deferredRequestSearch, requestStatus);
     await loadAdminSections(sectionsPage, deferredSectionSearch);
-    pushToast({ title: "Sección aprobada", tone: "success" });
   };
 
-  const handleReject = async (id: string) => {
-    await rejectSectionCreation(id);
+  const handleReject = async (request: SectionRequest) => {
+    await rejectSectionCreation(request.id);
     await loadSectionRequests(sectionRequestsPage, deferredRequestSearch, requestStatus);
-    pushToast({ title: "Sección rechazada", tone: "danger" });
   };
 
   return (
@@ -268,8 +269,8 @@ export default function AdminSeccionesPage() {
         onQueryChange={setRequestSearch}
         onStatusChange={setRequestStatus}
         onPageChange={(page) => loadSectionRequests(page, deferredRequestSearch, requestStatus)}
-        onApprove={handleApprove}
-        onReject={handleReject}
+        onApprove={(request) => setDecisionModal({ type: "approve", request })}
+        onReject={(request) => setDecisionModal({ type: "reject", request })}
       />
       <AcceptedSectionsPanel
         sections={sections}
@@ -279,6 +280,66 @@ export default function AdminSeccionesPage() {
         total={sectionsTotal}
         onQueryChange={setSectionSearch}
         onPageChange={(page) => loadAdminSections(page, deferredSectionSearch)}
+      />
+
+      <ConfirmActionModal
+        open={decisionModal?.type === "approve"}
+        title="Aprobar sección"
+        description={
+          <>
+            Confirma que quieres aprobar la sección{" "}
+            <span className="font-medium text-[var(--ink)]">{decisionModal?.request.name}</span>
+            {decisionModal?.request.eventName ? (
+              <>
+                {" "}
+                para el evento{" "}
+                <span className="font-medium text-[var(--ink)]">
+                  {decisionModal.request.eventName}
+                </span>
+              </>
+            ) : null}
+            . Al aprobarla se creará como sección oficial.
+          </>
+        }
+        confirmLabel="Aprobar sección"
+        confirmVariant="primary"
+        onClose={() => setDecisionModal(null)}
+        onConfirm={async () => {
+          if (decisionModal?.type !== "approve") return;
+          await handleApprove(decisionModal.request);
+        }}
+        successToast={{ title: "Sección aprobada", tone: "success" }}
+        errorTitle="No se pudo aprobar la sección"
+      />
+
+      <ConfirmActionModal
+        open={decisionModal?.type === "reject"}
+        title="Rechazar sección"
+        description={
+          <>
+            Confirma que quieres rechazar la solicitud de sección{" "}
+            <span className="font-medium text-[var(--ink)]">{decisionModal?.request.name}</span>
+            {decisionModal?.request.representativeName ? (
+              <>
+                {" "}
+                de{" "}
+                <span className="font-medium text-[var(--ink)]">
+                  {decisionModal.request.representativeName}
+                </span>
+              </>
+            ) : null}
+            .
+          </>
+        }
+        confirmLabel="Rechazar sección"
+        confirmVariant="danger"
+        onClose={() => setDecisionModal(null)}
+        onConfirm={async () => {
+          if (decisionModal?.type !== "reject") return;
+          await handleReject(decisionModal.request);
+        }}
+        successToast={{ title: "Sección rechazada", tone: "danger" }}
+        errorTitle="No se pudo rechazar la sección"
       />
     </div>
   );

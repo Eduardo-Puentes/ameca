@@ -11,7 +11,13 @@ import { ConfirmActionModal } from "@/components/ui/ConfirmActionModal";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { getMember } from "@/lib/data";
 import type { Member } from "@/lib/types";
-import { formatProfileType } from "@/lib/utils";
+import {
+  formatAcademicDegree,
+  formatInstitution,
+  formatMemberState,
+  formatMemberTitle,
+  formatProfileType,
+} from "@/lib/utils";
 import { useAppStore } from "@/store";
 
 const formatDate = (value?: number | string | null) => {
@@ -105,6 +111,10 @@ export default function AdminMemberProfilePage() {
     { label: "Nombre completo", value: member.fullName },
     { label: "Correo", value: member.email },
     { label: "Teléfono", value: member.phoneNumber || "Sin teléfono" },
+    { label: "Título", value: formatMemberTitle(member.title) },
+    { label: "Grado académico", value: formatAcademicDegree(member.academicDegree) },
+    { label: "Estado", value: formatMemberState(member.state) },
+    { label: "Institución", value: formatInstitution(member.institution) },
     { label: "Perfil", value: formatProfileType(String(member.profileType ?? "")) },
     { label: "Rol", value: roleLabel },
     { label: "Vencimiento", value: formatDate(member.expirationDate) },

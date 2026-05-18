@@ -6,6 +6,7 @@ import { useParams } from "next/navigation";
 import { PageHeader } from "@/components/layout/PageMetaContext";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
+import { ConfirmActionModal } from "@/components/ui/ConfirmActionModal";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Textarea } from "@/components/ui/Textarea";
 import { useToastStore } from "@/components/ui/Toast";
@@ -34,7 +35,7 @@ export default function AdminMembershipRequestDetailPage() {
   const [request, setRequest] = useState<MembershipRequest | null>(null);
   const [comment, setComment] = useState("");
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [decisionModal, setDecisionModal] = useState<"approve" | "reject" | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -74,40 +75,17 @@ export default function AdminMembershipRequestDetailPage() {
 
   const handleApprove = async () => {
     if (!request) return;
-    try {
-      setSaving(true);
-      await approveMemberRequest(request.id, comment.trim() || undefined);
-      await refresh();
-      pushToast({ title: "Solicitud aprobada", tone: "success" });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "No se pudo aprobar la solicitud.";
-      pushToast({ title: "Error", message, tone: "danger" });
-    } finally {
-      setSaving(false);
-    }
+    await approveMemberRequest(request.id, comment.trim() || undefined);
+    await refresh();
   };
 
   const handleReject = async () => {
     if (!request) return;
     if (!comment.trim()) {
-      pushToast({
-        title: "Comentario requerido",
-        message: "Agrega el motivo del rechazo para continuar.",
-        tone: "warning",
-      });
-      return;
+      throw new Error("Agrega el motivo del rechazo para continuar.");
     }
-    try {
-      setSaving(true);
-      await denyMemberRequest(request.id, comment.trim());
-      await refresh();
-      pushToast({ title: "Solicitud rechazada", tone: "danger" });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "No se pudo rechazar la solicitud.";
-      pushToast({ title: "Error", message, tone: "danger" });
-    } finally {
-      setSaving(false);
-    }
+    await denyMemberRequest(request.id, comment.trim());
+    await refresh();
   };
 
   const proofUrl = request?.paymentProofUrl ?? "";
@@ -276,32 +254,74 @@ export default function AdminMembershipRequestDetailPage() {
               </div>
             </div>
 
-            <Textarea
-              placeholder="Comentario para el historial o motivo del rechazo"
-              value={comment}
-              onChange={(event) => setComment(event.target.value)}
-              disabled={saving || !canDecideRequest}
-            />
-
             {canDecideRequest ? (
               <div className="flex flex-wrap justify-end gap-2">
                 {canApproveRequest ? (
-                  <Button onClick={handleApprove} loading={saving} loadingText="Procesando...">
+                  <Button onClick={() => setDecisionModal("approve")}>
                     Aprobar
                   </Button>
                 ) : null}
                 <Button
                   variant="danger"
-                  onClick={handleReject}
-                  disabled={!comment.trim()}
-                  loading={saving}
-                  loadingText="Procesando..."
+                  onClick={() => setDecisionModal("reject")}
                 >
                   Rechazar
                 </Button>
               </div>
             ) : null}
           </Card>
+
+          <ConfirmActionModal
+            open={decisionModal === "approve"}
+            title="Aprobar solicitud"
+            description={
+              <>
+                Confirma que quieres aprobar la solicitud de{" "}
+                <span className="font-medium text-[var(--ink)]">{request.memberName}</span> para cambiar a{" "}
+                <span className="font-medium text-[var(--ink)]">
+                  {formatProfileType(request.profileType)}
+                </span>
+                .
+              </>
+            }
+            confirmLabel="Aprobar solicitud"
+            confirmVariant="primary"
+            onClose={() => setDecisionModal(null)}
+            onConfirm={handleApprove}
+            successToast={{ title: "Solicitud aprobada", tone: "success" }}
+            errorTitle="No se pudo aprobar la solicitud"
+          >
+            <Textarea
+              placeholder="Comentario opcional para el historial"
+              value={comment}
+              onChange={(event) => setComment(event.target.value)}
+            />
+          </ConfirmActionModal>
+
+          <ConfirmActionModal
+            open={decisionModal === "reject"}
+            title="Rechazar solicitud"
+            description={
+              <>
+                Indica el motivo para rechazar la solicitud de{" "}
+                <span className="font-medium text-[var(--ink)]">{request.memberName}</span>. Este comentario
+                quedará en el historial.
+              </>
+            }
+            confirmLabel="Rechazar solicitud"
+            confirmVariant="danger"
+            confirmDisabled={!comment.trim()}
+            onClose={() => setDecisionModal(null)}
+            onConfirm={handleReject}
+            successToast={{ title: "Solicitud rechazada", tone: "danger" }}
+            errorTitle="No se pudo rechazar la solicitud"
+          >
+            <Textarea
+              placeholder="Motivo del rechazo"
+              value={comment}
+              onChange={(event) => setComment(event.target.value)}
+            />
+          </ConfirmActionModal>
         </>
       )}
     </div>

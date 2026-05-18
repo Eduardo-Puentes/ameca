@@ -9,6 +9,7 @@ import type {
   DiplomaRecord,
   DiplomaTemplate,
   Event,
+  EventRegistrationPreview,
   EventMemberRegistration,
   EventUpsertPayload,
   EventRequest,
@@ -24,6 +25,7 @@ import type {
   PublicEventSpeaker,
   RequestStatusFilter,
   Section,
+  SectionDiscountSettings,
   SectionDetail,
   SectionInvite,
   MySection,
@@ -51,6 +53,7 @@ type MemberResponse = Partial<Member> & {
   full_name?: string;
   phone_number?: string;
   profile_type?: string;
+  academic_degree?: string;
   expiration_date?: number | string | null;
 };
 type ListMembersResponse =
@@ -76,6 +79,10 @@ const normalizeMember = (member: MemberResponse): Member => ({
   email: member.email ?? "",
   phoneNumber: member.phoneNumber ?? member.phone_number ?? "",
   profileType: member.profileType ?? member.profile_type ?? "professional",
+  academicDegree: member.academicDegree ?? member.academic_degree,
+  state: member.state,
+  institution: member.institution,
+  title: member.title ?? null,
   verified: Boolean(member.verified),
   expirationDate: member.expirationDate ?? member.expiration_date ?? null,
   role: member.role ?? "member",
@@ -277,6 +284,9 @@ export async function authRegister(payload: {
   email: string;
   password: string;
   phoneNumber?: string;
+  academicDegree: string;
+  state: string;
+  institution: string;
 }) {
   return request<RegisterResponse>(
     "/auth/register",
@@ -287,6 +297,10 @@ export async function authRegister(payload: {
         password: payload.password,
         full_name: payload.fullName,
         phone_number: payload.phoneNumber ?? null,
+        academic_degree: payload.academicDegree,
+        state: payload.state,
+        institution: payload.institution,
+        title: null,
       }),
     },
     false
@@ -333,6 +347,10 @@ export async function getMyEventRegistration(eventId: string): Promise<MemberEve
   return request<MemberEventRegistration>(`/events/${eventId}/registration/me`);
 }
 
+export async function getMyEventRegistrationPreview(eventId: string): Promise<EventRegistrationPreview> {
+  return request<EventRegistrationPreview>(`/events/${eventId}/request-preview/me`);
+}
+
 export async function createEvent(payload: EventUpsertPayload): Promise<Event> {
   return request<Event>("/admin/events", {
     method: "POST",
@@ -363,6 +381,22 @@ export async function updateAdminMembershipPrices(
   payload: Partial<Event["profilePrices"]>
 ): Promise<MembershipPrices> {
   return request<MembershipPrices>("/admin/membership-prices", {
+    method: "PATCH",
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getAdminSectionDiscounts(): Promise<SectionDiscountSettings> {
+  return request<SectionDiscountSettings>("/admin/section-discounts");
+}
+
+export async function updateAdminSectionDiscounts(
+  payload: Pick<
+    SectionDiscountSettings,
+    "thresholdCount" | "belowThresholdPercent" | "atOrAboveThresholdPercent"
+  >
+): Promise<SectionDiscountSettings> {
+  return request<SectionDiscountSettings>("/admin/section-discounts", {
     method: "PATCH",
     body: JSON.stringify(payload),
   });
@@ -999,9 +1033,12 @@ export async function revokeEventMemberSpeaker(eventMemberId: string) {
 
 export async function updateMySpeakerProfile(
   eventId: string,
-  payload: { speakerDescription?: string; speakerPhoto?: File | null }
+  payload: { title?: string | null; speakerDescription?: string; speakerPhoto?: File | null }
 ) {
   const form = new FormData();
+  if ("title" in payload) {
+    form.append("title", payload.title ?? "");
+  }
   if (typeof payload.speakerDescription === "string") {
     form.append("speaker_description", payload.speakerDescription);
   }

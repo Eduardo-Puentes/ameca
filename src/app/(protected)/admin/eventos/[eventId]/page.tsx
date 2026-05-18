@@ -37,7 +37,13 @@ import type {
   Section,
   SpeakerType,
 } from "@/lib/types";
-import { formatCurrency, formatDate, formatProfileType, formatSpeakerType } from "@/lib/utils";
+import {
+  formatCurrency,
+  formatDate,
+  formatMemberTitle,
+  formatProfileType,
+  formatSpeakerType,
+} from "@/lib/utils";
 
 export default function AdminEventoDetallePage() {
   const params = useParams();
@@ -343,7 +349,14 @@ export default function AdminEventoDetallePage() {
     },
   ];
   const speakerColumns = [
-    { header: "Ponente", accessor: "memberName" },
+    {
+      header: "Ponente",
+      accessor: "memberName",
+      render: (registration: EventMemberRegistration) =>
+        registration.title
+          ? `${formatMemberTitle(registration.title)} ${registration.memberName}`
+          : registration.memberName,
+    },
     { header: "Correo", accessor: "memberEmail" },
     {
       header: "Tipo",

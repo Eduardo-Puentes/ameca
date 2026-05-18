@@ -5,6 +5,7 @@ import { PageHeader } from "@/components/layout/PageMetaContext";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
+import { ConfirmActionModal } from "@/components/ui/ConfirmActionModal";
 import { DataTable } from "@/components/ui/DataTable";
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
@@ -39,8 +40,7 @@ function toBadge(inviteStatus: SectionInvite["status"]) {
 }
 
 export default function MemberSeccionesPage() {
-  const { selectedEventId, user, events, loadEvents, members, loadMembers } =
-    useAppStore();
+  const { user, events, loadEvents, members, loadMembers } = useAppStore();
   const pushToast = useToastStore((state) => state.pushToast);
   const [mySections, setMySections] = useState<MySection[]>([]);
   const [selectedSectionId, setSelectedSectionId] = useState("");
@@ -50,7 +50,10 @@ export default function MemberSeccionesPage() {
   const [selectedInviteMember, setSelectedInviteMember] = useState<Member | null>(null);
   const [invitesLoading, setInvitesLoading] = useState(false);
   const [inviteActionLoading, setInviteActionLoading] = useState(false);
-  const [respondingInviteId, setRespondingInviteId] = useState<string | null>(null);
+  const [inviteResponseModal, setInviteResponseModal] = useState<{
+    response: "accept" | "decline";
+    invite: SectionInvite;
+  } | null>(null);
   const [sectionModalOpen, setSectionModalOpen] = useState(false);
   const [sectionName, setSectionName] = useState("");
   const [sectionEventId, setSectionEventId] = useState("");
@@ -161,25 +164,13 @@ export default function MemberSeccionesPage() {
     }
   };
 
-  const respondToInvite = async (inviteId: string, response: "accept" | "decline") => {
-    setRespondingInviteId(inviteId);
-    try {
-      await (response === "accept"
-        ? acceptSectionInvite(inviteId)
-        : declineSectionInvite(inviteId));
-      const updatedInvites = await listMySectionInvites();
-      setMyInvites(updatedInvites);
-      pushToast({
-        title: response === "accept" ? "Invitación aceptada" : "Invitación declinada",
-        tone: response === "accept" ? "success" : "info",
-      });
-      refreshMySections();
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "No se pudo responder la invitación.";
-      pushToast({ title: "Error", message, tone: "danger" });
-    } finally {
-      setRespondingInviteId(null);
-    }
+  const respondToInvite = async (invite: SectionInvite, response: "accept" | "decline") => {
+    await (response === "accept"
+      ? acceptSectionInvite(invite.id)
+      : declineSectionInvite(invite.id));
+    const updatedInvites = await listMySectionInvites();
+    setMyInvites(updatedInvites);
+    refreshMySections();
   };
 
   const openSectionRequestModal = () => {
@@ -204,7 +195,7 @@ export default function MemberSeccionesPage() {
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : "No se pudo crear la solicitud.";
-      pushToast({ title: "No se pudo pedir la sección", message, tone: "danger" });
+      pushToast({ title: "No se pudo solicitar la sección", message, tone: "danger" });
     } finally {
       setSectionSubmitting(false);
     }
@@ -245,16 +236,14 @@ export default function MemberSeccionesPage() {
         <div className="flex flex-wrap gap-2">
           <Button
             size="sm"
-            onClick={() => respondToInvite(invite.id, "accept")}
-            disabled={respondingInviteId === invite.id}
+            onClick={() => setInviteResponseModal({ response: "accept", invite })}
           >
             Aceptar
           </Button>
           <Button
             size="sm"
             variant="secondary"
-            onClick={() => respondToInvite(invite.id, "decline")}
-            disabled={respondingInviteId === invite.id}
+            onClick={() => setInviteResponseModal({ response: "decline", invite })}
           >
             Rechazar
           </Button>
@@ -276,23 +265,23 @@ export default function MemberSeccionesPage() {
           <div>
             <div className="text-lg font-semibold text-[var(--ink)]">Solicitar sección</div>
             <div className="text-sm text-[var(--muted)]">
-              Cualquier socio verificado puede pedir abrir una sección para un evento abierto.
+              Cualquier socio verificado puede solicitar abrir una sección para un evento abierto.
             </div>
           </div>
           <Button
             onClick={openSectionRequestModal}
             disabled={!member?.verified || openEvents.length === 0}
           >
-            Pedir sección
+            Solicitar sección
           </Button>
         </div>
         {!member?.verified ? (
           <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface-2)] p-5 text-sm text-[var(--muted)]">
-            Verifica tu cuenta antes de pedir una sección.
+            Verifica tu cuenta antes de solicitar una sección.
           </div>
         ) : openEvents.length === 0 ? (
           <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface-2)] p-5 text-sm text-[var(--muted)]">
-            No hay eventos abiertos para pedir una sección.
+            No hay eventos abiertos para solicitar una sección.
           </div>
         ) : (
           <div className="grid gap-3 text-sm md:grid-cols-2">
@@ -454,7 +443,7 @@ export default function MemberSeccionesPage() {
         onClose={() => {
           if (!sectionSubmitting) setSectionModalOpen(false);
         }}
-        title="Pedir sección"
+        title="Solicitar sección"
       >
         <div className="space-y-4">
           <FormField label="Evento">
@@ -495,6 +484,61 @@ export default function MemberSeccionesPage() {
           </div>
         </div>
       </Modal>
+
+      <ConfirmActionModal
+        open={inviteResponseModal?.response === "accept"}
+        title="Aceptar invitación"
+        description={
+          <>
+            Confirma que quieres unirte a la sección{" "}
+            <span className="font-medium text-[var(--ink)]">
+              {inviteResponseModal?.invite.sectionName || "Sección"}
+            </span>
+            {inviteResponseModal?.invite.eventName ? (
+              <>
+                {" "}
+                del evento{" "}
+                <span className="font-medium text-[var(--ink)]">
+                  {inviteResponseModal.invite.eventName}
+                </span>
+              </>
+            ) : null}
+            .
+          </>
+        }
+        confirmLabel="Aceptar invitación"
+        confirmVariant="primary"
+        onClose={() => setInviteResponseModal(null)}
+        onConfirm={async () => {
+          if (inviteResponseModal?.response !== "accept") return;
+          await respondToInvite(inviteResponseModal.invite, "accept");
+        }}
+        successToast={{ title: "Invitación aceptada", tone: "success" }}
+        errorTitle="No se pudo aceptar la invitación"
+      />
+
+      <ConfirmActionModal
+        open={inviteResponseModal?.response === "decline"}
+        title="Rechazar invitación"
+        description={
+          <>
+            Confirma que quieres rechazar la invitación a la sección{" "}
+            <span className="font-medium text-[var(--ink)]">
+              {inviteResponseModal?.invite.sectionName || "Sección"}
+            </span>
+            .
+          </>
+        }
+        confirmLabel="Rechazar invitación"
+        confirmVariant="danger"
+        onClose={() => setInviteResponseModal(null)}
+        onConfirm={async () => {
+          if (inviteResponseModal?.response !== "decline") return;
+          await respondToInvite(inviteResponseModal.invite, "decline");
+        }}
+        successToast={{ title: "Invitación rechazada", tone: "info" }}
+        errorTitle="No se pudo rechazar la invitación"
+      />
     </div>
   );
 }
