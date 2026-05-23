@@ -127,7 +127,7 @@ export default function MemberEventRequestDetailPage() {
                 <div className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">Evento</div>
                 <div className="text-lg font-semibold text-[var(--ink)]">{request.eventName}</div>
                 <div className="text-sm text-[var(--muted)]">
-                  Sección: <span className="text-[var(--ink)]">{request.sectionName}</span>
+                  Sección estudiantil: <span className="text-[var(--ink)]">{request.sectionName}</span>
                 </div>
                 <div className="text-sm text-[var(--muted)]">
                   Costo calculado:{" "}

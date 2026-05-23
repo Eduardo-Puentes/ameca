@@ -38,15 +38,15 @@ export default function MemberEventosPage() {
           <div className="mb-3 inline-flex h-9 w-9 items-center justify-center rounded-lg bg-[var(--accent-soft)] text-[var(--accent)]">
             <Users className="h-4 w-4" />
           </div>
-          <div className="text-sm font-semibold text-[var(--ink)]">2. Revisa tus secciones</div>
+          <div className="text-sm font-semibold text-[var(--ink)]">2. Revisa tus secciones estudiantiles</div>
           <div className="mt-1 text-sm text-[var(--muted)]">
-            Si participas con una organización o grupo, confirma primero las secciones a las que perteneces.
+            Si participas con una organización o grupo, confirma primero las secciones estudiantiles a las que perteneces.
           </div>
           <Link
             href="/socio/secciones"
             className="mt-3 inline-flex h-9 items-center rounded-lg bg-[var(--surface)] px-3 text-sm font-medium text-[var(--accent)] transition hover:bg-[var(--accent-soft)]"
           >
-            Ir a secciones
+            Ir a secciones estudiantiles
           </Link>
         </div>
         <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-4">

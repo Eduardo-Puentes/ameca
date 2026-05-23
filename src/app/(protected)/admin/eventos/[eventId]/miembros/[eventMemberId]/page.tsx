@@ -112,7 +112,7 @@ export default function AdminEventMemberDetailPage() {
                 <div className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">Evento</div>
                 <div className="text-lg font-semibold text-[var(--ink)]">{eventName}</div>
                 <div className="text-sm text-[var(--muted)]">
-                  Sección: <span className="text-[var(--ink)]">{registration.sectionName}</span>
+                  Sección estudiantil: <span className="text-[var(--ink)]">{registration.sectionName}</span>
                 </div>
                 <div className="text-sm text-[var(--muted)]">
                   Costo almacenado: <span className="text-[var(--ink)]">{formatCurrency(registration.cost)}</span>
@@ -141,7 +141,7 @@ export default function AdminEventMemberDetailPage() {
                 </div>
               </div>
               <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
-                <div className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">Ponente</div>
+                <div className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">Speaker</div>
                 <div className="mt-2 text-sm font-semibold text-[var(--ink)]">
                   {registration.isSpeaker ? formatSpeakerType(registration.speakerType ?? "plenary") : "No"}
                 </div>

@@ -164,7 +164,7 @@ export default function AdminEventRequestDetailPage() {
                   Teléfono: {request.memberPhoneNumber || "Sin teléfono"}
                 </div>
                 <div className="text-sm text-[var(--muted)]">
-                  Sección: <span className="text-[var(--ink)]">{request.sectionName}</span>
+                  Sección estudiantil: <span className="text-[var(--ink)]">{request.sectionName}</span>
                 </div>
               </div>
               <div className="space-y-2">

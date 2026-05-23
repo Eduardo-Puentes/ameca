@@ -250,7 +250,7 @@ export default function AdminEventoDetallePage() {
       { label: "Solicitudes pendientes", value: pendingRequests },
       { label: "Registros aprobados", value: approvedRequests },
       { label: "Asistencias", value: attendanceCount },
-      { label: "Secciones", value: sections.length },
+      { label: "Secciones estudiantiles", value: sections.length },
     ],
     [attendanceCount, approvedRequests, pendingRequests, sections.length]
   );
@@ -260,7 +260,7 @@ export default function AdminEventoDetallePage() {
   const requestColumns = [
     { header: "Socio", accessor: "memberName" },
     { header: "Correo", accessor: "memberEmail" },
-    { header: "Sección", accessor: "sectionName" },
+    { header: "Sección estudiantil", accessor: "sectionName" },
     {
       header: "Estado",
       accessor: "status",
@@ -289,7 +289,7 @@ export default function AdminEventoDetallePage() {
       render: (registration: EventMemberRegistration) =>
         formatProfileType(String(registration.profileType)),
     },
-    { header: "Sección", accessor: "sectionName" },
+    { header: "Sección estudiantil", accessor: "sectionName" },
     {
       header: "Costo",
       accessor: "cost",
@@ -312,7 +312,7 @@ export default function AdminEventoDetallePage() {
       ),
     },
     {
-      header: "Ponente",
+      header: "Speaker",
       accessor: "speakerStatus",
       render: (registration: EventMemberRegistration) => (
         <Badge tone={registration.isSpeaker ? "info" : "neutral"}>
@@ -350,7 +350,7 @@ export default function AdminEventoDetallePage() {
   ];
   const speakerColumns = [
     {
-      header: "Ponente",
+      header: "Speaker",
       accessor: "memberName",
       render: (registration: EventMemberRegistration) =>
         registration.title
@@ -363,11 +363,11 @@ export default function AdminEventoDetallePage() {
       accessor: "speakerType",
       render: (registration: EventMemberRegistration) => formatSpeakerType(registration.speakerType),
     },
-    { header: "Sección", accessor: "sectionName" },
+    { header: "Sección estudiantil", accessor: "sectionName" },
   ];
   const presentationColumns = [
     { header: "Título", accessor: "name" },
-    { header: "Ponente", accessor: "presenterName" },
+    { header: "Speaker", accessor: "presenterName" },
     { header: "Correo", accessor: "presenterEmail" },
     { header: "Tipo", accessor: "presentationType" },
     {
@@ -410,7 +410,7 @@ export default function AdminEventoDetallePage() {
     },
   ];
   const sectionColumns = [
-    { header: "Sección", accessor: "name" },
+    { header: "Sección estudiantil", accessor: "name" },
     { header: "Representante", accessor: "representativeName" },
     { header: "Integrantes", accessor: "pCount" },
     {
@@ -487,7 +487,7 @@ export default function AdminEventoDetallePage() {
   const handleDeleteSection = async (section: Section) => {
     if (section.pCount > 1) {
       throw new Error(
-        "Retira primero a todos los integrantes de la sección. Debe quedar solo el representante."
+        "Retira primero a todos los integrantes de la sección estudiantil. Debe quedar solo el representante."
       );
     }
 
@@ -514,10 +514,10 @@ export default function AdminEventoDetallePage() {
       );
       await refreshSpeakerAndPresentationData();
       setSpeakerModalRegistration(null);
-      pushToast({ title: "Ponente actualizado", tone: "success" });
+      pushToast({ title: "Speaker actualizado", tone: "success" });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "No se pudo actualizar el ponente.";
-      pushToast({ title: "Error al actualizar ponente", message, tone: "danger" });
+      const message = error instanceof Error ? error.message : "No se pudo actualizar el speaker.";
+      pushToast({ title: "Error al actualizar speaker", message, tone: "danger" });
     } finally {
       setSpeakerSaving(false);
     }
@@ -612,7 +612,7 @@ export default function AdminEventoDetallePage() {
           <Input
             value={requestSearch}
             onChange={(inputEvent) => setRequestSearch(inputEvent.target.value)}
-            placeholder="Buscar por socio, correo, sección o comentarios"
+            placeholder="Buscar por socio, correo, sección estudiantil o comentarios"
             className="md:max-w-xl"
           />
           <CostTypeFilter value={requestCostType} onChange={setRequestCostType} />
@@ -635,9 +635,9 @@ export default function AdminEventoDetallePage() {
       <Card className="space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="space-y-1">
-            <div className="text-lg font-semibold text-[var(--ink)]">Ponentes</div>
+            <div className="text-lg font-semibold text-[var(--ink)]">Speakers</div>
             <div className="text-sm text-[var(--muted)]">
-              Invita socios registrados como plenarios o magistrales.
+              Invita socios registrados como plenary o keynote speakers.
             </div>
           </div>
           <Badge tone="neutral">{speakersTotal} activo(s)</Badge>
@@ -648,7 +648,7 @@ export default function AdminEventoDetallePage() {
             setSpeakersSearch(event.target.value);
             setSpeakersPage(1);
           }}
-          placeholder="Buscar por nombre, correo, teléfono, organización, perfil, sección o tipo"
+          placeholder="Buscar por nombre, correo, teléfono, organización, perfil, sección estudiantil o tipo"
           className="md:max-w-xl"
         />
         {speakersError ? (
@@ -657,9 +657,9 @@ export default function AdminEventoDetallePage() {
           </div>
         ) : null}
         {speakersLoading ? (
-          <div className="text-sm text-[var(--muted)]">Cargando ponentes...</div>
+          <div className="text-sm text-[var(--muted)]">Cargando speakers...</div>
         ) : speakers.length === 0 ? (
-          <div className="text-sm text-[var(--muted)]">No hay ponentes invitados.</div>
+          <div className="text-sm text-[var(--muted)]">No hay speakers invitados.</div>
         ) : (
           <DataTable
             columns={speakerColumns}
@@ -703,7 +703,7 @@ export default function AdminEventoDetallePage() {
               setPresentationsSearch(event.target.value);
               setPresentationsPage(1);
             }}
-            placeholder="Buscar por título, código, ponente o correo"
+            placeholder="Buscar por título, código, speaker o correo"
           />
           <Select
             value={presentationTypeFilter}
@@ -749,14 +749,14 @@ export default function AdminEventoDetallePage() {
 
       <Card className="space-y-4">
         <div className="space-y-1">
-          <div className="text-lg font-semibold text-[var(--ink)]">Secciones del evento</div>
+          <div className="text-lg font-semibold text-[var(--ink)]">Secciones estudiantiles del evento</div>
           <div className="text-sm text-[var(--muted)]">
-            Consulta las secciones aprobadas, su representante y sus integrantes.
+            Consulta las secciones estudiantiles aprobadas, su representante y sus integrantes.
           </div>
         </div>
         <div className="space-y-3">
           {sections.length === 0 ? (
-            <div className="text-sm text-[var(--muted)]">No hay secciones aprobadas para este evento.</div>
+            <div className="text-sm text-[var(--muted)]">No hay secciones estudiantiles aprobadas para este evento.</div>
           ) : (
             <DataTable
               columns={sectionColumns}
@@ -771,7 +771,7 @@ export default function AdminEventoDetallePage() {
         <div className="space-y-1">
           <div className="text-lg font-semibold text-[var(--ink)]">Socios registrados</div>
           <div className="text-sm text-[var(--muted)]">
-            Registros aprobados para este evento, con búsqueda por datos del socio, sección o boleto.
+            Registros aprobados para este evento, con búsqueda por datos del socio, sección estudiantil o boleto.
           </div>
         </div>
         <Input
@@ -780,7 +780,7 @@ export default function AdminEventoDetallePage() {
             setMemberSearch(inputEvent.target.value);
             setEventMembersPage(1);
           }}
-          placeholder="Buscar por nombre, correo, teléfono, organización, perfil, sección o boleto"
+          placeholder="Buscar por nombre, correo, teléfono, organización, perfil, sección estudiantil o boleto"
           className="md:max-w-xl"
         />
         {eventMembersError ? (
@@ -887,7 +887,7 @@ export default function AdminEventoDetallePage() {
         onClose={() => {
           if (!speakerSaving) setSpeakerModalRegistration(null);
         }}
-        title="Ponente"
+        title="Speaker"
       >
         {speakerModalRegistration ? (
           <div className="space-y-4">
@@ -905,7 +905,7 @@ export default function AdminEventoDetallePage() {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-[var(--ink)]" htmlFor="speaker-type">
-                Tipo de ponente
+                Tipo de speaker
               </label>
               <Select
                 id="speaker-type"
@@ -913,9 +913,9 @@ export default function AdminEventoDetallePage() {
                 onChange={(event) => setSpeakerModalType(event.target.value as SpeakerType)}
                 disabled={speakerSaving}
               >
-                <option value="none">Sin ponencia</option>
-                <option value="plenary">Plenaria</option>
-                <option value="keynote">Magistral</option>
+                <option value="none">No speaker</option>
+                <option value="plenary">Plenary</option>
+                <option value="keynote">Keynote</option>
               </Select>
             </div>
             <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -959,7 +959,7 @@ export default function AdminEventoDetallePage() {
       <ConfirmActionModal
         open={!!sectionDeleteModal}
         onClose={() => setSectionDeleteModal(null)}
-        title="Desactivar sección"
+        title="Desactivar sección estudiantil"
         description={
           sectionDeleteModal ? (
             <>
@@ -971,15 +971,15 @@ export default function AdminEventoDetallePage() {
             </>
           ) : null
         }
-        confirmLabel="Desactivar sección"
+        confirmLabel="Desactivar sección estudiantil"
         confirmDisabled={!sectionDeleteModal || sectionDeleteModal.pCount > 1}
         onConfirm={async () => {
           if (!sectionDeleteModal) return;
           await handleDeleteSection(sectionDeleteModal);
         }}
         successToast={{
-          title: "Sección eliminada",
-          message: "La sección fue desactivada y retirada del evento.",
+          title: "Sección estudiantil eliminada",
+          message: "La sección estudiantil fue desactivada y retirada del evento.",
           tone: "success",
         }}
         errorTitle="No se puede desactivar"
@@ -987,12 +987,12 @@ export default function AdminEventoDetallePage() {
         {sectionDeleteModal ? (
           sectionDeleteModal.pCount > 1 ? (
             <div className="rounded-xl border border-[var(--warning)]/40 bg-[var(--warning)]/10 p-4 text-[var(--ink)]">
-              Retira primero a todos los integrantes de la sección. Debe quedar solo el
+              Retira primero a todos los integrantes de la sección estudiantil. Debe quedar solo el
               representante.
             </div>
           ) : (
             <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-4 text-[var(--ink)]">
-              Confirma solo si esta sección ya no debe aparecer en el evento.
+              Confirma solo si esta sección estudiantil ya no debe aparecer en el evento.
             </div>
           )
         ) : null}

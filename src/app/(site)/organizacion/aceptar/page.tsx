@@ -18,10 +18,10 @@ export default function AcceptOrganizationInvitePage() {
             </div>
           </div>
           <div className="text-sm text-[var(--muted)]">
-            El backend actual usa invitaciones de sección dentro del portal de socio.
+            El backend actual usa invitaciones de sección estudiantil dentro del portal de socio.
           </div>
           <Link href="/socio/secciones" className="inline-flex">
-            <Button>Ir a secciones</Button>
+            <Button>Ir a secciones estudiantiles</Button>
           </Link>
         </Card>
       </div>

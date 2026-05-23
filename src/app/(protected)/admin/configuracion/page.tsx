@@ -122,10 +122,10 @@ export default function AdminConfiguracionPage() {
     const nextThreshold = Number(thresholdCount);
     const nextBelow = Number(belowThresholdPercent);
     const nextAtOrAbove = Number(atOrAboveThresholdPercent);
-    if (!Number.isInteger(nextThreshold) || nextThreshold < 5 || nextThreshold % 5 !== 0) {
+    if (!Number.isInteger(nextThreshold) || nextThreshold < 1) {
       pushToast({
         title: "Corte inválido",
-        message: "El número de participantes debe ser un múltiplo de 5.",
+        message: "El número de participantes debe ser un entero mayor o igual a uno.",
         tone: "danger",
       });
       return;
@@ -245,14 +245,14 @@ export default function AdminConfiguracionPage() {
       <Card className="space-y-5">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <div className="text-lg font-semibold text-[var(--ink)]">Descuentos por sección</div>
+            <div className="text-lg font-semibold text-[var(--ink)]">Descuentos por sección estudiantil</div>
             <div className="text-sm text-[var(--muted)]">
               Reglas globales para calcular descuentos de registro a eventos.
             </div>
           </div>
           {sectionDiscounts ? (
             <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-xs text-[var(--muted)]">
-              Sin sección no hay descuento.
+              Sin sección estudiantil no hay descuento.
             </div>
           ) : null}
         </div>
@@ -269,8 +269,8 @@ export default function AdminConfiguracionPage() {
               <span>Corte de participantes</span>
               <Input
                 type="number"
-                min={5}
-                step={5}
+                min={1}
+                step={1}
                 value={thresholdCount}
                 onChange={(event) => setThresholdCount(event.target.value)}
               />

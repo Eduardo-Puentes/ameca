@@ -48,7 +48,7 @@ const ROLE_CREDENTIALS: Record<Role, { email: string; password: string }> = {
 
 type AuthUser = { id: string; name: string; email: string; role: BackendRole };
 type AuthResponse = { token: string; user: AuthUser };
-type RegisterResponse = { ok: boolean };
+type RegisterResponse = { ok: boolean; emailError?: string | null };
 type MemberResponse = Partial<Member> & {
   full_name?: string;
   phone_number?: string;
@@ -134,7 +134,7 @@ const humanizeError = (message: string, status: number, code?: string) => {
     ["event not found", "Evento no encontrado."],
     ["request not found", "Solicitud no encontrada."],
     ["member not found", "Socio no encontrado."],
-    ["section not found", "Sección no encontrada."],
+    ["section not found", "Sección estudiantil no encontrada."],
     ["invalid token", "El enlace no es válido."],
     ["token expired", "El enlace ha expirado."],
     ["missing fields", "Faltan datos obligatorios."],
@@ -150,9 +150,9 @@ const humanizeError = (message: string, status: number, code?: string) => {
     ["resolve registered event members before deleting this event", "No puedes eliminar un evento con socios registrados."],
     ["email verification cannot be revoked by admins", "La verificación por correo no puede retirarse desde administración."],
     ["profile type must be changed", "El tipo de membresía se cambia desde una solicitud de upgrade."],
-    ["member must accept the section invite", "El socio debe aceptar la invitación antes de usar esta sección."],
-    ["member already belongs to another section", "El socio ya pertenece a otra sección de este evento."],
-    ["remove all section members before deleting this section", "Retira primero a todos los socios de la sección. Debe quedar solo el representante."],
+    ["member must accept the section invite", "El socio debe aceptar la invitación antes de usar esta sección estudiantil."],
+    ["member already belongs to another section", "El socio ya pertenece a otra sección estudiantil de este evento."],
+    ["remove all section members before deleting this section", "Retira primero a todos los socios de la sección estudiantil. Debe quedar solo el representante."],
     ["transfer the section representative before removing this member", "Transfiere la representación antes de retirar a este socio."],
     ["only a treasurer or superuser can approve a membership request with an associated cost", "Solo tesorería o superadmin puede aprobar solicitudes de membresía con costo."],
     ["same profile", "El perfil solicitado debe ser distinto al actual."],

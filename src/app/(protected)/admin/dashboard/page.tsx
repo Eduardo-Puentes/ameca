@@ -99,7 +99,7 @@ export default function AdminDashboardPage() {
   const eventColumns = [
     { header: "Evento", accessor: "eventName" },
     { header: "Socio", accessor: "memberName" },
-    { header: "Sección", accessor: "sectionName" },
+    { header: "Sección estudiantil", accessor: "sectionName" },
     {
       header: "Estado",
       accessor: "status",
@@ -131,7 +131,7 @@ export default function AdminDashboardPage() {
       <div className="grid gap-4 md:grid-cols-3">
         <StatCard label="Membresías pendientes" value={pendingMembership} />
         <StatCard label="Solicitudes de evento" value={pendingEvent} />
-        <StatCard label="Secciones pendientes" value={pendingSections.length} />
+        <StatCard label="Secciones estudiantiles pendientes" value={pendingSections.length} />
       </div>
 
       <Card className="space-y-4">
@@ -196,7 +196,7 @@ export default function AdminDashboardPage() {
           <Input
             value={eventSearch}
             onChange={(event) => setEventSearch(event.target.value)}
-            placeholder="Buscar por socio, correo, sección o comentarios"
+            placeholder="Buscar por socio, correo, sección estudiantil o comentarios"
             className="md:max-w-xl"
           />
           <CostTypeFilter value={eventCostType} onChange={setEventCostType} />

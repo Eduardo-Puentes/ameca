@@ -12,7 +12,7 @@ export const diplomaFieldLabels: Record<DiplomaFieldKey, string> = {
   "participant.email": "Correo",
   "event.name": "Nombre del evento",
   "event.start_date": "Fecha del evento",
-  organization: "Organización / Sección",
+  organization: "Organización / Sección estudiantil",
   attended_days: "Días asistidos",
   issue_date: "Fecha de emisión",
   custom_text: "Texto libre",

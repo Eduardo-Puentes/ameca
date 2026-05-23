@@ -25,7 +25,7 @@ export type AuthSlice = {
     academicDegree: string;
     state: string;
     institution: string;
-  }) => Promise<void>;
+  }) => Promise<{ emailError?: string | null }>;
   hydrateSession: () => Promise<void>;
   logout: () => Promise<void>;
 };
@@ -74,9 +74,10 @@ export const createAuthSlice: StateCreator<AuthSlice, [], [], AuthSlice> = (set)
   registerMember: async (payload) => {
     set({ authLoading: true });
     try {
-      await authRegister(payload);
+      const response = await authRegister(payload);
       tokenStorage.clear();
       set({ user: null, token: null, role: null, authLoading: false, authReady: true });
+      return { emailError: response.emailError };
     } catch (error) {
       set({ authLoading: false, authReady: true });
       throw error;
@@ -84,6 +85,10 @@ export const createAuthSlice: StateCreator<AuthSlice, [], [], AuthSlice> = (set)
   },
   hydrateSession: async () => {
     const token = tokenStorage.get();
+    if (!token) {
+      set({ user: null, token: null, role: null, authReady: true });
+      return;
+    }
     try {
       const user = await authMe();
       set({ user, token, role: user.role, authReady: true });

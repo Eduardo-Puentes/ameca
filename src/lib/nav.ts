@@ -18,7 +18,7 @@ export const adminNav: NavItem[] = [
   { label: "Socios", href: "/admin/socios", icon: Users },
   { label: "Solicitudes", href: "/admin/socios/solicitudes", icon: ClipboardList },
   { label: "Eventos", href: "/admin/eventos", icon: CalendarDays },
-  { label: "Secciones", href: "/admin/secciones", icon: Building2 },
+  { label: "Secciones estudiantiles", href: "/admin/secciones", icon: Building2 },
   { label: "Administradores", href: "/admin/administradores", icon: ShieldCheck },
   { label: "Configuración", href: "/admin/configuracion", icon: Settings },
 ];
@@ -29,7 +29,7 @@ export const memberNav: NavItem[] = [
   { label: "Membresía", href: "/socio/membresia", icon: BadgeCheck },
   { label: "Eventos", href: "/socio/eventos", icon: CalendarDays },
   { label: "Solicitudes", href: "/socio/solicitudes", icon: ClipboardList },
-  { label: "Secciones", href: "/socio/secciones", icon: Building2 },
+  { label: "Secciones estudiantiles", href: "/socio/secciones", icon: Building2 },
   { label: "Diplomas", href: "/socio/diplomas", icon: Award },
 ];
 

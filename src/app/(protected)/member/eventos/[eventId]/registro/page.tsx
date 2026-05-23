@@ -106,7 +106,7 @@ export default function MemberEventoRegistroPage() {
       });
       setRegistration((prev) => (prev ? { ...prev, ...updated } : updated));
       setSpeakerPhoto(null);
-      pushToast({ title: "Perfil de ponente actualizado", tone: "success" });
+      pushToast({ title: "Perfil de speaker actualizado", tone: "success" });
     } catch (saveError) {
       const message = saveError instanceof Error ? saveError.message : "No se pudo guardar el perfil.";
       pushToast({ title: "Error al guardar", message, tone: "danger" });
@@ -182,8 +182,8 @@ export default function MemberEventoRegistroPage() {
               <div className="mt-1 font-semibold text-[var(--ink)]">{formatCurrency(registration.cost)}</div>
             </div>
             <div className="rounded-lg bg-[var(--surface-2)] p-3 text-sm">
-              <div className="text-xs text-[var(--muted)]">Sección</div>
-              <div className="mt-1 font-semibold text-[var(--ink)]">{registration.sectionName || "Sin sección"}</div>
+              <div className="text-xs text-[var(--muted)]">Sección estudiantil</div>
+              <div className="mt-1 font-semibold text-[var(--ink)]">{registration.sectionName || "Sin sección estudiantil"}</div>
             </div>
             <div className="rounded-lg bg-[var(--surface-2)] p-3 text-sm">
               <div className="text-xs text-[var(--muted)]">Aprobado</div>
@@ -273,10 +273,10 @@ export default function MemberEventoRegistroPage() {
       {registration.isSpeaker ? (
         <Card className="space-y-4">
           <div>
-            <div className="text-lg font-semibold text-[var(--ink)]">Perfil de ponente</div>
+            <div className="text-lg font-semibold text-[var(--ink)]">Perfil de speaker</div>
             <div className="text-sm text-[var(--muted)]">Actualiza la información que verá el equipo organizador.</div>
           </div>
-          <FileUpload label="Foto de ponente" accept=".png,.jpg,.jpeg" onChange={setSpeakerPhoto} />
+          <FileUpload label="Foto de speaker" accept=".png,.jpg,.jpeg" onChange={setSpeakerPhoto} />
           {registration.speakerPhotoUrl ? (
             <a className="inline-flex text-sm text-[var(--accent)]" href={registration.speakerPhotoUrl} target="_blank" rel="noreferrer">
               Ver foto actual
@@ -300,7 +300,7 @@ export default function MemberEventoRegistroPage() {
             </Select>
           </div>
           <Textarea
-            placeholder="Escribe una semblanza breve para tu perfil de ponente"
+            placeholder="Escribe una semblanza breve para tu perfil de speaker"
             value={speakerDescription}
             onChange={(event) => setSpeakerDescription(event.target.value)}
             className="min-h-[140px]"
