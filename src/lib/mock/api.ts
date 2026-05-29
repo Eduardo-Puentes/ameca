@@ -174,6 +174,28 @@ export async function authRegister(payload: {
   return { ok: true };
 }
 
+export async function requestPasswordReset() {
+  await wait(300);
+  return { ok: true };
+}
+
+export async function resetPassword(_token: string, password: string) {
+  await wait(300);
+  if (password.length < 8) {
+    throw new Error("La contraseña debe tener al menos 8 caracteres.");
+  }
+  return { ok: true };
+}
+
+export async function resendVerification() {
+  await wait(300);
+  return {
+    ok: true,
+    sent: true,
+    message: "Te enviamos un nuevo enlace de verificación. Revisa tu correo y también la carpeta de spam.",
+  };
+}
+
 export async function authRegisterRepresentative(payload: {
   fullName: string;
   email: string;
@@ -306,6 +328,8 @@ export async function createEvent(payload: EventUpsertPayload) {
     open: resolvedOpen,
     location: payload.location ?? "Por definir",
     description: payload.description ?? "Descripción pendiente.",
+    abstractPdfKey: "",
+    abstractPdfUrl: payload.abstractPdfFile ? "#" : "",
     capacity: payload.capacity ?? 100,
     profilePrices: {
       ...defaultEventProfilePrices,
@@ -319,16 +343,18 @@ export async function createEvent(payload: EventUpsertPayload) {
 
 export async function updateEvent(id: string, payload: EventUpsertPayload) {
   await wait(250);
+  const { abstractPdfFile, ...eventPayload } = payload;
   events = events.map((event) => {
     if (event.id !== id) return event;
     const nextOpen = payload.open ?? (payload.status ? payload.status === "open" : event.open);
     return {
       ...event,
-      ...payload,
+      ...eventPayload,
       profilePrices: {
         ...event.profilePrices,
         ...payload.profilePrices,
       },
+      abstractPdfUrl: abstractPdfFile ? "#" : event.abstractPdfUrl,
       open: nextOpen,
       status: nextOpen ? "open" : "closed",
     };

@@ -46,9 +46,11 @@ export default async function BoardMemberDetailPage({
           <p className="mt-2 text-sm font-semibold uppercase tracking-[0.24em] text-[var(--muted)]">
             {member.term}
           </p>
-          <p className="mt-6 text-2xl font-semibold text-[var(--ink)]">
-            {member.organization}
-          </p>
+          {member.organization ? (
+            <p className="mt-6 text-2xl font-semibold text-[var(--ink)]">
+              {member.organization}
+            </p>
+          ) : null}
         </div>
 
         {/* IMAGE (ONLY CENTERED ELEMENT) */}

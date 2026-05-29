@@ -101,9 +101,11 @@ export default function HomePage() {
                   <p className="mt-2 text-sm font-medium uppercase tracking-[0.18em] text-[var(--muted)]">
                     {member.role}
                   </p>
-                  <p className="mt-1 text-sm font-medium text-[var(--muted)]">
-                    {member.organization}
-                  </p>
+                  {member.organization ? (
+                    <p className="mt-1 text-sm font-medium text-[var(--muted)]">
+                      {member.organization}
+                    </p>
+                  ) : null}
                 </div>
               </article>
             </Link>

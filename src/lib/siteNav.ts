@@ -19,7 +19,7 @@ export const siteNavGroups: SiteNavGroup[] = [
       {
         label: "Consejo Directivo",
         href: "/#consejo-directivo-actual",
-        description: "Acceso rapido al directorio del consejo actual.",
+        description: "Acceso rápido al directorio del consejo actual.",
       },
     ],
   },

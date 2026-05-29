@@ -90,8 +90,11 @@ function LoginPageContent() {
               <Button onClick={handleLogin} disabled={loading}>
                 Entrar
               </Button>
-              <Link href="/register" className="text-sm text-[var(--accent)]">
+              <Link href="/register" className="text-sm text-[var(--accent)] hover:underline">
                 Crear cuenta nueva
+              </Link>
+              <Link href="/forgot-password" className="text-sm text-[var(--accent)] hover:underline">
+                Olvidé mi contraseña
               </Link>
             </div>
           </div>

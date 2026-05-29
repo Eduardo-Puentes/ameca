@@ -11,7 +11,7 @@ const quickLinks = [
   },
   {
     title: "Ver eventos",
-    description: "Consulta la agenda publica y sus detalles.",
+    description: "Consulta la agenda y sus detalles.",
     href: "/eventos",
     variant: "secondary",
   },

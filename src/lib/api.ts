@@ -104,6 +104,7 @@ const toEpochDay = (value: Event["startDate"] | undefined) => {
 
 const normalizeEventPayload = (payload: EventUpsertPayload) => ({
   ...payload,
+  abstractPdfFile: undefined,
   startDate: toEpochDay(payload.startDate),
 });
 
@@ -111,7 +112,11 @@ const humanizeError = (message: string, status: number, code?: string) => {
   const codeMappings: Record<string, string> = {
     email_already_registered: "El correo ya está registrado.",
     email_not_verified: "Debes verificar tu correo antes de iniciar sesión.",
+    verification_token_expired: "El enlace de verificación ha expirado.",
+    invalid_verification_token: "El enlace de verificación no es válido.",
     invalid_credentials: "Correo o contraseña inválidos.",
+    invalid_password_reset_token: "El enlace para restablecer contraseña no es válido o ya expiró.",
+    password_too_short: "La contraseña debe tener al menos 8 caracteres.",
     invalid_profile_type: "El tipo de membresía solicitado no es válido.",
     membership_request_already_pending: "Ya tienes una solicitud de membresía pendiente.",
     payment_proof_required: "Debes subir tu comprobante de pago.",
@@ -137,6 +142,7 @@ const humanizeError = (message: string, status: number, code?: string) => {
     ["section not found", "Sección estudiantil no encontrada."],
     ["invalid token", "El enlace no es válido."],
     ["token expired", "El enlace ha expirado."],
+    ["password must be at least 8 characters", "La contraseña debe tener al menos 8 caracteres."],
     ["missing fields", "Faltan datos obligatorios."],
     ["duplicate scan", "Escaneo duplicado."],
     ["ticket not found", "El boleto no es válido para este evento."],
@@ -318,6 +324,30 @@ export async function authLogout() {
   return request<{ ok: boolean }>("/auth/logout", { method: "POST" }, false);
 }
 
+export async function requestPasswordReset(email: string) {
+  return request<{ ok: boolean }>(
+    "/auth/forgot-password",
+    { method: "POST", body: JSON.stringify({ email }) },
+    false
+  );
+}
+
+export async function resetPassword(token: string, password: string) {
+  return request<{ ok: boolean }>(
+    "/auth/reset-password",
+    { method: "POST", body: JSON.stringify({ token, password }) },
+    false
+  );
+}
+
+export async function resendVerification(payload: { email?: string; token?: string }) {
+  return request<{ ok: boolean; sent: boolean; message: string }>(
+    "/auth/resend-verification",
+    { method: "POST", body: JSON.stringify(payload) },
+    false
+  );
+}
+
 export async function verifyEmail(token: string) {
   const q = encodeURIComponent(token);
   return request<{ ok: boolean }>(`/auth/verify-email?token=${q}`, { method: "POST" }, false);
@@ -352,16 +382,27 @@ export async function getMyEventRegistrationPreview(eventId: string): Promise<Ev
 }
 
 export async function createEvent(payload: EventUpsertPayload): Promise<Event> {
-  return request<Event>("/admin/events", {
+  const created = await request<Event>("/admin/events", {
     method: "POST",
     body: JSON.stringify(normalizeEventPayload(payload)),
   });
+  return payload.abstractPdfFile ? uploadEventAbstract(created.id, payload.abstractPdfFile) : created;
 }
 
 export async function updateEvent(id: string, payload: EventUpsertPayload): Promise<Event | null> {
-  return request<Event>(`/admin/events/${id}`, {
+  const updated = await request<Event>(`/admin/events/${id}`, {
     method: "PATCH",
     body: JSON.stringify(normalizeEventPayload(payload)),
+  });
+  return payload.abstractPdfFile ? uploadEventAbstract(id, payload.abstractPdfFile) : updated;
+}
+
+export async function uploadEventAbstract(id: string, file: File): Promise<Event> {
+  const form = new FormData();
+  form.append("abstractPdf", file);
+  return request<Event>(`/admin/events/${id}/abstract`, {
+    method: "POST",
+    body: form,
   });
 }
 

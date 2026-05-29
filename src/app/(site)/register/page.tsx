@@ -73,7 +73,7 @@ export default function RegisterPage() {
           tone: "success",
         });
       }
-      router.push("/login");
+      router.push("/check-email?type=verification");
     } catch (error) {
       const message = error instanceof Error ? error.message : "No se pudo crear la cuenta.";
       pushToast({ title: "Registro fallido", message, tone: "danger" });
@@ -175,7 +175,7 @@ export default function RegisterPage() {
               <Button onClick={handleRegister} disabled={loading}>
                 Crear cuenta
               </Button>
-              <Link href="/login" className="text-sm text-[var(--accent)]">
+              <Link href="/login" className="text-sm text-[var(--accent)] hover:underline">
                 Ya tengo cuenta
               </Link>
             </div>

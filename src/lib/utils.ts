@@ -67,7 +67,7 @@ export function formatCurrency(value: number, fallback = "Sin costo") {
 export function formatSpeakerType(value: string | null | undefined) {
   if (value === "keynote") return "Keynote";
   if (value === "plenary") return "Plenary";
-  return "No speaker";
+  return "Sin ponente";
 }
 
 export function formatProfileType(value: string | null | undefined, fallback = "Sin perfil") {

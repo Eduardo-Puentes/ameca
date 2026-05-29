@@ -30,9 +30,9 @@ import {
   updateEventMemberSpeaker,
 } from "@/lib/data";
 import type {
-  Event,
   EventMemberRegistration,
   EventRequest,
+  EventUpsertPayload,
   Presentation,
   Section,
   SpeakerType,
@@ -184,11 +184,11 @@ export default function AdminEventoDetallePage() {
       })
       .catch((error) => {
         if (!active) return;
-        const message = error instanceof Error ? error.message : "No se pudieron cargar speakers.";
+        const message = error instanceof Error ? error.message : "No se pudieron cargar ponentes.";
         setSpeakersError(message);
         setSpeakers([]);
         setSpeakersTotal(0);
-        pushToast({ title: "Error al cargar speakers", message, tone: "danger" });
+        pushToast({ title: "Error al cargar ponentes", message, tone: "danger" });
       })
       .finally(() => {
         if (active) setSpeakersLoading(false);
@@ -312,7 +312,7 @@ export default function AdminEventoDetallePage() {
       ),
     },
     {
-      header: "Speaker",
+      header: "Ponente",
       accessor: "speakerStatus",
       render: (registration: EventMemberRegistration) => (
         <Badge tone={registration.isSpeaker ? "info" : "neutral"}>
@@ -350,7 +350,7 @@ export default function AdminEventoDetallePage() {
   ];
   const speakerColumns = [
     {
-      header: "Speaker",
+      header: "Ponente",
       accessor: "memberName",
       render: (registration: EventMemberRegistration) =>
         registration.title
@@ -367,7 +367,7 @@ export default function AdminEventoDetallePage() {
   ];
   const presentationColumns = [
     { header: "Título", accessor: "name" },
-    { header: "Speaker", accessor: "presenterName" },
+    { header: "Ponente", accessor: "presenterName" },
     { header: "Correo", accessor: "presenterEmail" },
     { header: "Tipo", accessor: "presentationType" },
     {
@@ -464,7 +464,7 @@ export default function AdminEventoDetallePage() {
     }
   };
 
-  const handleUpdateEvent = async (payload: Partial<Event>) => {
+  const handleUpdateEvent = async (payload: EventUpsertPayload) => {
     if (!event) return;
     try {
       setEditSaving(true);
@@ -514,10 +514,10 @@ export default function AdminEventoDetallePage() {
       );
       await refreshSpeakerAndPresentationData();
       setSpeakerModalRegistration(null);
-      pushToast({ title: "Speaker actualizado", tone: "success" });
+      pushToast({ title: "Ponente actualizado", tone: "success" });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "No se pudo actualizar el speaker.";
-      pushToast({ title: "Error al actualizar speaker", message, tone: "danger" });
+      const message = error instanceof Error ? error.message : "No se pudo actualizar el ponente.";
+      pushToast({ title: "Error al actualizar ponente", message, tone: "danger" });
     } finally {
       setSpeakerSaving(false);
     }
@@ -584,6 +584,24 @@ export default function AdminEventoDetallePage() {
           </div>
         </div>
         <div className="text-sm text-[var(--muted)]">{event.description}</div>
+        {event.abstractPdfUrl ? (
+          <div className="overflow-hidden rounded-lg border border-[var(--border)] bg-white">
+            <object
+              data={`${event.abstractPdfUrl}#page=1&toolbar=0&navpanes=0`}
+              type="application/pdf"
+              className="h-80 w-full"
+            >
+              <a
+                href={event.abstractPdfUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="block p-4 text-sm font-medium text-[var(--accent)] hover:underline"
+              >
+                Abrir resumen del evento
+              </a>
+            </object>
+          </div>
+        ) : null}
         <div className="text-xs text-[var(--muted)]">
           {formatDate(event.startDate)} • {event.duration} día(s) • Capacidad {event.capacity}
         </div>
@@ -635,9 +653,9 @@ export default function AdminEventoDetallePage() {
       <Card className="space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="space-y-1">
-            <div className="text-lg font-semibold text-[var(--ink)]">Speakers</div>
+            <div className="text-lg font-semibold text-[var(--ink)]">Ponentes</div>
             <div className="text-sm text-[var(--muted)]">
-              Invita socios registrados como plenary o keynote speakers.
+              Invita socios registrados como plenary o keynote.
             </div>
           </div>
           <Badge tone="neutral">{speakersTotal} activo(s)</Badge>
@@ -657,9 +675,9 @@ export default function AdminEventoDetallePage() {
           </div>
         ) : null}
         {speakersLoading ? (
-          <div className="text-sm text-[var(--muted)]">Cargando speakers...</div>
+          <div className="text-sm text-[var(--muted)]">Cargando ponentes...</div>
         ) : speakers.length === 0 ? (
-          <div className="text-sm text-[var(--muted)]">No hay speakers invitados.</div>
+          <div className="text-sm text-[var(--muted)]">No hay ponentes invitados.</div>
         ) : (
           <DataTable
             columns={speakerColumns}
@@ -703,7 +721,7 @@ export default function AdminEventoDetallePage() {
               setPresentationsSearch(event.target.value);
               setPresentationsPage(1);
             }}
-            placeholder="Buscar por título, código, speaker o correo"
+            placeholder="Buscar por título, código, ponente o correo"
           />
           <Select
             value={presentationTypeFilter}
@@ -887,7 +905,7 @@ export default function AdminEventoDetallePage() {
         onClose={() => {
           if (!speakerSaving) setSpeakerModalRegistration(null);
         }}
-        title="Speaker"
+        title="Ponente"
       >
         {speakerModalRegistration ? (
           <div className="space-y-4">
@@ -905,7 +923,7 @@ export default function AdminEventoDetallePage() {
             </div>
             <div className="space-y-2">
               <label className="text-sm font-medium text-[var(--ink)]" htmlFor="speaker-type">
-                Tipo de speaker
+                Tipo de ponente
               </label>
               <Select
                 id="speaker-type"
@@ -913,7 +931,7 @@ export default function AdminEventoDetallePage() {
                 onChange={(event) => setSpeakerModalType(event.target.value as SpeakerType)}
                 disabled={speakerSaving}
               >
-                <option value="none">No speaker</option>
+                <option value="none">Sin ponente</option>
                 <option value="plenary">Plenary</option>
                 <option value="keynote">Keynote</option>
               </Select>

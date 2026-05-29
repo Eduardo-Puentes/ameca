@@ -21,6 +21,9 @@ export const authLoginWithCredentials = pick(
 );
 export const authRegister = pick(api.authRegister, mock.authRegister);
 export const authLogout = pick(api.authLogout);
+export const requestPasswordReset = pick(api.requestPasswordReset, mock.requestPasswordReset);
+export const resetPassword = pick(api.resetPassword, mock.resetPassword);
+export const resendVerification = pick(api.resendVerification, mock.resendVerification);
 export const verifyEmail = pick(api.verifyEmail);
 export const authMe: typeof api.authMe = () => {
   if (!useMock) return api.authMe();

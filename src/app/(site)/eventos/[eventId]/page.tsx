@@ -66,7 +66,7 @@ export default function EventoDetallePage() {
       <div className="grid gap-6 lg:grid-cols-[1fr_220px]">
         <section className="rounded-2xl bg-[var(--surface)] p-8 shadow-[0_18px_40px_-28px_rgba(27,29,27,0.4)]">
           <div className="text-xs uppercase tracking-[0.3em] text-[var(--muted)]">
-            Congreso publico
+            Congreso
           </div>
           <div className="mt-3 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div>
@@ -91,6 +91,28 @@ export default function EventoDetallePage() {
               value={event.open ? "Acepta solicitudes" : "Solo consulta informativa"}
             />
           </dl>
+
+          {event.abstractPdfUrl ? (
+            <div className="mt-8 border-t border-[var(--border)] pt-6">
+              <h2 className="text-lg font-semibold text-[var(--ink)]">Resumen del evento</h2>
+              <div className="mt-3 overflow-hidden rounded-lg border border-[var(--border)] bg-white">
+                <object
+                  data={`${event.abstractPdfUrl}#page=1&toolbar=0&navpanes=0`}
+                  type="application/pdf"
+                  className="h-[32rem] w-full"
+                >
+                  <a
+                    href={event.abstractPdfUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="block p-4 text-sm font-medium text-[var(--accent)] hover:underline"
+                  >
+                    Abrir resumen del evento
+                  </a>
+                </object>
+              </div>
+            </div>
+          ) : null}
 
           <div className="mt-8 border-t border-[var(--border)] pt-6">
             <h2 className="text-lg font-semibold text-[var(--ink)]">Informacion para asistentes</h2>
