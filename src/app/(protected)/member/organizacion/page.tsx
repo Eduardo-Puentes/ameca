@@ -13,7 +13,7 @@ export default function MemberOrganizationPage() {
       />
       <Card>
         <div className="text-sm text-[var(--muted)]">
-          La versión actual del backend reemplaza organizaciones por secciones de evento.
+          La versión actual del backend reemplaza organizaciones por secciones estudiantiles de evento.
         </div>
       </Card>
     </div>

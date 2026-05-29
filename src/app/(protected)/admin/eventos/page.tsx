@@ -13,7 +13,7 @@ import { useToastStore } from "@/components/ui/Toast";
 import { listEventMembers, listEventRequests } from "@/lib/data";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import { useAppStore } from "@/store";
-import type { Event } from "@/lib/types";
+import type { Event, EventUpsertPayload } from "@/lib/types";
 
 type DeleteModalState = {
   event: Event;
@@ -34,7 +34,7 @@ export default function AdminEventosPage() {
     loadEvents();
   }, [loadEvents]);
 
-  const handleCreate = async (payload: Partial<Event>) => {
+  const handleCreate = async (payload: EventUpsertPayload) => {
     await addEvent(payload);
     setOpen(false);
     pushToast({ title: "Evento creado", tone: "success" });

@@ -1,5 +1,5 @@
 import type { StateCreator } from "zustand";
-import type { Event } from "@/lib/types";
+import type { Event, EventUpsertPayload } from "@/lib/types";
 import {
   createEvent,
   deleteEvent,
@@ -13,8 +13,8 @@ export type EventsSlice = {
   eventsLoading: boolean;
   loadEvents: () => Promise<void>;
   selectEvent: (id: string) => void;
-  addEvent: (payload: Partial<Event>) => Promise<Event>;
-  editEvent: (id: string, payload: Partial<Event>) => Promise<Event | null>;
+  addEvent: (payload: EventUpsertPayload) => Promise<Event>;
+  editEvent: (id: string, payload: EventUpsertPayload) => Promise<Event | null>;
   removeEvent: (id: string) => Promise<void>;
 };
 

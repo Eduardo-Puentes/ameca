@@ -166,7 +166,7 @@ export default function MemberEventoDetallePage() {
                 </div>
               </div>
               <div className="rounded-lg bg-[var(--surface-2)] p-3 text-sm">
-                <div className="text-xs text-[var(--muted)]">Descuento de sección</div>
+                <div className="text-xs text-[var(--muted)]">Descuento de sección estudiantil</div>
                 <div className="mt-1 font-semibold text-[var(--ink)]">
                   {requestPreview.sectionDiscountPercent > 0
                     ? `${requestPreview.sectionDiscountPercent}%`
@@ -189,10 +189,10 @@ export default function MemberEventoDetallePage() {
 
         {requestPreview?.sectionId ? (
           <Card className="w-full space-y-4">
-            <div className="text-lg font-semibold text-[var(--ink)]">Tu sección para este evento</div>
+            <div className="text-lg font-semibold text-[var(--ink)]">Tu sección estudiantil para este evento</div>
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="rounded-lg bg-[var(--surface-2)] p-3 text-sm sm:col-span-2">
-                <div className="text-xs text-[var(--muted)]">Sección</div>
+                <div className="text-xs text-[var(--muted)]">Sección estudiantil</div>
                 <div className="mt-1 font-semibold text-[var(--ink)]">{requestPreview.sectionName}</div>
               </div>
               <div className="rounded-lg bg-[var(--surface-2)] p-3 text-sm">
@@ -203,7 +203,7 @@ export default function MemberEventoDetallePage() {
               </div>
             </div>
             <div className="text-sm text-[var(--muted)]">
-              Esta sección se aplicará automáticamente al enviar tu solicitud.
+              Esta sección estudiantil se aplicará automáticamente al enviar tu solicitud.
             </div>
           </Card>
         ) : null}

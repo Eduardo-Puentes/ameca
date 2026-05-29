@@ -13,7 +13,7 @@ export default function AdminOrganizationsPage() {
       />
       <Card>
         <div className="text-sm text-[var(--muted)]">
-          La lógica vigente del backend trabaja con membresías, eventos y secciones.
+          La lógica vigente del backend trabaja con membresías, eventos y secciones estudiantiles.
         </div>
       </Card>
     </div>

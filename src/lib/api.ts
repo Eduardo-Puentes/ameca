@@ -48,7 +48,7 @@ const ROLE_CREDENTIALS: Record<Role, { email: string; password: string }> = {
 
 type AuthUser = { id: string; name: string; email: string; role: BackendRole };
 type AuthResponse = { token: string; user: AuthUser };
-type RegisterResponse = { ok: boolean };
+type RegisterResponse = { ok: boolean; emailError?: string | null };
 type MemberResponse = Partial<Member> & {
   full_name?: string;
   phone_number?: string;
@@ -104,6 +104,7 @@ const toEpochDay = (value: Event["startDate"] | undefined) => {
 
 const normalizeEventPayload = (payload: EventUpsertPayload) => ({
   ...payload,
+  abstractPdfFile: undefined,
   startDate: toEpochDay(payload.startDate),
 });
 
@@ -111,7 +112,11 @@ const humanizeError = (message: string, status: number, code?: string) => {
   const codeMappings: Record<string, string> = {
     email_already_registered: "El correo ya está registrado.",
     email_not_verified: "Debes verificar tu correo antes de iniciar sesión.",
+    verification_token_expired: "El enlace de verificación ha expirado.",
+    invalid_verification_token: "El enlace de verificación no es válido.",
     invalid_credentials: "Correo o contraseña inválidos.",
+    invalid_password_reset_token: "El enlace para restablecer contraseña no es válido o ya expiró.",
+    password_too_short: "La contraseña debe tener al menos 8 caracteres.",
     invalid_profile_type: "El tipo de membresía solicitado no es válido.",
     membership_request_already_pending: "Ya tienes una solicitud de membresía pendiente.",
     payment_proof_required: "Debes subir tu comprobante de pago.",
@@ -134,9 +139,10 @@ const humanizeError = (message: string, status: number, code?: string) => {
     ["event not found", "Evento no encontrado."],
     ["request not found", "Solicitud no encontrada."],
     ["member not found", "Socio no encontrado."],
-    ["section not found", "Sección no encontrada."],
+    ["section not found", "Sección estudiantil no encontrada."],
     ["invalid token", "El enlace no es válido."],
     ["token expired", "El enlace ha expirado."],
+    ["password must be at least 8 characters", "La contraseña debe tener al menos 8 caracteres."],
     ["missing fields", "Faltan datos obligatorios."],
     ["duplicate scan", "Escaneo duplicado."],
     ["ticket not found", "El boleto no es válido para este evento."],
@@ -150,9 +156,9 @@ const humanizeError = (message: string, status: number, code?: string) => {
     ["resolve registered event members before deleting this event", "No puedes eliminar un evento con socios registrados."],
     ["email verification cannot be revoked by admins", "La verificación por correo no puede retirarse desde administración."],
     ["profile type must be changed", "El tipo de membresía se cambia desde una solicitud de upgrade."],
-    ["member must accept the section invite", "El socio debe aceptar la invitación antes de usar esta sección."],
-    ["member already belongs to another section", "El socio ya pertenece a otra sección de este evento."],
-    ["remove all section members before deleting this section", "Retira primero a todos los socios de la sección. Debe quedar solo el representante."],
+    ["member must accept the section invite", "El socio debe aceptar la invitación antes de usar esta sección estudiantil."],
+    ["member already belongs to another section", "El socio ya pertenece a otra sección estudiantil de este evento."],
+    ["remove all section members before deleting this section", "Retira primero a todos los socios de la sección estudiantil. Debe quedar solo el representante."],
     ["transfer the section representative before removing this member", "Transfiere la representación antes de retirar a este socio."],
     ["only a treasurer or superuser can approve a membership request with an associated cost", "Solo tesorería o superadmin puede aprobar solicitudes de membresía con costo."],
     ["same profile", "El perfil solicitado debe ser distinto al actual."],
@@ -318,6 +324,30 @@ export async function authLogout() {
   return request<{ ok: boolean }>("/auth/logout", { method: "POST" }, false);
 }
 
+export async function requestPasswordReset(email: string) {
+  return request<{ ok: boolean }>(
+    "/auth/forgot-password",
+    { method: "POST", body: JSON.stringify({ email }) },
+    false
+  );
+}
+
+export async function resetPassword(token: string, password: string) {
+  return request<{ ok: boolean }>(
+    "/auth/reset-password",
+    { method: "POST", body: JSON.stringify({ token, password }) },
+    false
+  );
+}
+
+export async function resendVerification(payload: { email?: string; token?: string }) {
+  return request<{ ok: boolean; sent: boolean; message: string }>(
+    "/auth/resend-verification",
+    { method: "POST", body: JSON.stringify(payload) },
+    false
+  );
+}
+
 export async function verifyEmail(token: string) {
   const q = encodeURIComponent(token);
   return request<{ ok: boolean }>(`/auth/verify-email?token=${q}`, { method: "POST" }, false);
@@ -352,16 +382,27 @@ export async function getMyEventRegistrationPreview(eventId: string): Promise<Ev
 }
 
 export async function createEvent(payload: EventUpsertPayload): Promise<Event> {
-  return request<Event>("/admin/events", {
+  const created = await request<Event>("/admin/events", {
     method: "POST",
     body: JSON.stringify(normalizeEventPayload(payload)),
   });
+  return payload.abstractPdfFile ? uploadEventAbstract(created.id, payload.abstractPdfFile) : created;
 }
 
 export async function updateEvent(id: string, payload: EventUpsertPayload): Promise<Event | null> {
-  return request<Event>(`/admin/events/${id}`, {
+  const updated = await request<Event>(`/admin/events/${id}`, {
     method: "PATCH",
     body: JSON.stringify(normalizeEventPayload(payload)),
+  });
+  return payload.abstractPdfFile ? uploadEventAbstract(id, payload.abstractPdfFile) : updated;
+}
+
+export async function uploadEventAbstract(id: string, file: File): Promise<Event> {
+  const form = new FormData();
+  form.append("abstractPdf", file);
+  return request<Event>(`/admin/events/${id}/abstract`, {
+    method: "POST",
+    body: form,
   });
 }
 

@@ -17,7 +17,7 @@ export default function EventosPage() {
     <div className="mx-auto max-w-6xl px-6 py-12">
       <div className="mb-8">
         <div className="text-xs uppercase tracking-[0.3em] text-[var(--muted)]">Eventos</div>
-        <h1 className="text-3xl font-semibold text-[var(--ink)]">Agenda pública</h1>
+        <h1 className="text-3xl font-semibold text-[var(--ink)]">Agenda</h1>
         <p className="text-sm text-[var(--muted)]">
           Conoce los próximos eventos y sus detalles principales.
         </p>

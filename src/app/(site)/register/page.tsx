@@ -51,7 +51,7 @@ export default function RegisterPage() {
     }
 
     try {
-      await registerMember({
+      const result = await registerMember({
         fullName: fullName.trim(),
         email: email.trim(),
         password,
@@ -60,12 +60,20 @@ export default function RegisterPage() {
         state,
         institution,
       });
-      pushToast({
-        title: "Registro exitoso",
-        message: "Revisa tu correo para verificar tu cuenta antes de iniciar sesión.",
-        tone: "success",
-      });
-      router.push("/login");
+      if (result.emailError) {
+        pushToast({
+          title: "Cuenta creada",
+          message: "No se pudo enviar el correo de verificación. Contacta a administración para activar tu cuenta.",
+          tone: "warning",
+        });
+      } else {
+        pushToast({
+          title: "Registro exitoso",
+          message: "Revisa tu correo para verificar tu cuenta antes de iniciar sesión.",
+          tone: "success",
+        });
+      }
+      router.push("/check-email?type=verification");
     } catch (error) {
       const message = error instanceof Error ? error.message : "No se pudo crear la cuenta.";
       pushToast({ title: "Registro fallido", message, tone: "danger" });
@@ -167,7 +175,7 @@ export default function RegisterPage() {
               <Button onClick={handleRegister} disabled={loading}>
                 Crear cuenta
               </Button>
-              <Link href="/login" className="text-sm text-[var(--accent)]">
+              <Link href="/login" className="text-sm text-[var(--accent)] hover:underline">
                 Ya tengo cuenta
               </Link>
             </div>

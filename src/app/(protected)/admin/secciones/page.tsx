@@ -31,7 +31,7 @@ function SectionRequestStatusFilter({
   return (
     <div
       role="group"
-      aria-label="Filtrar solicitudes de sección"
+      aria-label="Filtrar solicitudes de sección estudiantil"
       className="inline-grid grid-cols-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-1"
     >
       {options.map((option) => {
@@ -84,7 +84,7 @@ function SectionRequestsPanel({
   onReject: (request: SectionRequest) => void;
 }) {
   const columns = [
-    { header: "Sección", accessor: "name" },
+    { header: "Sección estudiantil", accessor: "name" },
     { header: "Representante", accessor: "representativeName" },
     { header: "Evento", accessor: "eventName" },
     {
@@ -119,14 +119,14 @@ function SectionRequestsPanel({
       <div className="space-y-1">
         <div className="text-lg font-semibold text-[var(--ink)]">Solicitudes</div>
         <div className="text-sm text-[var(--muted)]">
-          Peticiones por revisar antes de crear una sección oficial.
+          Peticiones por revisar antes de crear una sección estudiantil oficial.
         </div>
       </div>
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <Input
           value={query}
           onChange={(event) => onQueryChange(event.target.value)}
-          placeholder="Buscar por título de sección"
+          placeholder="Buscar por título de sección estudiantil"
           className="lg:max-w-xl"
         />
         <SectionRequestStatusFilter value={status} onChange={onStatusChange} />
@@ -158,7 +158,7 @@ function AcceptedSectionsPanel({
     "flex h-10 w-full items-center justify-center rounded-xl bg-[var(--accent-soft)] px-4 text-sm font-semibold text-[var(--accent-strong)] shadow-[0_16px_30px_-18px_rgba(1,122,31,0.55)] transition duration-150 hover:bg-[var(--accent)] hover:text-white hover:shadow-[0_18px_32px_-16px_rgba(1,122,31,0.65)] active:scale-[0.985] active:translate-y-px";
 
   const columns = [
-    { header: "Sección", accessor: "name" },
+    { header: "Sección estudiantil", accessor: "name" },
     { header: "Representante", accessor: "representativeName" },
     { header: "Evento", accessor: "eventName" },
     { header: "Integrantes", accessor: "pCount" },
@@ -188,15 +188,15 @@ function AcceptedSectionsPanel({
   return (
     <Card className="space-y-4">
       <div className="space-y-1">
-        <div className="text-lg font-semibold text-[var(--ink)]">Secciones aceptadas</div>
+        <div className="text-lg font-semibold text-[var(--ink)]">Secciones estudiantiles aceptadas</div>
         <div className="text-sm text-[var(--muted)]">
-          Secciones ya creadas y disponibles dentro de sus eventos.
+          Secciones estudiantiles ya creadas y disponibles dentro de sus eventos.
         </div>
       </div>
       <Input
         value={query}
         onChange={(event) => onQueryChange(event.target.value)}
-        placeholder="Buscar por título de sección"
+        placeholder="Buscar por título de sección estudiantil"
         className="lg:max-w-xl"
       />
       <DataTable columns={columns} data={sections} />
@@ -254,9 +254,9 @@ export default function AdminSeccionesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Secciones"
-        subtitle="Solicitudes por aprobar y secciones activas"
-        breadcrumb={["Admin", "Secciones"]}
+        title="Secciones estudiantiles"
+        subtitle="Solicitudes por aprobar y secciones estudiantiles activas"
+        breadcrumb={["Admin", "Secciones estudiantiles"]}
       />
 
       <SectionRequestsPanel
@@ -284,10 +284,10 @@ export default function AdminSeccionesPage() {
 
       <ConfirmActionModal
         open={decisionModal?.type === "approve"}
-        title="Aprobar sección"
+        title="Aprobar sección estudiantil"
         description={
           <>
-            Confirma que quieres aprobar la sección{" "}
+            Confirma que quieres aprobar la sección estudiantil{" "}
             <span className="font-medium text-[var(--ink)]">{decisionModal?.request.name}</span>
             {decisionModal?.request.eventName ? (
               <>
@@ -298,26 +298,26 @@ export default function AdminSeccionesPage() {
                 </span>
               </>
             ) : null}
-            . Al aprobarla se creará como sección oficial.
+            . Al aprobarla se creará como sección estudiantil oficial.
           </>
         }
-        confirmLabel="Aprobar sección"
+        confirmLabel="Aprobar sección estudiantil"
         confirmVariant="primary"
         onClose={() => setDecisionModal(null)}
         onConfirm={async () => {
           if (decisionModal?.type !== "approve") return;
           await handleApprove(decisionModal.request);
         }}
-        successToast={{ title: "Sección aprobada", tone: "success" }}
-        errorTitle="No se pudo aprobar la sección"
+        successToast={{ title: "Sección estudiantil aprobada", tone: "success" }}
+        errorTitle="No se pudo aprobar la sección estudiantil"
       />
 
       <ConfirmActionModal
         open={decisionModal?.type === "reject"}
-        title="Rechazar sección"
+        title="Rechazar sección estudiantil"
         description={
           <>
-            Confirma que quieres rechazar la solicitud de sección{" "}
+            Confirma que quieres rechazar la solicitud de sección estudiantil{" "}
             <span className="font-medium text-[var(--ink)]">{decisionModal?.request.name}</span>
             {decisionModal?.request.representativeName ? (
               <>
@@ -331,15 +331,15 @@ export default function AdminSeccionesPage() {
             .
           </>
         }
-        confirmLabel="Rechazar sección"
+        confirmLabel="Rechazar sección estudiantil"
         confirmVariant="danger"
         onClose={() => setDecisionModal(null)}
         onConfirm={async () => {
           if (decisionModal?.type !== "reject") return;
           await handleReject(decisionModal.request);
         }}
-        successToast={{ title: "Sección rechazada", tone: "danger" }}
-        errorTitle="No se pudo rechazar la sección"
+        successToast={{ title: "Sección estudiantil rechazada", tone: "danger" }}
+        errorTitle="No se pudo rechazar la sección estudiantil"
       />
     </div>
   );

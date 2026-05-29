@@ -190,12 +190,12 @@ export default function MemberSeccionesPage() {
       setSectionName("");
       pushToast({
         title: "Solicitud enviada",
-        message: `La sección quedó en estado ${request.status}.`,
+        message: `La sección estudiantil quedó en estado ${request.status}.`,
         tone: "success",
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : "No se pudo crear la solicitud.";
-      pushToast({ title: "No se pudo solicitar la sección", message, tone: "danger" });
+      pushToast({ title: "No se pudo solicitar la sección estudiantil", message, tone: "danger" });
     } finally {
       setSectionSubmitting(false);
     }
@@ -222,7 +222,7 @@ export default function MemberSeccionesPage() {
       render: (invite: SectionInvite) =>
         invite.eventName ?? events.find((event) => event.id === invite.eventId)?.name ?? "-",
     },
-    { header: "Sección", accessor: "sectionName" },
+    { header: "Sección estudiantil", accessor: "sectionName" },
     { header: "Invita", accessor: "createdByMemberName" },
     {
       header: "Fecha",
@@ -255,33 +255,33 @@ export default function MemberSeccionesPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Secciones"
-        subtitle="Información de tu sección e integrantes"
-        breadcrumb={["Socio", "Secciones"]}
+        title="Secciones estudiantiles"
+        subtitle="Información de tu sección estudiantil e integrantes"
+        breadcrumb={["Socio", "Secciones estudiantiles"]}
       />
 
       <Card className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="text-lg font-semibold text-[var(--ink)]">Solicitar sección</div>
+            <div className="text-lg font-semibold text-[var(--ink)]">Solicitar sección estudiantil</div>
             <div className="text-sm text-[var(--muted)]">
-              Cualquier socio verificado puede solicitar abrir una sección para un evento abierto.
+              Cualquier socio verificado puede solicitar abrir una sección estudiantil para un evento abierto.
             </div>
           </div>
           <Button
             onClick={openSectionRequestModal}
             disabled={!member?.verified || openEvents.length === 0}
           >
-            Solicitar sección
+            Solicitar sección estudiantil
           </Button>
         </div>
         {!member?.verified ? (
           <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface-2)] p-5 text-sm text-[var(--muted)]">
-            Verifica tu cuenta antes de solicitar una sección.
+            Verifica tu cuenta antes de solicitar una sección estudiantil.
           </div>
         ) : openEvents.length === 0 ? (
           <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface-2)] p-5 text-sm text-[var(--muted)]">
-            No hay eventos abiertos para solicitar una sección.
+            No hay eventos abiertos para solicitar una sección estudiantil.
           </div>
         ) : (
           <div className="grid gap-3 text-sm md:grid-cols-2">
@@ -300,14 +300,14 @@ export default function MemberSeccionesPage() {
 
       <Card className="space-y-4">
         <div>
-          <div className="text-lg font-semibold text-[var(--ink)]">Secciones donde participas</div>
+          <div className="text-lg font-semibold text-[var(--ink)]">Secciones estudiantiles donde participas</div>
           <div className="text-sm text-[var(--muted)]">
-            Aquí aparecen las secciones de las que eres integrante o representante.
+            Aquí aparecen las secciones estudiantiles de las que eres integrante o representante.
           </div>
         </div>
         {mySections.length === 0 ? (
           <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface-2)] p-5 text-sm text-[var(--muted)]">
-            Aún no perteneces a ninguna sección.
+            Aún no perteneces a ninguna sección estudiantil.
           </div>
         ) : (
           <div className="grid gap-3 md:grid-cols-2">
@@ -337,7 +337,7 @@ export default function MemberSeccionesPage() {
         <div>
           <div className="text-lg font-semibold text-[var(--ink)]">Invitaciones recibidas</div>
           <div className="text-sm text-[var(--muted)]">
-            Acepta o rechaza invitaciones para unirte a una sección de evento.
+            Acepta o rechaza invitaciones para unirte a una sección estudiantil de evento.
           </div>
         </div>
         {pendingMyInvites.length === 0 ? (
@@ -354,11 +354,11 @@ export default function MemberSeccionesPage() {
           <div className="space-y-1">
             <h2 className="text-lg font-semibold text-[var(--ink)]">Invitar integrantes</h2>
             <p className="text-sm text-[var(--muted)]">
-              Envía una invitación por correo para que otro socio se una a tu sección.
+              Envía una invitación por correo para que otro socio se una a tu sección estudiantil.
             </p>
           </div>
           <div className="grid gap-4 md:grid-cols-2">
-            <FormField label="Sección a gestionar">
+            <FormField label="Sección estudiantil a gestionar">
               <select
                 className="h-12 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 text-sm text-[var(--ink)]"
                 value={selectedSectionId}
@@ -443,7 +443,7 @@ export default function MemberSeccionesPage() {
         onClose={() => {
           if (!sectionSubmitting) setSectionModalOpen(false);
         }}
-        title="Solicitar sección"
+        title="Solicitar sección estudiantil"
       >
         <div className="space-y-4">
           <FormField label="Evento">
@@ -459,7 +459,7 @@ export default function MemberSeccionesPage() {
               ))}
             </Select>
           </FormField>
-          <FormField label="Nombre de sección">
+          <FormField label="Nombre de sección estudiantil">
             <Input
               value={sectionName}
               onChange={(event) => setSectionName(event.target.value)}
@@ -490,9 +490,9 @@ export default function MemberSeccionesPage() {
         title="Aceptar invitación"
         description={
           <>
-            Confirma que quieres unirte a la sección{" "}
+            Confirma que quieres unirte a la sección estudiantil{" "}
             <span className="font-medium text-[var(--ink)]">
-              {inviteResponseModal?.invite.sectionName || "Sección"}
+              {inviteResponseModal?.invite.sectionName || "Sección estudiantil"}
             </span>
             {inviteResponseModal?.invite.eventName ? (
               <>
@@ -522,9 +522,9 @@ export default function MemberSeccionesPage() {
         title="Rechazar invitación"
         description={
           <>
-            Confirma que quieres rechazar la invitación a la sección{" "}
+            Confirma que quieres rechazar la invitación a la sección estudiantil{" "}
             <span className="font-medium text-[var(--ink)]">
-              {inviteResponseModal?.invite.sectionName || "Sección"}
+              {inviteResponseModal?.invite.sectionName || "Sección estudiantil"}
             </span>
             .
           </>

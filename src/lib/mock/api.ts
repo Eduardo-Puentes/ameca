@@ -174,6 +174,28 @@ export async function authRegister(payload: {
   return { ok: true };
 }
 
+export async function requestPasswordReset() {
+  await wait(300);
+  return { ok: true };
+}
+
+export async function resetPassword(_token: string, password: string) {
+  await wait(300);
+  if (password.length < 8) {
+    throw new Error("La contraseña debe tener al menos 8 caracteres.");
+  }
+  return { ok: true };
+}
+
+export async function resendVerification() {
+  await wait(300);
+  return {
+    ok: true,
+    sent: true,
+    message: "Te enviamos un nuevo enlace de verificación. Revisa tu correo y también la carpeta de spam.",
+  };
+}
+
 export async function authRegisterRepresentative(payload: {
   fullName: string;
   email: string;
@@ -306,6 +328,8 @@ export async function createEvent(payload: EventUpsertPayload) {
     open: resolvedOpen,
     location: payload.location ?? "Por definir",
     description: payload.description ?? "Descripción pendiente.",
+    abstractPdfKey: "",
+    abstractPdfUrl: payload.abstractPdfFile ? "#" : "",
     capacity: payload.capacity ?? 100,
     profilePrices: {
       ...defaultEventProfilePrices,
@@ -319,16 +343,18 @@ export async function createEvent(payload: EventUpsertPayload) {
 
 export async function updateEvent(id: string, payload: EventUpsertPayload) {
   await wait(250);
+  const { abstractPdfFile, ...eventPayload } = payload;
   events = events.map((event) => {
     if (event.id !== id) return event;
     const nextOpen = payload.open ?? (payload.status ? payload.status === "open" : event.open);
     return {
       ...event,
-      ...payload,
+      ...eventPayload,
       profilePrices: {
         ...event.profilePrices,
         ...payload.profilePrices,
       },
+      abstractPdfUrl: abstractPdfFile ? "#" : event.abstractPdfUrl,
       open: nextOpen,
       status: nextOpen ? "open" : "closed",
     };
@@ -996,7 +1022,7 @@ export async function getSection(sectionId: string): Promise<SectionDetail> {
   await wait(200);
   const section = sections.find((item) => item.id === sectionId);
   if (!section) {
-    throw new Error("Sección no encontrada.");
+    throw new Error("Sección estudiantil no encontrada.");
   }
   const event = mockEvents.find((item) => item.id === section.eventId) ?? null;
   const members = mockMembers.slice(0, Math.max(1, Math.min(section.pCount, 8))).map((member, index) => ({
@@ -1041,10 +1067,10 @@ export async function deleteSection(id: string) {
   await wait(200);
   const section = sections.find((item) => item.id === id);
   if (!section) {
-    throw new Error("Sección no encontrada.");
+    throw new Error("Sección estudiantil no encontrada.");
   }
   if (section.pCount > 1) {
-    throw new Error("Retira primero a todos los socios de la sección.");
+    throw new Error("Retira primero a todos los socios de la sección estudiantil.");
   }
   sections = sections.filter((item) => item.id !== id);
   return { ok: true };
@@ -1054,7 +1080,7 @@ export async function removeSectionMember(sectionId: string, memberId: string): 
   await wait(200);
   const section = sections.find((item) => item.id === sectionId);
   if (!section) {
-    throw new Error("Sección no encontrada.");
+    throw new Error("Sección estudiantil no encontrada.");
   }
   const representativeMember = mockMembers[0];
   if (representativeMember?.id === memberId) {
@@ -1066,7 +1092,7 @@ export async function removeSectionMember(sectionId: string, memberId: string): 
   );
   const updated = sections.find((item) => item.id === sectionId);
   if (!updated) {
-    throw new Error("Sección no encontrada.");
+    throw new Error("Sección estudiantil no encontrada.");
   }
   return updated;
 }

@@ -112,7 +112,7 @@ export default function AdminEventMemberDetailPage() {
                 <div className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">Evento</div>
                 <div className="text-lg font-semibold text-[var(--ink)]">{eventName}</div>
                 <div className="text-sm text-[var(--muted)]">
-                  Sección: <span className="text-[var(--ink)]">{registration.sectionName}</span>
+                  Sección estudiantil: <span className="text-[var(--ink)]">{registration.sectionName}</span>
                 </div>
                 <div className="text-sm text-[var(--muted)]">
                   Costo almacenado: <span className="text-[var(--ink)]">{formatCurrency(registration.cost)}</span>

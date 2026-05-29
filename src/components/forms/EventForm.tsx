@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import type { Event } from "@/lib/types";
+import type { Event, EventUpsertPayload } from "@/lib/types";
 import { Button } from "@/components/ui/Button";
+import { FileUpload } from "@/components/ui/FileUpload";
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
@@ -25,6 +26,7 @@ type EventFormState = {
   location: string;
   capacity: NumericInputValue;
   description: string;
+  abstractPdfFile: File | null;
   profilePrices: Record<keyof Event["profilePrices"], NumericInputValue>;
 };
 
@@ -61,7 +63,7 @@ export function EventForm({
   submitting = false,
 }: {
   initial?: Partial<Event>;
-  onSubmit: (payload: Partial<Event>) => void | Promise<void>;
+  onSubmit: (payload: EventUpsertPayload) => void | Promise<void>;
   submitLabel?: string;
   submitting?: boolean;
 }) {
@@ -73,6 +75,7 @@ export function EventForm({
     location: initial?.location ?? "",
     capacity: toNumericInputValue(initial?.capacity, 100),
     description: initial?.description ?? "",
+    abstractPdfFile: null,
     profilePrices: {
       ...DEFAULT_PROFILE_PRICES,
       ...initial?.profilePrices,
@@ -105,6 +108,7 @@ export function EventForm({
             associatedStudent: toSubmitNumber(form.profilePrices.associatedStudent),
           },
           status: form.open ? "open" : "closed",
+          abstractPdfFile: form.abstractPdfFile,
         });
       }}
     >
@@ -209,6 +213,23 @@ export function EventForm({
           placeholder="Descripción breve del evento"
         />
       </FormField>
+      <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-4">
+        <FileUpload
+          label="Resumen del evento (PDF)"
+          accept="application/pdf,.pdf"
+          onChange={(file) => setForm((prev) => ({ ...prev, abstractPdfFile: file }))}
+        />
+        {initial?.abstractPdfUrl ? (
+          <a
+            href={initial.abstractPdfUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-3 inline-flex text-sm font-medium text-[var(--accent)] hover:underline"
+          >
+            Ver PDF actual
+          </a>
+        ) : null}
+      </div>
       <Button type="submit" disabled={submitting}>
         {submitting ? "Guardando..." : submitLabel}
       </Button>

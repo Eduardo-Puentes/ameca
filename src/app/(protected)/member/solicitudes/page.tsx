@@ -70,7 +70,7 @@ export default function MemberSolicitudesPage() {
 
   const eventColumns = [
     { header: "Evento", accessor: "eventName" },
-    { header: "Sección", accessor: "sectionName" },
+    { header: "Sección estudiantil", accessor: "sectionName" },
     {
       header: "Estado",
       accessor: "status",

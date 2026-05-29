@@ -44,7 +44,7 @@ export default function AdminSectionDetailPage() {
       .catch((fetchError) => {
         if (!active) return;
         const message =
-          fetchError instanceof Error ? fetchError.message : "No se pudo cargar la sección.";
+          fetchError instanceof Error ? fetchError.message : "No se pudo cargar la sección estudiantil.";
         setLoadState({ sectionId, section: null, error: message });
       });
     return () => {
@@ -137,8 +137,8 @@ export default function AdminSectionDetailPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <PageHeader title="Sección" subtitle="Cargando detalle" breadcrumb={["Admin", "Eventos"]} />
-        <Card>Cargando sección...</Card>
+        <PageHeader title="Sección estudiantil" subtitle="Cargando detalle" breadcrumb={["Admin", "Eventos"]} />
+        <Card>Cargando sección estudiantil...</Card>
       </div>
     );
   }
@@ -146,9 +146,9 @@ export default function AdminSectionDetailPage() {
   if (error || !section) {
     return (
       <div className="space-y-6">
-        <PageHeader title="Sección" subtitle="No encontrada" breadcrumb={["Admin", "Eventos"]} />
+        <PageHeader title="Sección estudiantil" subtitle="No encontrada" breadcrumb={["Admin", "Eventos"]} />
         <Card className="space-y-4">
-          <div className="text-sm text-[var(--danger)]">{error ?? "Sección no encontrada."}</div>
+          <div className="text-sm text-[var(--danger)]">{error ?? "Sección estudiantil no encontrada."}</div>
           <Link
             href={`/admin/eventos/${eventId}`}
             className="inline-flex h-10 items-center justify-center rounded-lg bg-[var(--surface-2)] px-4 text-sm font-semibold text-[var(--ink)] transition hover:bg-[var(--surface-3)]"
@@ -167,8 +167,8 @@ export default function AdminSectionDetailPage() {
     <div className="space-y-6">
       <PageHeader
         title={section.name}
-        subtitle="Detalle de sección"
-        breadcrumb={["Admin", "Eventos", event?.name ?? section.eventId, "Secciones", section.name]}
+        subtitle="Detalle de sección estudiantil"
+        breadcrumb={["Admin", "Eventos", event?.name ?? section.eventId, "Secciones estudiantiles", section.name]}
       />
 
       <div className="flex flex-wrap gap-3">
@@ -237,7 +237,7 @@ export default function AdminSectionDetailPage() {
         <div className="space-y-1">
           <div className="text-lg font-semibold text-[var(--ink)]">Integrantes</div>
           <div className="text-sm text-[var(--muted)]">
-            Socios asociados a esta sección para el evento.
+            Socios asociados a esta sección estudiantil para el evento.
           </div>
         </div>
         {section.members.length === 0 ? (
@@ -265,7 +265,7 @@ export default function AdminSectionDetailPage() {
               <span className="font-semibold text-[var(--ink)]">
                 {removeMemberModal.memberName}
               </span>{" "}
-              de esta sección.
+              de esta sección estudiantil.
             </>
           ) : null
         }
@@ -277,14 +277,14 @@ export default function AdminSectionDetailPage() {
         }}
         successToast={{
           title: "Integrante retirado",
-          message: "La sección y los costos asociados se recalcularon.",
+          message: "La sección estudiantil y los costos asociados se recalcularon.",
           tone: "success",
         }}
         errorTitle="No se pudo retirar"
       >
         {removeMemberModal ? (
           <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-4 text-[var(--ink)]">
-            El integrante dejará de pertenecer a esta sección para el evento.
+            El integrante dejará de pertenecer a esta sección estudiantil para el evento.
           </div>
         ) : null}
       </ConfirmActionModal>

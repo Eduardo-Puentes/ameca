@@ -182,8 +182,8 @@ export default function MemberEventoRegistroPage() {
               <div className="mt-1 font-semibold text-[var(--ink)]">{formatCurrency(registration.cost)}</div>
             </div>
             <div className="rounded-lg bg-[var(--surface-2)] p-3 text-sm">
-              <div className="text-xs text-[var(--muted)]">Sección</div>
-              <div className="mt-1 font-semibold text-[var(--ink)]">{registration.sectionName || "Sin sección"}</div>
+              <div className="text-xs text-[var(--muted)]">Sección estudiantil</div>
+              <div className="mt-1 font-semibold text-[var(--ink)]">{registration.sectionName || "Sin sección estudiantil"}</div>
             </div>
             <div className="rounded-lg bg-[var(--surface-2)] p-3 text-sm">
               <div className="text-xs text-[var(--muted)]">Aprobado</div>

@@ -51,6 +51,8 @@ export type Event = {
   open: boolean;
   location: string;
   description: string;
+  abstractPdfKey?: string;
+  abstractPdfUrl?: string;
   capacity: number;
   profilePrices: EventProfilePrices;
   status: "open" | "closed";
@@ -440,7 +442,9 @@ export type EventUpsertPayload = Partial<
     | "profilePrices"
     | "status"
   >
->;
+> & {
+  abstractPdfFile?: File | null;
+};
 
 export type OrganizationStatus = "pending" | "approved" | "rejected";
 

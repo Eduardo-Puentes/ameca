@@ -112,9 +112,9 @@ export default function MemberDashboardPage() {
                     </div>
                   </div>
                   <div className="rounded-lg bg-[var(--surface)] p-3">
-                    <div className="text-xs text-[var(--muted)]">Sección</div>
+                    <div className="text-xs text-[var(--muted)]">Sección estudiantil</div>
                     <div className="mt-1 font-semibold text-[var(--ink)]">
-                      {registration.sectionName || "Sin sección"}
+                      {registration.sectionName || "Sin sección estudiantil"}
                     </div>
                   </div>
                   <div className="rounded-lg bg-[var(--surface)] p-3">
@@ -146,29 +146,29 @@ export default function MemberDashboardPage() {
       <Card className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="text-lg font-semibold text-[var(--ink)]">Mis secciones</div>
+            <div className="text-lg font-semibold text-[var(--ink)]">Mis secciones estudiantiles</div>
             <div className="text-sm text-[var(--muted)]">
-              Integrante en {sections.length} sección(es)
+              Secciones estudiantiles: {sections.length}
               {sectionInvites.length ? ` · ${sectionInvites.length} invitación(es) pendiente(s)` : ""}
             </div>
           </div>
           <Link href="/socio/secciones">
             <Button variant="secondary">
               <Users className="h-4 w-4" />
-              Gestionar secciones
+              Gestionar secciones estudiantiles
             </Button>
           </Link>
         </div>
 
         {loading ? (
-          <div className="text-sm text-[var(--muted)]">Cargando secciones...</div>
+          <div className="text-sm text-[var(--muted)]">Cargando secciones estudiantiles...</div>
         ) : error ? (
           <div className="rounded-lg border border-[var(--danger)] bg-[var(--danger-soft)] p-3 text-sm text-[var(--danger)]">
             {error}
           </div>
         ) : sections.length === 0 && sectionInvites.length === 0 ? (
           <div className="rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface-2)] p-5 text-sm text-[var(--muted)]">
-            Aún no perteneces a una sección ni tienes invitaciones pendientes.
+            Aún no perteneces a una sección estudiantil ni tienes invitaciones pendientes.
           </div>
         ) : (
           <div className="grid gap-4 md:grid-cols-2">
@@ -180,7 +180,7 @@ export default function MemberDashboardPage() {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <div className="font-semibold text-[var(--ink)]">
-                      {invite.sectionName || "Sección"}
+                      {invite.sectionName || "Sección estudiantil"}
                     </div>
                     <div className="mt-1 text-sm text-[var(--muted)]">
                       {invite.eventName || "Evento"} · Invita {invite.createdByMemberName || "representante"}
@@ -219,7 +219,7 @@ export default function MemberDashboardPage() {
                 </div>
                 <Link href="/socio/secciones">
                   <Button size="sm" variant="secondary">
-                    {section.isRepresentative ? "Invitar integrantes" : "Ver sección"}
+                    {section.isRepresentative ? "Invitar integrantes" : "Ver sección estudiantil"}
                   </Button>
                 </Link>
               </div>

@@ -13,19 +13,19 @@ export type BoardMember = {
 export const drCesarOzunaLopez: BoardMember = {
   id: 1,
   slug: "dr-cesar-ozuna-lopez",
-  name: "Dr. Cesar Ozuna Lopez",
-  role: "President",
+  name: "Dr. César Ozuna López",
+  role: "Presidente",
   term: "2025-2027",
-  organization: "UGTO",
+  organization: "UG",
   photo: "/1.jpg",
   researchLines: [
-    "Pendiente de actualizar la primera linea de investigacion.",
-    "Pendiente de actualizar la segunda linea de investigacion.",
-    "Pendiente de actualizar la tercera linea de investigacion.",
+    "Pendiente de actualizar la primera línea de investigación.",
+    "Pendiente de actualizar la segunda línea de investigación.",
+    "Pendiente de actualizar la tercera línea de investigación.",
   ],
   bioParagraphs: [
-    "Resena pendiente de actualizacion para Dr. Cesar Ozuna Lopez. Este espacio puede incluir su trayectoria academica, experiencia profesional y contribuciones institucionales mas relevantes.",
-    "Aqui tambien puedes agregar informacion sobre proyectos destacados, liderazgo dentro de asociaciones y cualquier aporte relacionado con el periodo 2025-2027.",
+    "Reseña pendiente de actualización para Dr. César Ozuna López. Este espacio puede incluir su trayectoria académica, experiencia profesional y contribuciones institucionales más relevantes.",
+    "Aquí también puedes agregar información sobre proyectos destacados, liderazgo dentro de asociaciones y cualquier aporte relacionado con el periodo 2025-2027.",
   ],
 };
 
@@ -33,18 +33,18 @@ export const draCelesteCIbarraHerrera: BoardMember = {
   id: 2,
   slug: "dra-celeste-c-ibarra-herrera",
   name: "Dra. Celeste C. Ibarra Herrera",
-  role: "Vicepresidente",
+  role: "Vicepresidenta",
   term: "2025-2027",
   organization: "ITESM",
   photo: "/2.png",
   researchLines: [
-    "Pendiente de actualizar la primera linea de investigacion.",
-    "Pendiente de actualizar la segunda linea de investigacion.",
-    "Pendiente de actualizar la tercera linea de investigacion.",
+    "Pendiente de actualizar la primera línea de investigación.",
+    "Pendiente de actualizar la segunda línea de investigación.",
+    "Pendiente de actualizar la tercera línea de investigación.",
   ],
   bioParagraphs: [
-    "Resena pendiente de actualizacion para Dra. Celeste C. Ibarra Herrera. Este espacio puede incluir su trayectoria academica, experiencia profesional y contribuciones institucionales mas relevantes.",
-    "Aqui tambien puedes agregar informacion sobre proyectos destacados, liderazgo dentro de asociaciones y cualquier aporte relacionado con el periodo 2025-2027.",
+    "Reseña pendiente de actualización para Dra. Celeste C. Ibarra Herrera. Este espacio puede incluir su trayectoria académica, experiencia profesional y contribuciones institucionales más relevantes.",
+    "Aquí también puedes agregar información sobre proyectos destacados, liderazgo dentro de asociaciones y cualquier aporte relacionado con el periodo 2025-2027.",
   ],
 };
 
@@ -57,13 +57,13 @@ export const draMonicaLChavezGonzalez: BoardMember = {
   organization: "UAdeC",
   photo: "/3.png",
   researchLines: [
-    "Pendiente de actualizar la primera linea de investigacion.",
-    "Pendiente de actualizar la segunda linea de investigacion.",
-    "Pendiente de actualizar la tercera linea de investigacion.",
+    "Pendiente de actualizar la primera línea de investigación.",
+    "Pendiente de actualizar la segunda línea de investigación.",
+    "Pendiente de actualizar la tercera línea de investigación.",
   ],
   bioParagraphs: [
-    "Resena pendiente de actualizacion para Dra. Mónica L. Chávez González. Este espacio puede incluir su trayectoria academica, experiencia profesional y contribuciones institucionales mas relevantes.",
-    "Aqui tambien puedes agregar informacion sobre proyectos destacados, liderazgo dentro de asociaciones y cualquier aporte relacionado con el periodo 2025-2027.",
+    "Reseña pendiente de actualización para Dra. Mónica L. Chávez González. Este espacio puede incluir su trayectoria académica, experiencia profesional y contribuciones institucionales más relevantes.",
+    "Aquí también puedes agregar información sobre proyectos destacados, liderazgo dentro de asociaciones y cualquier aporte relacionado con el periodo 2025-2027.",
   ],
 };
 
@@ -76,13 +76,13 @@ export const draEstherPerezCarrillo: BoardMember = {
   organization: "ITESM",
   photo: "/4.png",
   researchLines: [
-    "Pendiente de actualizar la primera linea de investigacion.",
-    "Pendiente de actualizar la segunda linea de investigacion.",
-    "Pendiente de actualizar la tercera linea de investigacion.",
+    "Pendiente de actualizar la primera línea de investigación.",
+    "Pendiente de actualizar la segunda línea de investigación.",
+    "Pendiente de actualizar la tercera línea de investigación.",
   ],
   bioParagraphs: [
-    "Resena pendiente de actualizacion para Dra. Esther Pérez Carrillo. Este espacio puede incluir su trayectoria academica, experiencia profesional y contribuciones institucionales mas relevantes.",
-    "Aqui tambien puedes agregar informacion sobre proyectos destacados, liderazgo dentro de asociaciones y cualquier aporte relacionado con el periodo 2025-2027.",
+    "Reseña pendiente de actualización para Dra. Esther Pérez Carrillo. Este espacio puede incluir su trayectoria académica, experiencia profesional y contribuciones institucionales más relevantes.",
+    "Aquí también puedes agregar información sobre proyectos destacados, liderazgo dentro de asociaciones y cualquier aporte relacionado con el periodo 2025-2027.",
   ],
 };
 
@@ -92,35 +92,35 @@ export const drHectorECortesFerre: BoardMember = {
   name: "Dr. Héctor E. Cortés-Ferré",
   role: "Vocal de Vinculación y Relaciones Institucionales",
   term: "2025-2027",
-  organization: "Ibero",
+  organization: "ITESM",
   photo: "/5.png",
   researchLines: [
-    "Pendiente de actualizar la primera linea de investigacion.",
-    "Pendiente de actualizar la segunda linea de investigacion.",
-    "Pendiente de actualizar la tercera linea de investigacion.",
+    "Pendiente de actualizar la primera línea de investigación.",
+    "Pendiente de actualizar la segunda línea de investigación.",
+    "Pendiente de actualizar la tercera línea de investigación.",
   ],
   bioParagraphs: [
-    "Resena pendiente de actualizacion para Dr. Héctor E. Cortés-Ferré. Este espacio puede incluir su trayectoria academica, experiencia profesional y contribuciones institucionales mas relevantes.",
-    "Aqui tambien puedes agregar informacion sobre proyectos destacados, liderazgo dentro de asociaciones y cualquier aporte relacionado con el periodo 2025-2027.",
+    "Reseña pendiente de actualización para Dr. Héctor E. Cortés-Ferré. Este espacio puede incluir su trayectoria académica, experiencia profesional y contribuciones institucionales más relevantes.",
+    "Aquí también puedes agregar información sobre proyectos destacados, liderazgo dentro de asociaciones y cualquier aporte relacionado con el periodo 2025-2027.",
   ],
 };
 
 export const drJonatanJafetUuhNarvaez: BoardMember = {
   id: 6,
   slug: "dr-jonatan-jafet-uuh-narvaez",
-  name: "Dr. Jonatan Jafet Uuh Narvaez",
-  role: "Vocal de Logística de eventos",
+  name: "Dr. Jonatan Jafet Uuh Narváez",
+  role: "Vocal de Logística de Eventos",
   term: "2025-2027",
   organization: "UADY",
   photo: "/6.png",
   researchLines: [
-    "Pendiente de actualizar la primera linea de investigacion.",
-    "Pendiente de actualizar la segunda linea de investigacion.",
-    "Pendiente de actualizar la tercera linea de investigacion.",
+    "Pendiente de actualizar la primera línea de investigación.",
+    "Pendiente de actualizar la segunda línea de investigación.",
+    "Pendiente de actualizar la tercera línea de investigación.",
   ],
   bioParagraphs: [
-    "Resena pendiente de actualizacion para Dr. Jonatan Jafet Uuh Narvaez. Este espacio puede incluir su trayectoria academica, experiencia profesional y contribuciones institucionales mas relevantes.",
-    "Aqui tambien puedes agregar informacion sobre proyectos destacados, liderazgo dentro de asociaciones y cualquier aporte relacionado con el periodo 2025-2027.",
+    "Reseña pendiente de actualización para Dr. Jonatan Jafet Uuh Narváez. Este espacio puede incluir su trayectoria académica, experiencia profesional y contribuciones institucionales más relevantes.",
+    "Aquí también puedes agregar información sobre proyectos destacados, liderazgo dentro de asociaciones y cualquier aporte relacionado con el periodo 2025-2027.",
   ],
 };
 
@@ -128,18 +128,18 @@ export const drEverardoMaresMares: BoardMember = {
   id: 7,
   slug: "dr-everardo-mares-mares",
   name: "Dr. Everardo Mares Mares",
-  role: "Vocal Comunicación y Difusión",
+  role: "Vocal de Comunicación y Difusión",
   term: "2025-2027",
-  organization: "Organización por confirmar",
+  organization: "TecNM / ITS de Guanajuato",
   photo: "/7.jpg",
   researchLines: [
-    "Pendiente de actualizar la primera linea de investigacion.",
-    "Pendiente de actualizar la segunda linea de investigacion.",
-    "Pendiente de actualizar la tercera linea de investigacion.",
+    "Pendiente de actualizar la primera línea de investigación.",
+    "Pendiente de actualizar la segunda línea de investigación.",
+    "Pendiente de actualizar la tercera línea de investigación.",
   ],
   bioParagraphs: [
-    "Resena pendiente de actualizacion para Dr. Everardo Mares Mares. Este espacio puede incluir su trayectoria academica, experiencia profesional y contribuciones institucionales mas relevantes.",
-    "Aqui tambien puedes agregar informacion sobre proyectos destacados, liderazgo dentro de asociaciones y cualquier aporte relacionado con el periodo 2025-2027.",
+    "Reseña pendiente de actualización para Dr. Everardo Mares Mares. Este espacio puede incluir su trayectoria académica, experiencia profesional y contribuciones institucionales más relevantes.",
+    "Aquí también puedes agregar información sobre proyectos destacados, liderazgo dentro de asociaciones y cualquier aporte relacionado con el periodo 2025-2027.",
   ],
 };
 
@@ -149,16 +149,16 @@ export const ingJuanCarlosElizaldeLeon: BoardMember = {
   name: "Ing. Juan Carlos Elizalde León",
   role: "Vocal de Educación y Formación Continua",
   term: "2025-2027",
-  organization: "UADY",
+  organization: "",
   photo: "/8.jpeg",
   researchLines: [
-    "Pendiente de actualizar la primera linea de investigacion.",
-    "Pendiente de actualizar la segunda linea de investigacion.",
-    "Pendiente de actualizar la tercera linea de investigacion.",
+    "Pendiente de actualizar la primera línea de investigación.",
+    "Pendiente de actualizar la segunda línea de investigación.",
+    "Pendiente de actualizar la tercera línea de investigación.",
   ],
   bioParagraphs: [
-    "Resena pendiente de actualizacion para Ing. Juan Carlos Elizalde León. Este espacio puede incluir su trayectoria academica, experiencia profesional y contribuciones institucionales mas relevantes.",
-    "Aqui tambien puedes agregar informacion sobre proyectos destacados, liderazgo dentro de asociaciones y cualquier aporte relacionado con el periodo 2025-2027.",
+    "Reseña pendiente de actualización para Ing. Juan Carlos Elizalde León. Este espacio puede incluir su trayectoria académica, experiencia profesional y contribuciones institucionales más relevantes.",
+    "Aquí también puedes agregar información sobre proyectos destacados, liderazgo dentro de asociaciones y cualquier aporte relacionado con el periodo 2025-2027.",
   ],
 };
 
@@ -166,18 +166,18 @@ export const mbMariaAzucenaRochaMendoza: BoardMember = {
   id: 9,
   slug: "mb-maria-azucena-rocha-mendoza",
   name: "M.B. María Azucena Rocha Mendoza",
-  role: "Vocal Estudiante",
+  role: "Vocal Estudiantil",
   term: "2025-2027",
-  organization: "Organización por confirmar",
+  organization: "UG",
   photo: "/9.jpg",
   researchLines: [
-    "Pendiente de actualizar la primera linea de investigacion.",
-    "Pendiente de actualizar la segunda linea de investigacion.",
-    "Pendiente de actualizar la tercera linea de investigacion.",
+    "Pendiente de actualizar la primera línea de investigación.",
+    "Pendiente de actualizar la segunda línea de investigación.",
+    "Pendiente de actualizar la tercera línea de investigación.",
   ],
   bioParagraphs: [
-    "Resena pendiente de actualizacion para M.B. María Azucena Rocha Mendoza. Este espacio puede incluir su trayectoria academica, experiencia profesional y contribuciones institucionales mas relevantes.",
-    "Aqui tambien puedes agregar informacion sobre proyectos destacados, liderazgo dentro de asociaciones y cualquier aporte relacionado con el periodo 2025-2027.",
+    "Reseña pendiente de actualización para M.B. María Azucena Rocha Mendoza. Este espacio puede incluir su trayectoria académica, experiencia profesional y contribuciones institucionales más relevantes.",
+    "Aquí también puedes agregar información sobre proyectos destacados, liderazgo dentro de asociaciones y cualquier aporte relacionado con el periodo 2025-2027.",
   ],
 };
 
@@ -185,18 +185,18 @@ export const ibtMarioPenaAlvarado: BoardMember = {
   id: 10,
   slug: "ibt-mario-pena-alvarado",
   name: "IBT. Mario Peña Alvarado",
-  role: "Vocal Estudiante",
+  role: "Vocal Estudiantil",
   term: "2025-2027",
-  organization: "Organización por confirmar",
+  organization: "ITESM",
   photo: "/10.jpg",
   researchLines: [
-    "Pendiente de actualizar la primera linea de investigacion.",
-    "Pendiente de actualizar la segunda linea de investigacion.",
-    "Pendiente de actualizar la tercera linea de investigacion.",
+    "Pendiente de actualizar la primera línea de investigación.",
+    "Pendiente de actualizar la segunda línea de investigación.",
+    "Pendiente de actualizar la tercera línea de investigación.",
   ],
   bioParagraphs: [
-    "Resena pendiente de actualizacion para IBT. Mario Peña Alvarado. Este espacio puede incluir su trayectoria academica, experiencia profesional y contribuciones institucionales mas relevantes.",
-    "Aqui tambien puedes agregar informacion sobre proyectos destacados, liderazgo dentro de asociaciones y cualquier aporte relacionado con el periodo 2025-2027.",
+    "Reseña pendiente de actualización para IBT. Mario Peña Alvarado. Este espacio puede incluir su trayectoria académica, experiencia profesional y contribuciones institucionales más relevantes.",
+    "Aquí también puedes agregar información sobre proyectos destacados, liderazgo dentro de asociaciones y cualquier aporte relacionado con el periodo 2025-2027.",
   ],
 };
 
