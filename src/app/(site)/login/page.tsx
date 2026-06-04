@@ -98,21 +98,6 @@ function LoginPageContent() {
               </Link>
             </div>
           </div>
-
-          <div className="rounded-2xl border border-[var(--border)] bg-white/70 p-5 text-sm text-[var(--muted)]">
-            <div className="text-xs uppercase tracking-[0.2em]">Acceso superadmin</div>
-            <div className="mt-2 text-[var(--ink)]">
-              Usa estas credenciales para acceder al panel administrativo:
-            </div>
-            <div className="mt-2 grid gap-1 text-[var(--ink)]">
-              <div>
-                <span className="font-semibold">Correo:</span> superuser@ameca.org
-              </div>
-              <div>
-                <span className="font-semibold">Contraseña:</span> ChangeMe123!
-              </div>
-            </div>
-          </div>
         </Card>
       </div>
     </div>

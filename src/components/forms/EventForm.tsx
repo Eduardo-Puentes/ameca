@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { Event, EventUpsertPayload } from "@/lib/types";
 import { Button } from "@/components/ui/Button";
 import { FileUpload } from "@/components/ui/FileUpload";
@@ -67,6 +67,9 @@ export function EventForm({
   submitLabel?: string;
   submitting?: boolean;
 }) {
+  const submittingRef = useRef(false);
+  const [internalSubmitting, setInternalSubmitting] = useState(false);
+  const isSubmitting = submitting || internalSubmitting;
   const [form, setForm] = useState<EventFormState>({
     name: initial?.name ?? "",
     startDate: toDateInputValue(initial?.startDate),
@@ -95,21 +98,29 @@ export function EventForm({
   return (
     <form
       className="space-y-4"
-      onSubmit={(event) => {
+      onSubmit={async (event) => {
         event.preventDefault();
-        onSubmit({
-          ...form,
-          duration: toSubmitNumber(form.duration),
-          capacity: toSubmitNumber(form.capacity),
-          profilePrices: {
-            professional: toSubmitNumber(form.profilePrices.professional),
-            student: toSubmitNumber(form.profilePrices.student),
-            associatedProfessional: toSubmitNumber(form.profilePrices.associatedProfessional),
-            associatedStudent: toSubmitNumber(form.profilePrices.associatedStudent),
-          },
-          status: form.open ? "open" : "closed",
-          abstractPdfFile: form.abstractPdfFile,
-        });
+        if (submittingRef.current || submitting) return;
+        submittingRef.current = true;
+        setInternalSubmitting(true);
+        try {
+          await onSubmit({
+            ...form,
+            duration: toSubmitNumber(form.duration),
+            capacity: toSubmitNumber(form.capacity),
+            profilePrices: {
+              professional: toSubmitNumber(form.profilePrices.professional),
+              student: toSubmitNumber(form.profilePrices.student),
+              associatedProfessional: toSubmitNumber(form.profilePrices.associatedProfessional),
+              associatedStudent: toSubmitNumber(form.profilePrices.associatedStudent),
+            },
+            status: form.open ? "open" : "closed",
+            abstractPdfFile: form.abstractPdfFile,
+          });
+        } finally {
+          submittingRef.current = false;
+          setInternalSubmitting(false);
+        }
       }}
     >
       <div className="grid gap-4 md:grid-cols-2">
@@ -230,8 +241,8 @@ export function EventForm({
           </a>
         ) : null}
       </div>
-      <Button type="submit" disabled={submitting}>
-        {submitting ? "Guardando..." : submitLabel}
+      <Button type="submit" disabled={isSubmitting}>
+        {isSubmitting ? "Guardando..." : submitLabel}
       </Button>
     </form>
   );

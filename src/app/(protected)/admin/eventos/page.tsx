@@ -27,6 +27,7 @@ export default function AdminEventosPage() {
   const { events, loadEvents, addEvent, removeEvent } = useAppStore();
   const pushToast = useToastStore((state) => state.pushToast);
   const [open, setOpen] = useState(false);
+  const [createLoading, setCreateLoading] = useState(false);
   const [deleteModal, setDeleteModal] = useState<DeleteModalState | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
@@ -35,9 +36,18 @@ export default function AdminEventosPage() {
   }, [loadEvents]);
 
   const handleCreate = async (payload: EventUpsertPayload) => {
-    await addEvent(payload);
-    setOpen(false);
-    pushToast({ title: "Evento creado", tone: "success" });
+    if (createLoading) return;
+    setCreateLoading(true);
+    try {
+      await addEvent(payload);
+      setOpen(false);
+      pushToast({ title: "Evento creado", tone: "success" });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "No se pudo crear el evento.";
+      pushToast({ title: "Error al crear", message, tone: "danger" });
+    } finally {
+      setCreateLoading(false);
+    }
   };
 
   const prepareDelete = async (event: Event) => {
@@ -128,8 +138,15 @@ export default function AdminEventosPage() {
         ))}
       </div>
 
-      <Modal open={open} onClose={() => setOpen(false)} title="Crear evento">
-        <EventForm onSubmit={handleCreate} submitLabel="Crear evento" />
+      <Modal
+        open={open}
+        onClose={() => {
+          if (createLoading) return;
+          setOpen(false);
+        }}
+        title="Crear evento"
+      >
+        <EventForm onSubmit={handleCreate} submitLabel="Crear evento" submitting={createLoading} />
       </Modal>
 
       <ConfirmActionModal
