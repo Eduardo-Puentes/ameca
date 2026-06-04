@@ -18,12 +18,18 @@ export const createMembersSlice: StateCreator<AuthSlice & MembersSlice, [], [], 
   members: [],
   membersLoading: false,
   loadMembers: async () => {
+    if (!get().authReady) return;
     set({ membersLoading: true });
-    const role = get().role;
-    const canListMembers = role === "admin" || role === "superadmin" || role === "treasurer";
-    const data =
-      canListMembers ? await listMembers() : [await getMemberMe()];
-    set({ members: data, membersLoading: false });
+    try {
+      const role = get().role;
+      const canListMembers = role === "admin" || role === "superadmin" || role === "treasurer";
+      const data =
+        canListMembers ? await listMembers() : [await getMemberMe()];
+      set({ members: data, membersLoading: false });
+    } catch (error) {
+      set({ membersLoading: false });
+      throw error;
+    }
   },
   updateMemberProfile: async (id, payload) => {
     const role = get().role;

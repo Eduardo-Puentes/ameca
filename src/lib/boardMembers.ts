@@ -150,7 +150,7 @@ export const ingJuanCarlosElizaldeLeon: BoardMember = {
   role: "Vocal de Educación y Formación Continua",
   term: "2025-2027",
   organization: "",
-  photo: "/8.jpeg",
+  photo: "/juan-carlos-elizalde-leon.jpeg",
   researchLines: [
     "Pendiente de actualizar la primera línea de investigación.",
     "Pendiente de actualizar la segunda línea de investigación.",
