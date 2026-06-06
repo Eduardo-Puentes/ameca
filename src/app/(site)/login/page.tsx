@@ -9,6 +9,7 @@ import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { brand } from "@/lib/brand";
+import { resendVerification } from "@/lib/data";
 import { useAppStore } from "@/store";
 import { useToastStore } from "@/components/ui/Toast";
 import type { Role } from "@/lib/types";
@@ -32,6 +33,8 @@ function LoginPageContent() {
   const pushToast = useToastStore((state) => state.pushToast);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [unverifiedEmail, setUnverifiedEmail] = useState<string | null>(null);
+  const [resendingVerification, setResendingVerification] = useState(false);
 
   useEffect(() => {
     if (!authReady || !user) {
@@ -43,8 +46,10 @@ function LoginPageContent() {
   }, [authReady, router, searchParams, user]);
 
   const handleLogin = async () => {
+    const normalizedEmail = email.trim();
     try {
-      const user = await loginWithCredentials(email.trim(), password);
+      setUnverifiedEmail(null);
+      const user = await loginWithCredentials(normalizedEmail, password);
       const nextParam = searchParams.get("next");
       const safeNext =
         nextParam && nextParam.startsWith("/") ? nextParam : routeForRole[user.role];
@@ -52,7 +57,31 @@ function LoginPageContent() {
       router.push(nextRoute);
     } catch (error) {
       const message = error instanceof Error ? error.message : "No se pudo iniciar sesión.";
+      if (message.includes("verificar tu correo")) {
+        setUnverifiedEmail(normalizedEmail);
+        pushToast({ title: "Verifica tu correo", message, tone: "warning" });
+        return;
+      }
       pushToast({ title: "Credenciales inválidas", message, tone: "danger" });
+    }
+  };
+
+  const handleResendVerification = async () => {
+    const targetEmail = unverifiedEmail ?? email.trim();
+    if (!targetEmail) return;
+    setResendingVerification(true);
+    try {
+      const response = await resendVerification({ email: targetEmail });
+      pushToast({
+        title: response.sent ? "Correo reenviado" : "Revisa tu correo",
+        message: response.message,
+        tone: response.sent ? "success" : "info",
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "No se pudo reenviar el correo.";
+      pushToast({ title: "Error al reenviar", message, tone: "danger" });
+    } finally {
+      setResendingVerification(false);
     }
   };
 
@@ -86,6 +115,24 @@ function LoginPageContent() {
                 onChange={(event) => setPassword(event.target.value)}
               />
             </FormField>
+            {unverifiedEmail ? (
+              <div className="rounded-lg border border-[var(--warning)]/40 bg-[var(--warning-soft)] p-4 text-sm text-[var(--ink)]">
+                <div className="font-semibold">Tu correo aún no está verificado.</div>
+                <div className="mt-1 text-[var(--muted)]">
+                  Revisa tu bandeja o solicita un nuevo enlace para {unverifiedEmail}.
+                </div>
+                <Button
+                  className="mt-3"
+                  variant="secondary"
+                  size="sm"
+                  onClick={handleResendVerification}
+                  loading={resendingVerification}
+                  loadingText="Enviando..."
+                >
+                  Reenviar correo de verificación
+                </Button>
+              </div>
+            ) : null}
             <div className="flex flex-wrap items-center gap-3">
               <Button onClick={handleLogin} disabled={loading}>
                 Entrar
