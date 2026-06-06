@@ -63,6 +63,13 @@ type ListMembersResponse =
       data?: MemberResponse[];
       results?: MemberResponse[];
     });
+type SendDiplomasResponse =
+  | DiplomaRecord[]
+  | {
+      items?: DiplomaRecord[];
+      emailErrors?: unknown[];
+      emailErrorCount?: number;
+    };
 
 const normalizeRole = (role: BackendRole): Role =>
   role === "superuser" ? "superadmin" : (role as Role);
@@ -444,8 +451,26 @@ export async function updateAdminSectionDiscounts(
 }
 
 export async function listMembers(): Promise<Member[]> {
-  const response = await request<ListMembersResponse>("/members");
-  return normalizeMembersResponse(response);
+  const pageSize = 100;
+  const members: Member[] = [];
+  let page = 1;
+  let total: number | undefined;
+
+  do {
+    const params = new URLSearchParams({
+      page: String(page),
+      pageSize: String(pageSize),
+    });
+    const response = await request<ListMembersResponse>(`/members?${params.toString()}`);
+    const pageMembers = normalizeMembersResponse(response);
+    members.push(...pageMembers);
+
+    total = Array.isArray(response) ? members.length : response.total;
+    if (Array.isArray(response) || pageMembers.length < pageSize) break;
+    page += 1;
+  } while (total === undefined || members.length < total);
+
+  return members;
 }
 
 export async function listAdminUsers(): Promise<AdminUser[]> {
@@ -855,7 +880,10 @@ export async function listDiplomasByEvent(eventId: string): Promise<DiplomaRecor
 }
 
 export async function sendDiplomas(eventId: string): Promise<DiplomaRecord[]> {
-  return request<DiplomaRecord[]>(`/admin/events/${eventId}/diplomas/send`, { method: "POST" });
+  const response = await request<SendDiplomasResponse>(`/admin/events/${eventId}/diplomas/send`, {
+    method: "POST",
+  });
+  return Array.isArray(response) ? response : response.items ?? [];
 }
 
 export async function sendDiplomaRecord(recordId: string): Promise<DiplomaRecord | null> {

@@ -227,18 +227,19 @@ export const createRequestsSlice: StateCreator<AuthSlice & RequestsSlice, [], []
     const requestedQuery = query ?? get().eventRequestsQuery;
     const requestedCostType = costType ?? get().eventRequestsCostType;
     const requestedStatus = status ?? get().eventRequestsStatus;
+    const adminStatus = requestedStatus === "all" ? undefined : requestedStatus;
     if (role === "admin" || role === "treasurer" || role === "superadmin") {
       const result = eventId
         ? await listEventRequests(
             eventId,
-            undefined,
+            adminStatus,
             requestedQuery,
             requestedPage,
             get().requestPageSize,
             requestedCostType
           )
         : await listAdminEventRequests(
-            undefined,
+            adminStatus,
             requestedQuery,
             requestedPage,
             get().requestPageSize,

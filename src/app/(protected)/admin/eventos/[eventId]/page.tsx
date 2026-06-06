@@ -55,6 +55,7 @@ export default function AdminEventoDetallePage() {
     eventRequestsTotal,
     eventRequestsQuery,
     eventRequestsCostType,
+    eventRequestStatusCounts,
     requestPageSize,
     attendanceRecords,
     sections,
@@ -241,8 +242,8 @@ export default function AdminEventoDetallePage() {
   ]);
 
   const event = events.find((item) => item.id === eventId);
-  const pendingRequests = eventRequests.filter((req) => req.status === "pending").length;
-  const approvedRequests = eventRequests.filter((req) => req.status === "approved").length;
+  const pendingRequests = eventRequestStatusCounts.pending;
+  const approvedRequests = eventRequestStatusCounts.approved;
   const attendanceCount = attendanceRecords.filter((record) => record.eventId === eventId).length;
 
   const summary = useMemo(
