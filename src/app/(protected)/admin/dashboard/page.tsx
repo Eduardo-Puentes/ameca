@@ -32,7 +32,7 @@ export default function AdminDashboardPage() {
     dashboardEventRequestsCostType,
     dashboardEventRequestsEventId,
     requestPageSize,
-    sectionRequests,
+    sectionRequestsTotal,
     loadMembershipRequests,
     loadDashboardEventRequests,
     loadSectionRequests,
@@ -64,7 +64,7 @@ export default function AdminDashboardPage() {
 
   const pendingMembership = membershipRequestStatusCounts.pending;
   const pendingEvent = dashboardEventRequestStatusCounts.pending;
-  const pendingSections = sectionRequests.filter((req) => req.status === "pending");
+  const pendingSections = sectionRequestsTotal;
 
   const viewActionClassName =
     "flex h-10 w-full items-center justify-center rounded-xl bg-[var(--accent-soft)] px-4 text-sm font-semibold text-[var(--accent-strong)] shadow-[0_16px_30px_-18px_rgba(1,122,31,0.55)] transition duration-150 hover:bg-[var(--accent)] hover:text-white hover:shadow-[0_18px_32px_-16px_rgba(1,122,31,0.65)] active:scale-[0.985] active:translate-y-px";
@@ -131,7 +131,7 @@ export default function AdminDashboardPage() {
       <div className="grid gap-4 md:grid-cols-3">
         <StatCard label="Membresías pendientes" value={pendingMembership} />
         <StatCard label="Solicitudes de evento" value={pendingEvent} />
-        <StatCard label="Secciones estudiantiles pendientes" value={pendingSections.length} />
+        <StatCard label="Secciones estudiantiles pendientes" value={pendingSections} />
       </div>
 
       <Card className="space-y-4">
