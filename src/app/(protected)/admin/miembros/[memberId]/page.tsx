@@ -1,6 +1,6 @@
 "use client";
 
-import { ExternalLink, FileText } from "lucide-react";
+import { ExternalLink, FileText, KeyRound } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
@@ -8,8 +8,9 @@ import { PageHeader } from "@/components/layout/PageMetaContext";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ConfirmActionModal } from "@/components/ui/ConfirmActionModal";
+import { Modal } from "@/components/ui/Modal";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { getMember } from "@/lib/data";
+import { getMember, resetMemberPassword } from "@/lib/data";
 import type { Member } from "@/lib/types";
 import {
   formatAcademicDegree,
@@ -34,6 +35,10 @@ export default function AdminMemberProfilePage() {
   const memberId = params?.memberId as string;
   const { members, loadMembers, updateMemberProfile } = useAppStore();
   const [revertModalOpen, setRevertModalOpen] = useState(false);
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [temporaryPassword, setTemporaryPassword] = useState("");
+  const [passwordResetLoading, setPasswordResetLoading] = useState(false);
+  const [passwordResetError, setPasswordResetError] = useState("");
   const [memberDetail, setMemberDetail] = useState<Member | null>(null);
   const [detailLoadedFor, setDetailLoadedFor] = useState<string | null>(null);
 
@@ -121,6 +126,26 @@ export default function AdminMemberProfilePage() {
     { label: "Verificación", value: member.verified ? "Verificado" : "Pendiente" },
   ];
   const canRevertMembership = member.profileType !== "professional";
+  const closePasswordModal = () => {
+    if (passwordResetLoading) return;
+    setPasswordModalOpen(false);
+    setTemporaryPassword("");
+    setPasswordResetError("");
+  };
+  const handlePasswordReset = async () => {
+    setPasswordResetLoading(true);
+    setPasswordResetError("");
+    try {
+      const response = await resetMemberPassword(member.id);
+      setTemporaryPassword(response.temporaryPassword);
+    } catch (error) {
+      setPasswordResetError(
+        error instanceof Error ? error.message : "No se pudo generar una nueva contrasena."
+      );
+    } finally {
+      setPasswordResetLoading(false);
+    }
+  };
   const documents = [
     {
       label: "Comprobante de pago",
@@ -157,6 +182,13 @@ export default function AdminMemberProfilePage() {
             <div className="text-sm text-[var(--muted)]">{member.email}</div>
           </div>
           <StatusBadge status={member.verified ? "approved" : "pending"} />
+        </div>
+
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button variant="secondary" onClick={() => setPasswordModalOpen(true)}>
+            <KeyRound className="h-4 w-4" />
+            Generar contraseña
+          </Button>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2">
@@ -264,6 +296,54 @@ export default function AdminMemberProfilePage() {
         successToast={{ title: "Membresia revertida", tone: "success" }}
         errorTitle="No se pudo revertir la membresia"
       />
+
+      <Modal
+        open={passwordModalOpen}
+        onClose={closePasswordModal}
+        title={temporaryPassword ? "Contraseña generada" : "Generar nueva contraseña"}
+      >
+        {temporaryPassword ? (
+          <div className="space-y-4">
+            <div className="text-sm text-[var(--muted)]">
+              Esta contraseña solo se mostrara una vez. Copiala antes de cerrar esta ventana.
+            </div>
+            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
+              <div className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">
+                Nueva contraseña
+              </div>
+              <div className="mt-2 select-all break-all font-mono text-lg font-semibold text-[var(--ink)]">
+                {temporaryPassword}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4 text-sm text-[var(--muted)]">
+            <div>
+              Vas a generar una nueva contraseña temporal para{" "}
+              <span className="font-semibold text-[var(--ink)]">{member.fullName}</span>. La
+              contraseña actual dejara de funcionar.
+            </div>
+            {passwordResetError ? (
+              <div className="rounded-lg bg-[var(--danger-soft)] px-4 py-3 text-sm text-[var(--danger)]">
+                {passwordResetError}
+              </div>
+            ) : null}
+            <div className="flex justify-end gap-2">
+              <Button variant="secondary" onClick={closePasswordModal} disabled={passwordResetLoading}>
+                Cancelar
+              </Button>
+              <Button
+                variant="danger"
+                onClick={handlePasswordReset}
+                loading={passwordResetLoading}
+                loadingText="Generando..."
+              >
+                Regenerar contraseña
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

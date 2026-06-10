@@ -402,6 +402,41 @@ export type MemberUpdatePayload = Partial<
   >
 >;
 
+export type MemberImportIssue = {
+  row: number;
+  email?: string;
+  errors: string[];
+};
+
+export type MemberImportRowSummary = {
+  row: number;
+  email: string;
+  name?: string;
+  reason?: string;
+};
+
+export type MemberImportEmailFailure = {
+  row: number;
+  email: string;
+  error: string;
+};
+
+export type MemberImportResult = {
+  dryRun: boolean;
+  totalRows: number;
+  validRows: number;
+  created: number;
+  emailSent: number;
+  emailFailed: number;
+  skippedExisting: number;
+  invalidRows: number;
+  createdRows: MemberImportRowSummary[];
+  skippedRows: MemberImportRowSummary[];
+  emailFailedRows: MemberImportEmailFailure[];
+  issues: MemberImportIssue[];
+  maxRows: number;
+};
+
 export type AdminUser = {
   id: string;
   name: string;

@@ -22,9 +22,6 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
               <div className="text-xs uppercase tracking-[0.3em] text-[var(--muted)]">
                 {brand.brandName}
               </div>
-              <div className="truncate text-sm font-semibold text-[var(--ink)] sm:text-lg">
-                {brand.tagline}
-              </div>
             </div>
           </div>
           <SiteNavigation />
