@@ -100,6 +100,7 @@ export const updateMemberMe: typeof api.updateMemberMe = async (payload) => {
   return updated;
 };
 export const updateMember = pick(api.updateMember, mock.updateMember);
+export const resetMemberPassword = pick(api.resetMemberPassword);
 export const deleteMember = pick(api.deleteMember, mock.deleteMember);
 export const listMemberRequests = pick(api.listMemberRequests, mock.listMemberRequests);
 export const getMemberRequest = pick(api.getMemberRequest, mock.getMemberRequest);

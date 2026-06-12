@@ -14,6 +14,7 @@ import type {
   EventUpsertPayload,
   EventRequest,
   Member,
+  MemberImportResult,
   MemberEventRegistration,
   MemberUpdatePayload,
   MembershipPrices,
@@ -473,6 +474,16 @@ export async function listMembers(): Promise<Member[]> {
   return members;
 }
 
+export async function importMembers(file: File, dryRun: boolean): Promise<MemberImportResult> {
+  const form = new FormData();
+  form.append("file", file);
+  const params = new URLSearchParams({ dryRun: String(dryRun) });
+  return request<MemberImportResult>(`/members/admin/import?${params.toString()}`, {
+    method: "POST",
+    body: form,
+  });
+}
+
 export async function listAdminUsers(): Promise<AdminUser[]> {
   return request<AdminUser[]>("/admin/users");
 }
@@ -539,6 +550,12 @@ export async function updateMember(id: string, payload: MemberUpdatePayload): Pr
     body: JSON.stringify(payload),
   });
   return normalizeMember(response);
+}
+
+export async function resetMemberPassword(id: string) {
+  return request<{ ok: boolean; temporaryPassword: string }>(`/members/${id}/reset-password`, {
+    method: "POST",
+  });
 }
 
 export async function deleteMember(id: string) {
