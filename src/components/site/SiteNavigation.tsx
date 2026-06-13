@@ -101,7 +101,7 @@ export function SiteNavigation() {
             <div className="absolute right-0 top-0 z-10 flex h-dvh w-[min(22rem,100vw)] flex-col overflow-y-auto bg-[var(--surface)] p-5 shadow-[0_24px_60px_-28px_rgba(27,29,27,0.55)]">
               <div className="mb-5 flex items-center justify-between gap-3">
                 <div>
-                  <div className="text-xs uppercase tracking-[0.25em] text-[var(--muted)]">
+                  <div className="text-sm font-semibold uppercase tracking-[0.22em] text-[var(--muted)]">
                     AMECA
                   </div>
                   <div className="text-lg font-semibold text-[var(--ink)]">Menú</div>

@@ -19,7 +19,7 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
               />
             </Link>
             <div className="min-w-0">
-              <div className="text-xs uppercase tracking-[0.3em] text-[var(--muted)]">
+              <div className="text-base font-semibold uppercase tracking-[0.22em] text-[var(--muted)] sm:text-lg">
                 {brand.brandName}
               </div>
             </div>

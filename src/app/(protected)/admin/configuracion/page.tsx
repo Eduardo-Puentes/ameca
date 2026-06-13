@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { ChangePasswordCard } from "@/components/account/ChangePasswordCard";
 import { PageHeader } from "@/components/layout/PageMetaContext";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -331,6 +332,8 @@ export default function AdminConfiguracionPage() {
           cotizaciones pendientes y solicitudes nuevas.
         </div>
       </Card>
+
+      <ChangePasswordCard />
     </div>
   );
 }

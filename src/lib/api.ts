@@ -125,6 +125,7 @@ const humanizeError = (message: string, status: number, code?: string) => {
     invalid_credentials: "Correo o contraseña inválidos.",
     invalid_password_reset_token: "El enlace para restablecer contraseña no es válido o ya expiró.",
     password_too_short: "La contraseña debe tener al menos 8 caracteres.",
+    invalid_current_password: "La contraseña actual no es correcta.",
     invalid_profile_type: "El tipo de membresía solicitado no es válido.",
     membership_request_already_pending: "Ya tienes una solicitud de membresía pendiente.",
     payment_proof_required: "Debes subir tu comprobante de pago.",
@@ -346,6 +347,13 @@ export async function resetPassword(token: string, password: string) {
     { method: "POST", body: JSON.stringify({ token, password }) },
     false
   );
+}
+
+export async function changePassword(currentPassword: string, newPassword: string) {
+  return request<{ ok: boolean }>("/auth/change-password", {
+    method: "POST",
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
 }
 
 export async function resendVerification(payload: { email?: string; token?: string }) {

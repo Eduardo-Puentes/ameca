@@ -52,7 +52,6 @@ export function Sidebar({
             <div className="text-lg font-semibold text-[var(--ink)]">Plataforma</div>
           </div>
         </Link>
-        <div className="mt-3 text-sm text-[var(--muted)]">{brand.tagline}</div>
       </div>
       <nav className="flex flex-1 flex-col gap-2">
         {items.map((item) => {

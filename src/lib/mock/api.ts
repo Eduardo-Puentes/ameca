@@ -187,6 +187,17 @@ export async function resetPassword(_token: string, password: string) {
   return { ok: true };
 }
 
+export async function changePassword(currentPassword: string, newPassword: string) {
+  await wait(300);
+  if (!currentPassword) {
+    throw new Error("La contraseña actual no es correcta.");
+  }
+  if (newPassword.length < 8) {
+    throw new Error("La contraseña debe tener al menos 8 caracteres.");
+  }
+  return { ok: true };
+}
+
 export async function resendVerification() {
   await wait(300);
   return {
@@ -390,6 +401,11 @@ export async function createAdminUser(payload: AdminUserCreatePayload): Promise<
     role: payload.role,
     tempPassword: "ChangeMe123!",
   };
+}
+
+export async function resetAdminUserPassword() {
+  await wait(300);
+  return { ok: true, tempPassword: "ChangeMe123!" };
 }
 
 export async function updateMember(id: string, payload: MemberUpdatePayload) {

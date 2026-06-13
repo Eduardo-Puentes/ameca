@@ -23,6 +23,7 @@ export const authRegister = pick(api.authRegister, mock.authRegister);
 export const authLogout = pick(api.authLogout);
 export const requestPasswordReset = pick(api.requestPasswordReset, mock.requestPasswordReset);
 export const resetPassword = pick(api.resetPassword, mock.resetPassword);
+export const changePassword = pick(api.changePassword, mock.changePassword);
 export const resendVerification = pick(api.resendVerification, mock.resendVerification);
 export const verifyEmail = pick(api.verifyEmail);
 export const authMe: typeof api.authMe = () => {
@@ -63,7 +64,7 @@ export const listMembers = pick(api.listMembers, mock.listMembers);
 export const listAdminUsers = pick(api.listAdminUsers);
 export const createAdminUser = pick(api.createAdminUser, mock.createAdminUser);
 export const updateAdminUser = pick(api.updateAdminUser);
-export const resetAdminUserPassword = pick(api.resetAdminUserPassword);
+export const resetAdminUserPassword = pick(api.resetAdminUserPassword, mock.resetAdminUserPassword);
 export const deleteAdminUser = pick(api.deleteAdminUser);
 export const listMyPresentations = pick(api.listMyPresentations, mock.listMyPresentations);
 export const uploadPresentation = pick(api.uploadPresentation, mock.uploadPresentation);

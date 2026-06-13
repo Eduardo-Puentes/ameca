@@ -24,6 +24,7 @@ const expectedColumns = [
   "Fecha de inicio",
   "Correo",
   "Perfil",
+  "Grado académico",
 ];
 
 const profileValues = [
@@ -31,6 +32,22 @@ const profileValues = [
   "student",
   "associated_professional",
   "associated_student",
+];
+
+const academicDegreeValues = [
+  "doctorado",
+  "maestria",
+  "licenciatura",
+  "bachiller",
+  "other",
+];
+
+const dateFormats = [
+  "DD/MM/YYYY",
+  "DD-MM-YYYY",
+  "YYYY-MM-DD",
+  "MM/DD/YYYY",
+  "MM-DD-YYYY",
 ];
 
 function ResultStat({
@@ -226,7 +243,7 @@ export default function ImportMembersPage() {
             </div>
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-[1fr_0.8fr]">
+          <div className="grid gap-4 lg:grid-cols-[1fr_0.8fr_0.8fr]">
             <div>
               <div className="mb-2 text-xs uppercase text-[var(--muted)]">Columnas</div>
               <div className="flex flex-wrap gap-2">
@@ -244,6 +261,28 @@ export default function ImportMembersPage() {
                   </Badge>
                 ))}
               </div>
+            </div>
+            <div>
+              <div className="mb-2 text-xs uppercase text-[var(--muted)]">Grado académico</div>
+              <div className="flex flex-wrap gap-2">
+                {academicDegreeValues.map((value) => (
+                  <Badge key={value} tone="info">
+                    {value}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <div className="mb-2 text-xs uppercase text-[var(--muted)]">Formato de fecha</div>
+            <div className="flex flex-wrap gap-2">
+              {dateFormats.map((value) => (
+                <Badge key={value}>{value}</Badge>
+              ))}
+            </div>
+            <div className="mt-2 text-xs text-[var(--muted)]">
+              Para Fecha de inicio. También se aceptan celdas de fecha nativas de Excel.
             </div>
           </div>
 
