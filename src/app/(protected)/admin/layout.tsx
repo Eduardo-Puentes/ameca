@@ -11,6 +11,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const { meta } = usePageMeta();
   const loadEvents = useAppStore((state) => state.loadEvents);
   const loadMembers = useAppStore((state) => state.loadMembers);
+  const role = useAppStore((state) => state.role);
+  const navItems =
+    role === "superadmin"
+      ? adminNav
+      : adminNav.filter((item) => item.href !== "/admin/administradores");
 
   useEffect(() => {
     loadEvents();
@@ -23,7 +28,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         title={meta.title}
         subtitle={meta.subtitle}
         breadcrumb={meta.breadcrumb}
-        navItems={adminNav}
+        navItems={navItems}
       >
         {children}
       </AppShell>

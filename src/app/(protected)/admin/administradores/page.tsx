@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { Copy, KeyRound } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageMetaContext";
 import { Card } from "@/components/ui/Card";
 import { FormField } from "@/components/ui/FormField";
@@ -8,9 +9,16 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Button } from "@/components/ui/Button";
 import { ConfirmActionModal } from "@/components/ui/ConfirmActionModal";
+import { Modal } from "@/components/ui/Modal";
 import { useToastStore } from "@/components/ui/Toast";
 import { DataTable } from "@/components/ui/DataTable";
-import { createAdminUser, deleteAdminUser, listAdminUsers } from "@/lib/data";
+import { RoleGuard } from "@/components/guards/RoleGuard";
+import {
+  createAdminUser,
+  deleteAdminUser,
+  listAdminUsers,
+  resetAdminUserPassword,
+} from "@/lib/data";
 import type { AdminRole, AdminUser } from "@/lib/types";
 
 const roleLabels: Record<AdminRole, string> = {
@@ -40,7 +48,15 @@ const roleSections: Array<{ role: AdminRole; title: string; description: string;
   },
 ];
 
-export default function AdminAdministradoresPage() {
+type PasswordModalState = {
+  open: boolean;
+  title: string;
+  name: string;
+  email: string;
+  password: string;
+};
+
+function AdminAdministradoresContent() {
   const pushToast = useToastStore((state) => state.pushToast);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -49,6 +65,14 @@ export default function AdminAdministradoresPage() {
   const [admins, setAdmins] = useState<AdminUser[]>([]);
   const [adminsLoading, setAdminsLoading] = useState(false);
   const [adminToDelete, setAdminToDelete] = useState<AdminUser | null>(null);
+  const [resettingAdminId, setResettingAdminId] = useState<string | null>(null);
+  const [passwordModal, setPasswordModal] = useState<PasswordModalState>({
+    open: false,
+    title: "",
+    name: "",
+    email: "",
+    password: "",
+  });
 
   useEffect(() => {
     const loadAdminUsers = async () => {
@@ -103,11 +127,23 @@ export default function AdminAdministradoresPage() {
     {
       header: "Acciones",
       accessor: "actions",
-      className: "w-32 px-3 py-4 text-right",
+      className: "w-56 px-3 py-4 text-right",
       render: (admin: AdminUser) => (
-        <Button size="sm" variant="danger" onClick={() => setAdminToDelete(admin)}>
-          Eliminar
-        </Button>
+        <div className="flex justify-end gap-2">
+          <Button
+            size="sm"
+            variant="secondary"
+            loading={resettingAdminId === admin.id}
+            loadingText="Generando..."
+            onClick={() => handlePasswordReset(admin)}
+          >
+            <KeyRound className="h-4 w-4" />
+            Contraseña
+          </Button>
+          <Button size="sm" variant="danger" onClick={() => setAdminToDelete(admin)}>
+            Eliminar
+          </Button>
+        </div>
       ),
     },
   ];
@@ -124,13 +160,14 @@ export default function AdminAdministradoresPage() {
         email: email.trim(),
         role,
       });
-      pushToast({
+      setPasswordModal({
+        open: true,
         title: "Cuenta creada",
-        message: result.tempPassword
-          ? `Contraseña temporal: ${result.tempPassword}`
-          : "El acceso se enviará por correo.",
-        tone: "success",
+        name: fullName.trim(),
+        email: result.email,
+        password: result.tempPassword ?? "",
       });
+      pushToast({ title: "Cuenta creada", tone: "success" });
       setFullName("");
       setEmail("");
       setRole("admin");
@@ -142,6 +179,50 @@ export default function AdminAdministradoresPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePasswordReset = async (admin: AdminUser) => {
+    try {
+      setResettingAdminId(admin.id);
+      const result = await resetAdminUserPassword(admin.id);
+      setPasswordModal({
+        open: true,
+        title: "Contraseña generada",
+        name: admin.fullName,
+        email: admin.email,
+        password: result.tempPassword ?? "",
+      });
+      pushToast({ title: "Contraseña generada", tone: "success" });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "No se pudo generar la contraseña.";
+      pushToast({ title: "Error al generar", message, tone: "danger" });
+    } finally {
+      setResettingAdminId(null);
+    }
+  };
+
+  const handleCopyPassword = async () => {
+    if (!passwordModal.password) return;
+    try {
+      await navigator.clipboard.writeText(passwordModal.password);
+      pushToast({ title: "Contraseña copiada", tone: "success" });
+    } catch {
+      pushToast({
+        title: "No se pudo copiar",
+        message: "Selecciona la contraseña manualmente.",
+        tone: "warning",
+      });
+    }
+  };
+
+  const closePasswordModal = () => {
+    setPasswordModal({
+      open: false,
+      title: "",
+      name: "",
+      email: "",
+      password: "",
+    });
   };
 
   return (
@@ -237,6 +318,51 @@ export default function AdminAdministradoresPage() {
         successToast={{ title: "Cuenta eliminada", tone: "success" }}
         errorTitle="Error al eliminar"
       />
+
+      <Modal
+        open={passwordModal.open}
+        onClose={closePasswordModal}
+        title={passwordModal.title}
+      >
+        <div className="space-y-4">
+          <div className="text-sm text-[var(--muted)]">
+            Comparte esta contraseña temporal directamente con la persona de la cuenta.
+            Solo se mostrará en esta ventana.
+          </div>
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
+            <div className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">
+              Cuenta
+            </div>
+            <div className="mt-2 font-semibold text-[var(--ink)]">{passwordModal.name}</div>
+            <div className="text-sm text-[var(--muted)]">{passwordModal.email}</div>
+          </div>
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
+            <div className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">
+              Contraseña temporal
+            </div>
+            <div className="mt-2 select-all break-all font-mono text-lg font-semibold text-[var(--ink)]">
+              {passwordModal.password}
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="secondary" onClick={closePasswordModal}>
+              Cerrar
+            </Button>
+            <Button onClick={handleCopyPassword} disabled={!passwordModal.password}>
+              <Copy className="h-4 w-4" />
+              Copiar contraseña
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
+  );
+}
+
+export default function AdminAdministradoresPage() {
+  return (
+    <RoleGuard allowed={["superadmin"]}>
+      <AdminAdministradoresContent />
+    </RoleGuard>
   );
 }

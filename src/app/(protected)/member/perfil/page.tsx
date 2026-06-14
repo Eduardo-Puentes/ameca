@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { PageHeader } from "@/components/layout/PageMetaContext";
+import { ChangePasswordCard } from "@/components/account/ChangePasswordCard";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
@@ -12,7 +13,6 @@ import { useAppStore } from "@/store";
 import {
   formatAcademicDegree,
   formatDate,
-  formatInstitution,
   formatMemberState,
   formatProfileType,
 } from "@/lib/utils";
@@ -30,7 +30,7 @@ export default function MemberPerfilPage() {
     return members.find((item) => item.email === user?.email) ?? members[0];
   }, [members, user]);
 
-  const [form, setForm] = useState({ fullName: "", email: "" });
+  const [form, setForm] = useState({ fullName: "", email: "", institution: "" });
   const [saving, setSaving] = useState(false);
   const expirationDate = formatDate(member?.expirationDate, "Sin vencimiento");
 
@@ -40,6 +40,7 @@ export default function MemberPerfilPage() {
       setSaving(true);
       await updateMemberProfile(member.id, {
         fullName: form.fullName || member.fullName,
+        institution: form.institution || member.institution || "",
       });
       pushToast({ title: "Perfil actualizado", tone: "success" });
     } catch (error) {
@@ -75,7 +76,16 @@ export default function MemberPerfilPage() {
                 disabled
               />
             </FormField>
-            <div className="grid gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-3 text-sm md:grid-cols-3">
+            <FormField label="Institución / universidad">
+              <Input
+                value={form.institution || member?.institution || ""}
+                onChange={(event) =>
+                  setForm((prev) => ({ ...prev, institution: event.target.value }))
+                }
+                placeholder="Ej. Universidad de Guadalajara"
+              />
+            </FormField>
+            <div className="grid gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-3 text-sm md:grid-cols-2">
               <div>
                 <div className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">
                   Grado
@@ -90,14 +100,6 @@ export default function MemberPerfilPage() {
                 </div>
                 <div className="mt-1 font-semibold text-[var(--ink)]">
                   {formatMemberState(member?.state)}
-                </div>
-              </div>
-              <div>
-                <div className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">
-                  Institución
-                </div>
-                <div className="mt-1 font-semibold text-[var(--ink)]">
-                  {formatInstitution(member?.institution)}
                 </div>
               </div>
             </div>
@@ -129,6 +131,8 @@ export default function MemberPerfilPage() {
           </div>
         </Card>
       </div>
+
+      <ChangePasswordCard />
     </div>
   );
 }

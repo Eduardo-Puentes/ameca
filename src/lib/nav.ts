@@ -38,4 +38,5 @@ export const memberNav: NavItem[] = [
 export const staffNav: NavItem[] = [
   { label: "Escáner", href: "/staff/escaner", icon: QrCode },
   { label: "Validaciones", href: "/staff/validaciones", icon: FileCheck },
+  { label: "Configuración", href: "/staff/configuracion", icon: Settings },
 ];
