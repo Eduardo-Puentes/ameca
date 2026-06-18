@@ -11,11 +11,13 @@ import { Textarea } from "@/components/ui/Textarea";
 import { useToastStore } from "@/components/ui/Toast";
 import {
   approveEventRequest,
+  approveEventRequestPayment,
   denyEventRequest,
   getEventRequest,
   getEvent,
 } from "@/lib/data";
 import type { Event, EventRequest } from "@/lib/types";
+import { useAppStore } from "@/store";
 
 const formatDate = (value?: number | string | null) => {
   if (!value) return "Sin registro";
@@ -30,6 +32,7 @@ export default function AdminEventRequestDetailPage() {
   const eventId = params?.eventId as string;
   const requestId = params?.requestId as string;
   const pushToast = useToastStore((state) => state.pushToast);
+  const role = useAppStore((state) => state.role);
   const [request, setRequest] = useState<EventRequest | null>(null);
   const [event, setEvent] = useState<Event | null>(null);
   const [comment, setComment] = useState("");
@@ -91,6 +94,21 @@ export default function AdminEventRequestDetailPage() {
     }
   };
 
+  const handleApprovePayment = async () => {
+    if (!request) return;
+    try {
+      setSaving(true);
+      await approveEventRequestPayment(request.id, comment.trim() || undefined);
+      await refresh();
+      pushToast({ title: "Pago aprobado", tone: "success" });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "No se pudo aprobar el pago.";
+      pushToast({ title: "Error", message, tone: "danger" });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleReject = async () => {
     if (!request) return;
     if (!comment.trim()) {
@@ -129,6 +147,9 @@ export default function AdminEventRequestDetailPage() {
         ]
       : [];
   const canDecideRequest = request?.status === "pending";
+  const isPaidRequest = (request?.calculatedCost ?? 0) > 0;
+  const canApprovePayment = isPaidRequest && !request?.paymentApprovedAt && (role === "treasurer" || role === "superadmin");
+  const canApproveRequest = !isPaidRequest || Boolean(request?.paymentApprovedAt);
 
   return (
     <div className="space-y-6">
@@ -195,12 +216,22 @@ export default function AdminEventRequestDetailPage() {
                 <div className="mt-2 text-[var(--ink)]">{formatDate(request.createdAt)}</div>
               </div>
               <div className="rounded-xl bg-[var(--surface-2)] p-4 text-sm text-[var(--muted)]">
-                <div className="text-xs uppercase tracking-[0.2em]">Decidida</div>
-                <div className="mt-2 text-[var(--ink)]">{formatDate(request.decidedAt)}</div>
+                <div className="text-xs uppercase tracking-[0.2em]">Pago</div>
+                <div className="mt-2 text-[var(--ink)]">
+                  {isPaidRequest
+                    ? request.paymentApprovedAt
+                      ? `Aprobado por ${request.paymentApprovedByName || "tesorería"}`
+                      : "Pendiente de tesorería"
+                    : "No requiere aprobación de pago"}
+                </div>
               </div>
               <div className="rounded-xl bg-[var(--surface-2)] p-4 text-sm text-[var(--muted)]">
-                <div className="text-xs uppercase tracking-[0.2em]">Revisó</div>
-                <div className="mt-2 text-[var(--ink)]">{request.decidedByName || "Pendiente"}</div>
+                <div className="text-xs uppercase tracking-[0.2em]">Solicitud</div>
+                <div className="mt-2 text-[var(--ink)]">
+                  {request.requestApprovedAt
+                    ? `Aprobada por ${request.requestApprovedByName || "administración"}`
+                    : "Pendiente de administración"}
+                </div>
               </div>
             </div>
           </Card>
@@ -266,7 +297,9 @@ export default function AdminEventRequestDetailPage() {
               <div className="text-lg font-semibold text-[var(--ink)]">Decisión</div>
               <div className="text-sm text-[var(--muted)]">
                 {canDecideRequest
-                  ? "Registra el comentario de revisión. Para rechazar, el motivo es obligatorio."
+                  ? isPaidRequest && !request.paymentApprovedAt
+                    ? "Primero debe aprobar pago tesorería o superadmin. Después cualquier perfil administrativo puede aprobar la solicitud."
+                    : "Registra el comentario de revisión. Para rechazar, el motivo es obligatorio."
                   : "Esta solicitud ya fue decidida y no puede cambiar de estado."}
               </div>
             </div>
@@ -280,9 +313,16 @@ export default function AdminEventRequestDetailPage() {
 
             {canDecideRequest ? (
               <div className="flex flex-wrap justify-end gap-2">
-                <Button onClick={handleApprove} loading={saving} loadingText="Procesando...">
-                  Aprobar
-                </Button>
+                {canApprovePayment ? (
+                  <Button variant="secondary" onClick={handleApprovePayment} loading={saving} loadingText="Procesando...">
+                    Aprobar pago
+                  </Button>
+                ) : null}
+                {canApproveRequest ? (
+                  <Button onClick={handleApprove} loading={saving} loadingText="Procesando...">
+                    Aprobar solicitud
+                  </Button>
+                ) : null}
                 <Button
                   variant="danger"
                   onClick={handleReject}

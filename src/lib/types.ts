@@ -155,6 +155,12 @@ export type EventRequest = {
   decidedAt?: number | string | null;
   decidedById?: string | null;
   decidedByName?: string;
+  paymentApprovedAt?: number | string | null;
+  paymentApprovedById?: string | null;
+  paymentApprovedByName?: string;
+  requestApprovedAt?: number | string | null;
+  requestApprovedById?: string | null;
+  requestApprovedByName?: string;
   paymentProofs?: PaymentProof[];
 };
 
@@ -301,6 +307,12 @@ export type MembershipRequest = {
   decidedAt?: number | string | null;
   decidedById?: string | null;
   decidedByName?: string;
+  paymentApprovedAt?: number | string | null;
+  paymentApprovedById?: string | null;
+  paymentApprovedByName?: string;
+  requestApprovedAt?: number | string | null;
+  requestApprovedById?: string | null;
+  requestApprovedByName?: string;
   paymentProofs?: PaymentProof[];
 };
 
@@ -326,6 +338,7 @@ export type MembershipPrices = {
 
 export type SectionDiscountSettings = {
   thresholdCount: number;
+  higherThresholdCount: number;
   belowThresholdPercent: number;
   atOrAboveThresholdPercent: number;
   allowedDiscountPercents: number[];

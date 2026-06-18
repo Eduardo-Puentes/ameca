@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/Textarea";
 import { useToastStore } from "@/components/ui/Toast";
 import {
   approveMemberRequest,
+  approveMemberRequestPayment,
   denyMemberRequest,
   getMemberRequest,
 } from "@/lib/data";
@@ -35,7 +36,7 @@ export default function AdminMembershipRequestDetailPage() {
   const [request, setRequest] = useState<MembershipRequest | null>(null);
   const [comment, setComment] = useState("");
   const [loading, setLoading] = useState(true);
-  const [decisionModal, setDecisionModal] = useState<"approve" | "reject" | null>(null);
+  const [decisionModal, setDecisionModal] = useState<"approve-payment" | "approve-request" | "reject" | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -79,6 +80,12 @@ export default function AdminMembershipRequestDetailPage() {
     await refresh();
   };
 
+  const handleApprovePayment = async () => {
+    if (!request) return;
+    await approveMemberRequestPayment(request.id, comment.trim() || undefined);
+    await refresh();
+  };
+
   const handleReject = async () => {
     if (!request) return;
     if (!comment.trim()) {
@@ -94,7 +101,8 @@ export default function AdminMembershipRequestDetailPage() {
   const isProofImage = /\.(png|jpe?g|webp)$/i.test(proofUrl);
   const isSchoolIdImage = /\.(png|jpe?g|webp)$/i.test(schoolIdUrl);
   const isPaidRequest = (request?.upgradeCost ?? 0) > 0;
-  const canApproveRequest = !isPaidRequest || role === "treasurer" || role === "superadmin";
+  const canApprovePayment = isPaidRequest && !request?.paymentApprovedAt && (role === "treasurer" || role === "superadmin");
+  const canApproveRequest = !isPaidRequest || Boolean(request?.paymentApprovedAt);
   const canDecideRequest = request?.status === "pending";
 
   return (
@@ -158,9 +166,13 @@ export default function AdminMembershipRequestDetailPage() {
                 <div className="mt-2 text-[var(--ink)]">{formatDate(request.createdAt)}</div>
               </div>
               <div className="rounded-xl bg-[var(--surface-2)] p-4 text-sm text-[var(--muted)]">
-                <div className="text-xs uppercase tracking-[0.2em]">Estado</div>
+                <div className="text-xs uppercase tracking-[0.2em]">Pago</div>
                 <div className="mt-2">
-                  <StatusBadge status={request.status} />
+                  {isPaidRequest
+                    ? request.paymentApprovedAt
+                      ? `Aprobado por ${request.paymentApprovedByName || "tesorería"}`
+                      : "Pendiente de tesorería"
+                    : "No requiere aprobación de pago"}
                 </div>
               </div>
             </div>
@@ -248,17 +260,22 @@ export default function AdminMembershipRequestDetailPage() {
               <div className="text-sm text-[var(--muted)]">
                 {!canDecideRequest
                   ? "Esta solicitud ya fue decidida y no puede cambiar de estado."
-                  : isPaidRequest && !canApproveRequest
-                  ? "Esta solicitud tiene costo y requiere aprobación de tesorería o superadmin."
+                  : isPaidRequest && !request.paymentApprovedAt
+                  ? "Primero debe aprobar pago tesorería o superadmin. Después cualquier perfil administrativo puede aprobar la solicitud."
                   : "Usa este espacio para registrar el comentario que acompañará la aprobación o el rechazo."}
               </div>
             </div>
 
             {canDecideRequest ? (
               <div className="flex flex-wrap justify-end gap-2">
+                {canApprovePayment ? (
+                  <Button variant="secondary" onClick={() => setDecisionModal("approve-payment")}>
+                    Aprobar pago
+                  </Button>
+                ) : null}
                 {canApproveRequest ? (
-                  <Button onClick={() => setDecisionModal("approve")}>
-                    Aprobar
+                  <Button onClick={() => setDecisionModal("approve-request")}>
+                    Aprobar solicitud
                   </Button>
                 ) : null}
                 <Button
@@ -272,7 +289,30 @@ export default function AdminMembershipRequestDetailPage() {
           </Card>
 
           <ConfirmActionModal
-            open={decisionModal === "approve"}
+            open={decisionModal === "approve-payment"}
+            title="Aprobar pago"
+            description={
+              <>
+                Confirma la aprobación de pago de{" "}
+                <span className="font-medium text-[var(--ink)]">{request.memberName}</span>.
+              </>
+            }
+            confirmLabel="Aprobar pago"
+            confirmVariant="primary"
+            onClose={() => setDecisionModal(null)}
+            onConfirm={handleApprovePayment}
+            successToast={{ title: "Pago aprobado", tone: "success" }}
+            errorTitle="No se pudo aprobar el pago"
+          >
+            <Textarea
+              placeholder="Comentario opcional para el historial"
+              value={comment}
+              onChange={(event) => setComment(event.target.value)}
+            />
+          </ConfirmActionModal>
+
+          <ConfirmActionModal
+            open={decisionModal === "approve-request"}
             title="Aprobar solicitud"
             description={
               <>

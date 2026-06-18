@@ -129,6 +129,12 @@ const humanizeError = (message: string, status: number, code?: string) => {
     invalid_profile_type: "El tipo de membresía solicitado no es válido.",
     membership_request_already_pending: "Ya tienes una solicitud de membresía pendiente.",
     payment_proof_required: "Debes subir tu comprobante de pago.",
+    payment_approval_required: "Primero debe aprobar el pago tesorería o superadmin.",
+    payment_approval_not_required: "Esta solicitud no requiere aprobación de pago.",
+    invalid_email: "Correo inválido.",
+    section_invited_member_not_student: "Socio no es estudiante.",
+    section_student_membership_required:
+      "Solo socios con membresía de estudiante pueden usar secciones estudiantiles.",
     professional_revert_required:
       "Para cambiar tu membresía actual, primero solicita a administración que revierta tu cuenta a profesional.",
     same_profile_type: "El perfil solicitado debe ser distinto al actual.",
@@ -450,7 +456,7 @@ export async function getAdminSectionDiscounts(): Promise<SectionDiscountSetting
 export async function updateAdminSectionDiscounts(
   payload: Pick<
     SectionDiscountSettings,
-    "thresholdCount" | "belowThresholdPercent" | "atOrAboveThresholdPercent"
+    "thresholdCount" | "higherThresholdCount" | "belowThresholdPercent" | "atOrAboveThresholdPercent"
   >
 ): Promise<SectionDiscountSettings> {
   return request<SectionDiscountSettings>("/admin/section-discounts", {
@@ -595,9 +601,16 @@ export async function getMemberRequest(id: string): Promise<MembershipRequest> {
 }
 
 export async function approveMemberRequest(id: string, comments?: string) {
-  return request<MembershipRequest>(`/admin/membership-requests/${id}`, {
-    method: "PATCH",
-    body: JSON.stringify({ status: "approved", comments }),
+  return request<MembershipRequest>(`/admin/membership-requests/${id}/approve-request`, {
+    method: "POST",
+    body: JSON.stringify({ comments }),
+  });
+}
+
+export async function approveMemberRequestPayment(id: string, comments?: string) {
+  return request<MembershipRequest>(`/admin/membership-requests/${id}/approve-payment`, {
+    method: "POST",
+    body: JSON.stringify({ comments }),
   });
 }
 
@@ -705,9 +718,16 @@ export async function getMyEventRequest(id: string): Promise<EventRequest> {
 }
 
 export async function approveEventRequest(id: string, comments?: string) {
-  return request<EventRequest>(`/admin/event-requests/${id}`, {
-    method: "PATCH",
-    body: JSON.stringify({ status: "approved", comments }),
+  return request<EventRequest>(`/admin/event-requests/${id}/approve-request`, {
+    method: "POST",
+    body: JSON.stringify({ comments }),
+  });
+}
+
+export async function approveEventRequestPayment(id: string, comments?: string) {
+  return request<EventRequest>(`/admin/event-requests/${id}/approve-payment`, {
+    method: "POST",
+    body: JSON.stringify({ comments }),
   });
 }
 
@@ -870,10 +890,10 @@ export async function listSectionInvites(sectionId: string): Promise<SectionInvi
   return request<SectionInvite[]>(`/sections/${sectionId}/invites`);
 }
 
-export async function createSectionInvite(sectionId: string, memberId: string): Promise<SectionInvite> {
+export async function createSectionInvite(sectionId: string, invitedEmail: string): Promise<SectionInvite> {
   return request<SectionInvite>(`/sections/${sectionId}/invites`, {
     method: "POST",
-    body: JSON.stringify({ invitedMemberId: memberId }),
+    body: JSON.stringify({ invitedEmail }),
   });
 }
 

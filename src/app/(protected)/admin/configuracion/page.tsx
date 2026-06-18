@@ -26,6 +26,7 @@ export default function AdminConfiguracionPage() {
   const [associatedProfessional, setAssociatedProfessional] = useState("");
   const [associatedStudent, setAssociatedStudent] = useState("");
   const [thresholdCount, setThresholdCount] = useState("");
+  const [higherThresholdCount, setHigherThresholdCount] = useState("");
   const [belowThresholdPercent, setBelowThresholdPercent] = useState("5");
   const [atOrAboveThresholdPercent, setAtOrAboveThresholdPercent] = useState("25");
   const [loadingPrices, setLoadingPrices] = useState(true);
@@ -64,6 +65,7 @@ export default function AdminConfiguracionPage() {
           if (!active) return;
           setSectionDiscounts(result);
           setThresholdCount(String(result.thresholdCount));
+          setHigherThresholdCount(String(result.higherThresholdCount));
           setBelowThresholdPercent(String(result.belowThresholdPercent));
           setAtOrAboveThresholdPercent(String(result.atOrAboveThresholdPercent));
         })
@@ -121,6 +123,7 @@ export default function AdminConfiguracionPage() {
 
   const handleSaveDiscounts = async () => {
     const nextThreshold = Number(thresholdCount);
+    const nextHigherThreshold = Number(higherThresholdCount);
     const nextBelow = Number(belowThresholdPercent);
     const nextAtOrAbove = Number(atOrAboveThresholdPercent);
     if (!Number.isInteger(nextThreshold) || nextThreshold < 1) {
@@ -131,10 +134,18 @@ export default function AdminConfiguracionPage() {
       });
       return;
     }
-    if (nextAtOrAbove < nextBelow) {
+    if (!Number.isInteger(nextHigherThreshold) || nextHigherThreshold <= nextThreshold) {
+      pushToast({
+        title: "Cortes inválidos",
+        message: "El segundo corte debe ser un entero mayor al primer corte.",
+        tone: "danger",
+      });
+      return;
+    }
+    if (nextAtOrAbove <= nextBelow) {
       pushToast({
         title: "Descuentos inválidos",
-        message: "El descuento superior debe ser mayor o igual al descuento inferior.",
+        message: "El segundo descuento debe ser mayor al primer descuento.",
         tone: "danger",
       });
       return;
@@ -144,6 +155,7 @@ export default function AdminConfiguracionPage() {
       setSavingDiscounts(true);
       const result = await updateAdminSectionDiscounts({
         thresholdCount: nextThreshold,
+        higherThresholdCount: nextHigherThreshold,
         belowThresholdPercent: nextBelow,
         atOrAboveThresholdPercent: nextAtOrAbove,
       });
@@ -266,24 +278,43 @@ export default function AdminConfiguracionPage() {
           </div>
         ) : sectionDiscounts ? (
           <div className="space-y-4">
-            <label className="block max-w-xs space-y-2 text-sm text-[var(--ink)]">
-              <span>Corte de participantes</span>
-              <Input
-                type="number"
-                min={1}
-                step={1}
-                value={thresholdCount}
-                onChange={(event) => setThresholdCount(event.target.value)}
-              />
-            </label>
-
             <div className="grid gap-3 lg:grid-cols-2">
+              <label className="block space-y-2 text-sm text-[var(--ink)]">
+                <span>Primer corte de registros</span>
+                <Input
+                  type="number"
+                  min={1}
+                  step={1}
+                  value={thresholdCount}
+                  onChange={(event) => setThresholdCount(event.target.value)}
+                />
+              </label>
+              <label className="block space-y-2 text-sm text-[var(--ink)]">
+                <span>Segundo corte de registros</span>
+                <Input
+                  type="number"
+                  min={2}
+                  step={1}
+                  value={higherThresholdCount}
+                  onChange={(event) => setHigherThresholdCount(event.target.value)}
+                />
+              </label>
+            </div>
+
+            <div className="grid gap-3 lg:grid-cols-3">
               <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-4">
                 <div className="text-sm font-medium text-[var(--ink)]">
-                  Menos de {thresholdCount || "0"} participantes
+                  Menos de {thresholdCount || "0"} registros
+                </div>
+                <div className="mt-3 text-sm font-semibold text-[var(--ink)]">0%</div>
+              </div>
+
+              <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-4">
+                <div className="text-sm font-medium text-[var(--ink)]">
+                  Desde {thresholdCount || "0"} y antes de {higherThresholdCount || "0"} registros
                 </div>
                 <label className="mt-3 block space-y-2 text-sm text-[var(--ink)]">
-                  <span>Descuento</span>
+                  <span>Primer descuento</span>
                   <Select
                     value={belowThresholdPercent}
                     onChange={(event) => setBelowThresholdPercent(event.target.value)}
@@ -299,10 +330,10 @@ export default function AdminConfiguracionPage() {
 
               <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-4">
                 <div className="text-sm font-medium text-[var(--ink)]">
-                  Desde {thresholdCount || "0"} participantes
+                  Desde {higherThresholdCount || "0"} registros
                 </div>
                 <label className="mt-3 block space-y-2 text-sm text-[var(--ink)]">
-                  <span>Descuento</span>
+                  <span>Segundo descuento</span>
                   <Select
                     value={atOrAboveThresholdPercent}
                     onChange={(event) => setAtOrAboveThresholdPercent(event.target.value)}

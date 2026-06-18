@@ -20,7 +20,6 @@ import {
   listMySectionInvites,
   listMySections,
   listSectionInvites,
-  searchUsersForSection,
 } from "@/lib/data";
 import type { Member, MySection, SectionInvite } from "@/lib/types";
 import { formatDateTime } from "@/lib/utils";
@@ -44,10 +43,7 @@ export default function MemberSeccionesPage() {
   const pushToast = useToastStore((state) => state.pushToast);
   const [mySections, setMySections] = useState<MySection[]>([]);
   const [selectedSectionId, setSelectedSectionId] = useState("");
-  const [inviteSearch, setInviteSearch] = useState("");
-  const [inviteResults, setInviteResults] = useState<Member[]>([]);
-  const [inviteSearchLoading, setInviteSearchLoading] = useState(false);
-  const [selectedInviteMember, setSelectedInviteMember] = useState<Member | null>(null);
+  const [inviteEmail, setInviteEmail] = useState("");
   const [invitesLoading, setInvitesLoading] = useState(false);
   const [inviteActionLoading, setInviteActionLoading] = useState(false);
   const [inviteResponseModal, setInviteResponseModal] = useState<{
@@ -104,32 +100,12 @@ export default function MemberSeccionesPage() {
   useEffect(() => {
     if (!selectedSectionId) return;
     setInvitesLoading(true);
-    setInviteSearch("");
-    setInviteResults([]);
-    setSelectedInviteMember(null);
+    setInviteEmail("");
     listSectionInvites(selectedSectionId)
       .then((data) => setSectionInvites(data))
       .catch(() => setSectionInvites([]))
       .finally(() => setInvitesLoading(false));
   }, [selectedSectionId]);
-
-  useEffect(() => {
-    if (!selectedSectionId || inviteSearch.trim().length < 2 || selectedInviteMember) {
-      setInviteResults([]);
-      setInviteSearchLoading(false);
-      return;
-    }
-
-    const timeout = window.setTimeout(() => {
-      setInviteSearchLoading(true);
-      searchUsersForSection(selectedSectionId, inviteSearch.trim())
-        .then((data) => setInviteResults(data))
-        .catch(() => setInviteResults([]))
-        .finally(() => setInviteSearchLoading(false));
-    }, 250);
-
-    return () => window.clearTimeout(timeout);
-  }, [inviteSearch, selectedInviteMember, selectedSectionId]);
 
   useEffect(() => {
     listMySectionInvites()
@@ -138,24 +114,25 @@ export default function MemberSeccionesPage() {
   }, []);
 
   const sendInvite = async () => {
-    if (!selectedSectionId || !selectedInviteMember) return;
+    if (!selectedSectionId || !inviteEmail.trim()) return;
     setInviteActionLoading(true);
     try {
-      await createSectionInvite(selectedSectionId, selectedInviteMember.id);
+      await createSectionInvite(selectedSectionId, inviteEmail.trim());
       const updatedInvites = await listSectionInvites(selectedSectionId);
       setSectionInvites(updatedInvites);
-      setInviteSearch("");
-      setInviteResults([]);
-      setSelectedInviteMember(null);
+      setInviteEmail("");
       pushToast({
-        title: "Invitación enviada",
+        title: "Invitación exitosa",
         message: "La invitación quedó pendiente para el socio.",
         tone: "success",
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : "No se pudo enviar la invitación.";
+      const title = message.toLowerCase().includes("no es estudiante")
+        ? "Socio no es estudiante"
+        : "Correo inválido";
       pushToast({
-        title: "No fue posible invitar",
+        title,
         message,
         tone: "danger",
       });
@@ -371,57 +348,17 @@ export default function MemberSeccionesPage() {
                 ))}
               </select>
             </FormField>
-            <FormField label="Buscar socio">
-              <div className="relative">
-                <Input
-                  placeholder="Nombre o correo del socio"
-                  value={inviteSearch}
-                  onChange={(event) => {
-                    setInviteSearch(event.target.value);
-                    setSelectedInviteMember(null);
-                  }}
-                />
-                {selectedInviteMember ? (
-                  <div className="mt-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-3 text-sm">
-                    <div className="font-semibold text-[var(--ink)]">
-                      {selectedInviteMember.fullName}
-                    </div>
-                    <div className="text-[var(--muted)]">{selectedInviteMember.email}</div>
-                  </div>
-                ) : inviteSearch.trim().length >= 2 ? (
-                  <div className="absolute z-20 mt-2 max-h-64 w-full overflow-auto rounded-xl border border-[var(--border)] bg-[var(--surface)] shadow-[0_18px_40px_-28px_rgba(27,29,27,0.45)]">
-                    {inviteSearchLoading ? (
-                      <div className="p-3 text-sm text-[var(--muted)]">Buscando...</div>
-                    ) : inviteResults.length === 0 ? (
-                      <div className="p-3 text-sm text-[var(--muted)]">
-                        No hay socios disponibles con esa búsqueda.
-                      </div>
-                    ) : (
-                      inviteResults.map((result) => (
-                        <button
-                          key={result.id}
-                          type="button"
-                          className="block w-full px-3 py-2 text-left text-sm transition hover:bg-[var(--surface-2)]"
-                          onClick={() => {
-                            setSelectedInviteMember(result);
-                            setInviteSearch(`${result.fullName} · ${result.email}`);
-                            setInviteResults([]);
-                          }}
-                        >
-                          <span className="block font-semibold text-[var(--ink)]">
-                            {result.fullName}
-                          </span>
-                          <span className="block text-[var(--muted)]">{result.email}</span>
-                        </button>
-                      ))
-                    )}
-                  </div>
-                ) : null}
-              </div>
+            <FormField label="Correo del socio">
+              <Input
+                type="email"
+                placeholder="socio@correo.com"
+                value={inviteEmail}
+                onChange={(event) => setInviteEmail(event.target.value)}
+              />
             </FormField>
           </div>
           <div className="flex justify-end">
-            <Button onClick={sendInvite} disabled={inviteActionLoading || !selectedInviteMember}>
+            <Button onClick={sendInvite} disabled={inviteActionLoading || !inviteEmail.trim()}>
               Enviar invitación
             </Button>
           </div>
