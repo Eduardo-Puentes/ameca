@@ -11,6 +11,11 @@ export function cn(...classes: Array<string | false | null | undefined>) {
 
 type DateLike = number | string | null | undefined;
 
+const isEpochDay = (value: number) => {
+  const seconds = value >= 1_000_000_000_000 ? Math.floor(value / 1000) : value;
+  return seconds % 86_400 === 0;
+};
+
 const normalizeDate = (value: DateLike) => {
   if (value === null || value === undefined || value === "") return null;
 
@@ -44,7 +49,15 @@ export function formatDate(value: DateLike, fallback = "Sin fecha") {
   if (!parsed) {
     return value ? String(value) : fallback;
   }
-  return parsed.toLocaleDateString("es-MX");
+
+  const numeric =
+    typeof value === "number"
+      ? value
+      : typeof value === "string" && /^\d+$/.test(value.trim())
+        ? Number(value)
+        : null;
+  const options = numeric !== null && isEpochDay(numeric) ? { timeZone: "UTC" } : undefined;
+  return parsed.toLocaleDateString("es-MX", options);
 }
 
 export function formatDateTime(value: DateLike, fallback = "Sin fecha") {
@@ -73,7 +86,7 @@ export function formatSpeakerType(value: string | null | undefined) {
 export function formatProfileType(value: string | null | undefined, fallback = "Sin perfil") {
   if (!value) return fallback;
   const labels: Record<string, string> = {
-    professional: "Profesional",
+    professional: "Cuenta gratuita",
     student: "Estudiante",
     associated_professional: "Socio profesional",
     associated_student: "Socio estudiante",

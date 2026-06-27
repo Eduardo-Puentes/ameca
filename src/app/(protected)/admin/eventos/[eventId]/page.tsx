@@ -607,7 +607,7 @@ export default function AdminEventoDetallePage() {
           {formatDate(event.startDate)} • {event.duration} día(s) • Capacidad {event.capacity}
         </div>
         <div className="grid gap-2 border-t border-[var(--border)] pt-3 text-xs text-[var(--muted)] sm:grid-cols-2 lg:grid-cols-4">
-          <div>Profesional: {formatCurrency(event.profilePrices.professional)}</div>
+          <div>Cuenta gratuita: {formatCurrency(event.profilePrices.professional)}</div>
           <div>Estudiante: {formatCurrency(event.profilePrices.student)}</div>
           <div>Asoc. profesional: {formatCurrency(event.profilePrices.associatedProfessional)}</div>
           <div>Asoc. estudiante: {formatCurrency(event.profilePrices.associatedStudent)}</div>

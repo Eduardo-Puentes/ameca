@@ -51,7 +51,7 @@ export default function RegisterPage() {
     }
 
     try {
-      const result = await registerMember({
+      await registerMember({
         fullName: fullName.trim(),
         email: email.trim(),
         password,
@@ -60,20 +60,12 @@ export default function RegisterPage() {
         state,
         institution,
       });
-      if (result.emailError) {
-        pushToast({
-          title: "Cuenta creada",
-          message: "No se pudo enviar el correo de verificación. Contacta a administración para activar tu cuenta.",
-          tone: "warning",
-        });
-      } else {
-        pushToast({
-          title: "Registro exitoso",
-          message: "Revisa tu correo para verificar tu cuenta antes de iniciar sesión.",
-          tone: "success",
-        });
-      }
-      router.push("/check-email?type=verification");
+      pushToast({
+        title: "Registro exitoso",
+        message: "Tu cuenta está lista. Ya puedes iniciar sesión.",
+        tone: "success",
+      });
+      router.push("/login");
     } catch (error) {
       const message = error instanceof Error ? error.message : "No se pudo crear la cuenta.";
       pushToast({ title: "Registro fallido", message, tone: "danger" });
@@ -120,7 +112,7 @@ export default function RegisterPage() {
               />
             </FormField>
             <div className="grid gap-4 md:grid-cols-3">
-              <FormField label="Grado académico">
+              <FormField label="Último grado de estudios cursado">
                 <Select
                   value={academicDegree}
                   onChange={(event) => setAcademicDegree(event.target.value)}

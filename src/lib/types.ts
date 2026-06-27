@@ -434,6 +434,12 @@ export type MemberImportEmailFailure = {
   error: string;
 };
 
+export type MemberImportCsvFile = {
+  filename: string;
+  content: string;
+  rowCount: number;
+};
+
 export type MemberImportResult = {
   dryRun: boolean;
   totalRows: number;
@@ -447,6 +453,12 @@ export type MemberImportResult = {
   skippedRows: MemberImportRowSummary[];
   emailFailedRows: MemberImportEmailFailure[];
   issues: MemberImportIssue[];
+  excessRows?: number;
+  csvFiles?: {
+    excessRows?: MemberImportCsvFile;
+    invalidRows?: MemberImportCsvFile;
+    existingRows?: MemberImportCsvFile;
+  };
   maxRows: number;
 };
 

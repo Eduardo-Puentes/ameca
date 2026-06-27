@@ -17,15 +17,8 @@ import {
   getEvent,
 } from "@/lib/data";
 import type { Event, EventRequest } from "@/lib/types";
+import { formatDate, formatDateTime } from "@/lib/utils";
 import { useAppStore } from "@/store";
-
-const formatDate = (value?: number | string | null) => {
-  if (!value) return "Sin registro";
-  if (typeof value === "number") {
-    return new Date(value * 1000).toLocaleString("es-MX");
-  }
-  return value;
-};
 
 export default function AdminEventRequestDetailPage() {
   const params = useParams();
@@ -213,7 +206,9 @@ export default function AdminEventRequestDetailPage() {
             <div className="grid gap-4 md:grid-cols-3">
               <div className="rounded-xl bg-[var(--surface-2)] p-4 text-sm text-[var(--muted)]">
                 <div className="text-xs uppercase tracking-[0.2em]">Creada</div>
-                <div className="mt-2 text-[var(--ink)]">{formatDate(request.createdAt)}</div>
+                <div className="mt-2 text-[var(--ink)]">
+                  {formatDateTime(request.createdAt, "Sin registro")}
+                </div>
               </div>
               <div className="rounded-xl bg-[var(--surface-2)] p-4 text-sm text-[var(--muted)]">
                 <div className="text-xs uppercase tracking-[0.2em]">Pago</div>
@@ -258,7 +253,7 @@ export default function AdminEventRequestDetailPage() {
                             {proof.fileName || `Comprobante ${index + 1}`}
                           </div>
                           <div className="text-xs text-[var(--muted)]">
-                            Subido: {formatDate(proof.uploadedAt)}
+                            Subido: {formatDateTime(proof.uploadedAt, "Sin registro")}
                           </div>
                         </div>
                         <a

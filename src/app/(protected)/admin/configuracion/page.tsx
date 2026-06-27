@@ -194,7 +194,7 @@ export default function AdminConfiguracionPage() {
           </div>
           {prices ? (
             <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2 text-xs text-[var(--muted)]">
-              Profesional y estudiante permanecen gratis.
+              Cuenta gratuita y estudiante permanecen gratis.
             </div>
           ) : null}
         </div>
@@ -213,7 +213,7 @@ export default function AdminConfiguracionPage() {
               </div>
               <div className="mt-3 grid gap-2 text-sm text-[var(--ink)]">
                 <div className="flex justify-between gap-3">
-                  <span>Profesional</span>
+                  <span>Cuenta gratuita</span>
                   <span className="font-semibold">{formatCurrency(prices.professional)}</span>
                 </div>
                 <div className="flex justify-between gap-3">

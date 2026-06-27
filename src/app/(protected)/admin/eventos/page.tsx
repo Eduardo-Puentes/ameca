@@ -112,7 +112,7 @@ export default function AdminEventosPage() {
               {event.location} • {formatDate(event.startDate)} • {event.duration} día(s)
             </div>
             <div className="grid gap-2 text-xs text-[var(--muted)] sm:grid-cols-2">
-              <div>Profesional: {formatCurrency(event.profilePrices.professional)}</div>
+              <div>Cuenta gratuita: {formatCurrency(event.profilePrices.professional)}</div>
               <div>Estudiante: {formatCurrency(event.profilePrices.student)}</div>
               <div>Asoc. profesional: {formatCurrency(event.profilePrices.associatedProfessional)}</div>
               <div>Asoc. estudiante: {formatCurrency(event.profilePrices.associatedStudent)}</div>

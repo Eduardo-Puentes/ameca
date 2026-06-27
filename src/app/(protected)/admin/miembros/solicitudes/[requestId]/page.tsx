@@ -18,15 +18,7 @@ import {
 } from "@/lib/data";
 import { useAppStore } from "@/store";
 import type { MembershipRequest } from "@/lib/types";
-import { formatProfileType } from "@/lib/utils";
-
-const formatDate = (value?: number | string | null) => {
-  if (!value) return "Sin registro";
-  if (typeof value === "number") {
-    return new Date(value * 1000).toLocaleString("es-MX");
-  }
-  return value;
-};
+import { formatDateTime, formatProfileType } from "@/lib/utils";
 
 export default function AdminMembershipRequestDetailPage() {
   const params = useParams();
@@ -163,7 +155,9 @@ export default function AdminMembershipRequestDetailPage() {
             <div className="grid gap-4 md:grid-cols-2">
               <div className="rounded-xl bg-[var(--surface-2)] p-4 text-sm text-[var(--muted)]">
                 <div className="text-xs uppercase tracking-[0.2em]">Creada</div>
-                <div className="mt-2 text-[var(--ink)]">{formatDate(request.createdAt)}</div>
+                <div className="mt-2 text-[var(--ink)]">
+                  {formatDateTime(request.createdAt, "Sin registro")}
+                </div>
               </div>
               <div className="rounded-xl bg-[var(--surface-2)] p-4 text-sm text-[var(--muted)]">
                 <div className="text-xs uppercase tracking-[0.2em]">Pago</div>
