@@ -1,9 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { AlertCircle, CheckCircle2, FileSpreadsheet, Upload } from "lucide-react";
+import { AlertCircle, CheckCircle2, Download, FileSpreadsheet, Upload } from "lucide-react";
 import { importMembers } from "@/lib/api";
-import type { MemberImportResult } from "@/lib/types";
+import type { MemberImportCsvFile, MemberImportResult } from "@/lib/types";
 import { PageHeader } from "@/components/layout/PageMetaContext";
 import { RoleGuard } from "@/components/guards/RoleGuard";
 import { useAppStore } from "@/store";
@@ -28,10 +28,10 @@ const expectedColumns = [
 ];
 
 const profileValues = [
-  "professional",
-  "student",
-  "associated_professional",
-  "associated_student",
+  { value: "professional", label: "Cuenta gratuita" },
+  { value: "student", label: "Estudiante" },
+  { value: "associated_professional", label: "Socio profesional" },
+  { value: "associated_student", label: "Socio estudiante" },
 ];
 
 const academicDegreeValues = [
@@ -69,18 +69,53 @@ function ResultStat({
   );
 }
 
+function downloadCsv(file: MemberImportCsvFile) {
+  const blob = new Blob([file.content], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = file.filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function CsvDownloadButton({ file, label }: { file?: MemberImportCsvFile; label: string }) {
+  if (!file?.rowCount) return null;
+  return (
+    <Button variant="secondary" size="sm" onClick={() => downloadCsv(file)}>
+      <Download className="h-4 w-4" />
+      {label} ({file.rowCount})
+    </Button>
+  );
+}
+
 function ResultPreview({ result }: { result: MemberImportResult }) {
-  const hasIssues = result.invalidRows > 0 || result.skippedExisting > 0;
+  const hasIssues = result.invalidRows > 0 || result.skippedExisting > 0 || (result.excessRows ?? 0) > 0;
+  const csvFiles = result.csvFiles ?? {};
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-3 md:grid-cols-5">
+      <div className="grid gap-3 md:grid-cols-6">
         <ResultStat label="Filas" value={result.totalRows} tone="info" />
         <ResultStat label="Válidas" value={result.validRows} tone="success" />
         <ResultStat label={result.dryRun ? "Por crear" : "Creadas"} value={result.created} tone="success" />
         <ResultStat label="Existentes" value={result.skippedExisting} tone="warning" />
         <ResultStat label="Inválidas" value={result.invalidRows} tone={result.invalidRows ? "danger" : "neutral"} />
+        <ResultStat label="Excedentes" value={result.excessRows ?? 0} tone={result.excessRows ? "warning" : "neutral"} />
       </div>
+
+      {csvFiles.excessRows?.rowCount || csvFiles.invalidRows?.rowCount || csvFiles.existingRows?.rowCount ? (
+        <Card variant="outline" className="p-4">
+          <div className="mb-3 text-sm font-semibold text-[var(--ink)]">Descargas CSV</div>
+          <div className="flex flex-wrap gap-2">
+            <CsvDownloadButton file={csvFiles.excessRows} label="Filas excedentes" />
+            <CsvDownloadButton file={csvFiles.invalidRows} label="Filas con errores" />
+            <CsvDownloadButton file={csvFiles.existingRows} label="Correos existentes" />
+          </div>
+        </Card>
+      ) : null}
 
       {!result.dryRun ? (
         <div className="grid gap-3 md:grid-cols-2">
@@ -255,9 +290,9 @@ export default function ImportMembersPage() {
             <div>
               <div className="mb-2 text-xs uppercase text-[var(--muted)]">Valores de Perfil</div>
               <div className="flex flex-wrap gap-2">
-                {profileValues.map((value) => (
-                  <Badge key={value} tone="info">
-                    {value}
+                {profileValues.map((item) => (
+                  <Badge key={item.value} tone="info">
+                    {item.value} = {item.label}
                   </Badge>
                 ))}
               </div>
@@ -297,7 +332,9 @@ export default function ImportMembersPage() {
                 setError("");
               }}
             />
-            <div className="text-xs text-[var(--muted)]">Máximo 150 filas por archivo.</div>
+            <div className="text-xs text-[var(--muted)]">
+              Se importan hasta 150 filas por archivo. Si hay más, las filas excedentes se devuelven en CSV.
+            </div>
           </div>
 
           {error ? (

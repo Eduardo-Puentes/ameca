@@ -15,20 +15,12 @@ import type { Member } from "@/lib/types";
 import {
   formatAcademicDegree,
   formatInstitution,
+  formatDate,
   formatMemberState,
   formatMemberTitle,
   formatProfileType,
 } from "@/lib/utils";
 import { useAppStore } from "@/store";
-
-const formatDate = (value?: number | string | null) => {
-  if (!value) return "Sin fecha";
-  if (typeof value === "number") {
-    return new Date(value * 1000).toLocaleDateString("es-MX");
-  }
-  const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? String(value) : parsed.toLocaleDateString("es-MX");
-};
 
 export default function AdminMemberProfilePage() {
   const params = useParams();
@@ -213,12 +205,12 @@ export default function AdminMemberProfilePage() {
                   Revertir membresía
                 </div>
                 <div className="mt-1 text-sm text-[var(--muted)]">
-                  Cambia este perfil a professional y permite que el socio solicite un nuevo
+                  Cambia este perfil a cuenta gratuita y permite que el socio solicite un nuevo
                   upgrade desde su panel.
                 </div>
               </div>
               <Button variant="danger" onClick={() => setRevertModalOpen(true)}>
-                Revertir a profesional
+                Revertir a cuenta gratuita
               </Button>
             </div>
           </div>
@@ -280,11 +272,11 @@ export default function AdminMemberProfilePage() {
           <>
             Vas a cambiar el perfil de{" "}
             <span className="font-semibold text-[var(--ink)]">{member.fullName}</span> a
-            professional. Se limpiara el vencimiento actual y el socio debera enviar una nueva
+            cuenta gratuita. Se limpiara el vencimiento actual y el socio debera enviar una nueva
             solicitud si quiere recuperar una membresia estudiantil o asociada.
           </>
         }
-        confirmLabel="Revertir a profesional"
+        confirmLabel="Revertir a cuenta gratuita"
         onClose={() => setRevertModalOpen(false)}
         onConfirm={async () => {
           const updated = await updateMemberProfile(member.id, { profileType: "professional" });

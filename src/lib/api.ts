@@ -136,7 +136,7 @@ const humanizeError = (message: string, status: number, code?: string) => {
     section_student_membership_required:
       "Solo socios con membresía de estudiante pueden usar secciones estudiantiles.",
     professional_revert_required:
-      "Para cambiar tu membresía actual, primero solicita a administración que revierta tu cuenta a profesional.",
+      "Solo socios profesionales pueden solicitar cambios de membresía, excepto estudiantes que pueden solicitar socio estudiante.",
     same_profile_type: "El perfil solicitado debe ser distinto al actual.",
     upgrade_requirements_not_met: "Faltan documentos requeridos para este upgrade.",
   };

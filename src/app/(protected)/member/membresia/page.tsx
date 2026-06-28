@@ -31,21 +31,33 @@ export default function MemberMembresiaPage() {
     loadMembers();
   }, [loadMembers]);
 
-  useEffect(() => {
-    if (requestedType !== "associated_professional" && requestedType !== "associated_student") {
-      setProofFile(null);
-    }
-    if (requestedType !== "student" && requestedType !== "associated_student") {
-      setSchoolIdFile(null);
-    }
-    if (requestedType !== "associated_professional") {
-      setCvFile(null);
-    }
-  }, [requestedType]);
-
   const member = useMemo(() => {
     return members.find((item) => item.email === user?.email) ?? members[0];
   }, [members, user]);
+
+  const profileOptions = useMemo(() => {
+    if (member?.profileType === "student") {
+      return PROFILE_OPTIONS.filter((option) => option.value === "associated_student");
+    }
+    return PROFILE_OPTIONS;
+  }, [member?.profileType]);
+
+  const selectedRequestedType = profileOptions.some((option) => option.value === requestedType)
+    ? requestedType
+    : profileOptions[0]?.value ?? "student";
+
+  const handleRequestedTypeChange = (nextType: ProfileType) => {
+    setRequestedType(nextType);
+    if (nextType !== "associated_professional" && nextType !== "associated_student") {
+      setProofFile(null);
+    }
+    if (nextType !== "student" && nextType !== "associated_student") {
+      setSchoolIdFile(null);
+    }
+    if (nextType !== "associated_professional") {
+      setCvFile(null);
+    }
+  };
 
   const handleSubmit = async () => {
     if (!member) {
@@ -57,7 +69,7 @@ export default function MemberMembresiaPage() {
       return;
     }
 
-    if (member.profileType === requestedType) {
+    if (member.profileType === selectedRequestedType) {
       pushToast({
         title: "Selecciona otro tipo",
         message: "Ya tienes ese tipo de membresía.",
@@ -66,18 +78,25 @@ export default function MemberMembresiaPage() {
       return;
     }
 
-    if (member.profileType !== "professional") {
+    const canRequestProfileChange =
+      member.profileType === "professional" ||
+      (member.profileType === "student" && selectedRequestedType === "associated_student");
+
+    if (!canRequestProfileChange) {
       pushToast({
         title: "Cambio no disponible",
         message:
-          "Para cambiar tu membresía actual, primero solicita a administración que revierta tu cuenta a profesional.",
+          member.profileType === "student"
+            ? "Como estudiante, solo puedes solicitar cambio a socio estudiante."
+            : "Para cambiar tu membresía actual, primero solicita a administración que revierta tu cuenta a profesional.",
         tone: "warning",
       });
       return;
     }
 
     if (
-      (requestedType === "associated_professional" || requestedType === "associated_student") &&
+      (selectedRequestedType === "associated_professional" ||
+        selectedRequestedType === "associated_student") &&
       !proofFile
     ) {
       pushToast({
@@ -88,7 +107,10 @@ export default function MemberMembresiaPage() {
       return;
     }
 
-    if ((requestedType === "student" || requestedType === "associated_student") && !schoolIdFile) {
+    if (
+      (selectedRequestedType === "student" || selectedRequestedType === "associated_student") &&
+      !schoolIdFile
+    ) {
       pushToast({
         title: "Identificación requerida",
         message: "Sube tu identificación escolar antes de enviar la solicitud.",
@@ -97,7 +119,7 @@ export default function MemberMembresiaPage() {
       return;
     }
 
-    if (requestedType === "associated_professional" && !cvFile) {
+    if (selectedRequestedType === "associated_professional" && !cvFile) {
       pushToast({
         title: "CV requerido",
         message: "Sube tu CV antes de enviar la solicitud.",
@@ -108,16 +130,17 @@ export default function MemberMembresiaPage() {
 
     try {
       const paymentProofForRequest =
-        requestedType === "associated_professional" || requestedType === "associated_student"
+        selectedRequestedType === "associated_professional" ||
+        selectedRequestedType === "associated_student"
           ? proofFile
           : null;
       const schoolIdForRequest =
-        requestedType === "student" || requestedType === "associated_student"
+        selectedRequestedType === "student" || selectedRequestedType === "associated_student"
           ? schoolIdFile
           : null;
-      const cvForRequest = requestedType === "associated_professional" ? cvFile : null;
+      const cvForRequest = selectedRequestedType === "associated_professional" ? cvFile : null;
       await createMembershipRequest(
-        requestedType,
+        selectedRequestedType,
         paymentProofForRequest,
         schoolIdForRequest,
         cvForRequest
@@ -179,31 +202,32 @@ export default function MemberMembresiaPage() {
               Tipo solicitado
             </label>
             <Select
-              value={requestedType}
-              onChange={(event) => setRequestedType(event.target.value as ProfileType)}
+              value={selectedRequestedType}
+              onChange={(event) => handleRequestedTypeChange(event.target.value as ProfileType)}
             >
-              {PROFILE_OPTIONS.map((item) => (
+              {profileOptions.map((item) => (
                 <option key={item.value} value={item.value}>
                   {item.label}
                 </option>
               ))}
             </Select>
           </div>
-          {requestedType === "associated_professional" || requestedType === "associated_student" ? (
+          {selectedRequestedType === "associated_professional" ||
+          selectedRequestedType === "associated_student" ? (
             <FileUpload
               label="Comprobante de pago"
               accept=".pdf,.png,.jpg"
               onChange={setProofFile}
             />
           ) : null}
-          {requestedType === "student" || requestedType === "associated_student" ? (
+          {selectedRequestedType === "student" || selectedRequestedType === "associated_student" ? (
             <FileUpload
               label="Identificación escolar"
               accept=".pdf,.png,.jpg"
               onChange={setSchoolIdFile}
             />
           ) : null}
-          {requestedType === "associated_professional" ? (
+          {selectedRequestedType === "associated_professional" ? (
             <FileUpload
               label="CV"
               accept=".pdf,.doc,.docx"

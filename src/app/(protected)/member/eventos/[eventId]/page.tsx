@@ -123,7 +123,7 @@ export default function MemberEventoDetallePage() {
           </div>
           <div className="grid gap-3 border-t border-[var(--border)] pt-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-lg bg-[var(--surface-2)] p-3">
-              <div className="text-xs text-[var(--muted)]">Profesional</div>
+              <div className="text-xs text-[var(--muted)]">Cuenta gratuita</div>
               <div className="mt-1 font-semibold text-[var(--ink)]">
                 {formatCurrency(event.profilePrices.professional)}
               </div>
