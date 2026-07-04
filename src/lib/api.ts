@@ -139,6 +139,10 @@ const humanizeError = (message: string, status: number, code?: string) => {
       "Solo socios profesionales pueden solicitar cambios de membresía, excepto estudiantes que pueden solicitar socio estudiante.",
     same_profile_type: "El perfil solicitado debe ser distinto al actual.",
     upgrade_requirements_not_met: "Faltan documentos requeridos para este upgrade.",
+    member_is_section_representative:
+      "No puedes eliminar este socio porque representa una sección estudiantil. Transfiere o elimina esa sección primero.",
+    member_has_related_records:
+      "No se pudo eliminar el socio porque aún tiene registros relacionados.",
   };
 
   if (code && codeMappings[code]) {
