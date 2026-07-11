@@ -10,10 +10,20 @@ import { Select } from "@/components/ui/Select";
 import { DataTable } from "@/components/ui/DataTable";
 import { Input } from "@/components/ui/Input";
 import { Pagination } from "@/components/ui/Pagination";
+import { RequestStatusFilter } from "@/components/ui/RequestStatusFilter";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useAppStore } from "@/store";
-import type { EventRequest, MembershipRequest } from "@/lib/types";
+import type {
+  EventRequest,
+  MembershipRequest,
+  RequestStatusFilter as RequestStatusFilterValue,
+} from "@/lib/types";
 import { formatProfileType } from "@/lib/utils";
+
+const eventRequestStatusOptions: Array<{ label: string; value: RequestStatusFilterValue }> = [
+  { label: "Pendientes", value: "pending" },
+  { label: "Rechazadas", value: "rejected" },
+];
 
 export default function AdminDashboardPage() {
   const {
@@ -30,6 +40,7 @@ export default function AdminDashboardPage() {
     dashboardEventRequestStatusCounts,
     dashboardEventRequestsQuery,
     dashboardEventRequestsCostType,
+    dashboardEventRequestsStatus,
     dashboardEventRequestsEventId,
     requestPageSize,
     sectionRequestsTotal,
@@ -42,6 +53,9 @@ export default function AdminDashboardPage() {
   const [eventFilterId, setEventFilterId] = useState<string>(dashboardEventRequestsEventId ?? "all");
   const [membershipCostType, setMembershipCostType] = useState(membershipRequestsCostType);
   const [eventCostType, setEventCostType] = useState(dashboardEventRequestsCostType);
+  const [eventStatus, setEventStatus] = useState<RequestStatusFilterValue>(
+    dashboardEventRequestsStatus === "rejected" ? "rejected" : "pending"
+  );
   const deferredMembershipSearch = useDeferredValue(membershipSearch);
   const deferredEventSearch = useDeferredValue(eventSearch);
 
@@ -58,9 +72,10 @@ export default function AdminDashboardPage() {
       eventFilterId === "all" ? null : eventFilterId,
       1,
       deferredEventSearch,
-      eventCostType
+      eventCostType,
+      eventStatus
     );
-  }, [deferredEventSearch, eventCostType, eventFilterId, loadDashboardEventRequests]);
+  }, [deferredEventSearch, eventCostType, eventFilterId, eventStatus, loadDashboardEventRequests]);
 
   const pendingMembership = membershipRequestStatusCounts.pending;
   const pendingEvent = dashboardEventRequestStatusCounts.pending;
@@ -168,7 +183,7 @@ export default function AdminDashboardPage() {
       <Card className="space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <div className="text-lg font-semibold text-[var(--ink)]">Solicitudes de evento por aprobar</div>
+            <div className="text-lg font-semibold text-[var(--ink)]">Solicitudes de evento</div>
             <div className="text-sm text-[var(--muted)]">
               Vista global por defecto; puedes enfocarte en un evento especifico desde aqui.
             </div>
@@ -199,7 +214,14 @@ export default function AdminDashboardPage() {
             placeholder="Buscar por socio, correo, sección estudiantil o comentarios"
             className="md:max-w-xl"
           />
-          <CostTypeFilter value={eventCostType} onChange={setEventCostType} />
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <RequestStatusFilter
+              value={eventStatus}
+              onChange={setEventStatus}
+              options={eventRequestStatusOptions}
+            />
+            <CostTypeFilter value={eventCostType} onChange={setEventCostType} />
+          </div>
         </div>
         <DataTable
           columns={eventColumns}
@@ -215,7 +237,8 @@ export default function AdminDashboardPage() {
               eventFilterId === "all" ? null : eventFilterId,
               page,
               deferredEventSearch,
-              eventCostType
+              eventCostType,
+              eventStatus
             )
           }
         />

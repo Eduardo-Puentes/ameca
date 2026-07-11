@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { PageHeader } from "@/components/layout/PageMetaContext";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -11,7 +12,7 @@ import { ConfirmActionModal } from "@/components/ui/ConfirmActionModal";
 import { DataTable } from "@/components/ui/DataTable";
 import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { getSection, removeSectionMember } from "@/lib/data";
+import { deleteSection, getSection, removeSectionMember } from "@/lib/data";
 import type { SectionDetail, SectionMember } from "@/lib/types";
 import { formatCurrency, formatDate, formatProfileType } from "@/lib/utils";
 
@@ -23,6 +24,7 @@ type SectionLoadState = {
 
 export default function AdminSectionDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const eventId = params?.eventId as string;
   const sectionId = params?.sectionId as string;
   const [loadState, setLoadState] = useState<SectionLoadState>({
@@ -32,6 +34,7 @@ export default function AdminSectionDetailPage() {
   });
   const [removingMemberId, setRemovingMemberId] = useState<string | null>(null);
   const [removeMemberModal, setRemoveMemberModal] = useState<SectionMember | null>(null);
+  const [deleteSectionModalOpen, setDeleteSectionModalOpen] = useState(false);
 
   useEffect(() => {
     if (!sectionId) return;
@@ -73,6 +76,11 @@ export default function AdminSectionDetailPage() {
     } finally {
       setRemovingMemberId(null);
     }
+  };
+
+  const handleDeleteSection = async () => {
+    await deleteSection(sectionId);
+    router.push(`/admin/eventos/${eventId}`);
   };
 
   const summary = useMemo(() => {
@@ -179,6 +187,9 @@ export default function AdminSectionDetailPage() {
           Volver al evento
         </Link>
         <StatusBadge status={section.status} />
+        <Button variant="danger" onClick={() => setDeleteSectionModalOpen(true)}>
+          Eliminar sección
+        </Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
@@ -287,6 +298,32 @@ export default function AdminSectionDetailPage() {
             El integrante dejará de pertenecer a esta sección estudiantil para el evento.
           </div>
         ) : null}
+      </ConfirmActionModal>
+
+      <ConfirmActionModal
+        open={deleteSectionModalOpen}
+        onClose={() => setDeleteSectionModalOpen(false)}
+        title="Eliminar sección estudiantil"
+        description={
+          <>
+            Estas a punto de eliminar{" "}
+            <span className="font-semibold text-[var(--ink)]">{section.name}</span>.
+          </>
+        }
+        confirmLabel="Eliminar sección estudiantil"
+        confirmVariant="danger"
+        onConfirm={handleDeleteSection}
+        successToast={{
+          title: "Sección estudiantil eliminada",
+          message: "La sección y sus relaciones con integrantes fueron retiradas.",
+          tone: "success",
+        }}
+        errorTitle="No se pudo eliminar"
+      >
+        <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-4 text-[var(--ink)]">
+          Se eliminarán las relaciones de sus integrantes con esta sección estudiantil. Las
+          solicitudes y registros de evento permanecerán, pero quedarán sin sección asignada.
+        </div>
       </ConfirmActionModal>
     </div>
   );

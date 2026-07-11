@@ -22,6 +22,8 @@ import {
 } from "@/lib/data";
 
 const EMPTY_STATUS_COUNTS: RequestStatusCounts = { pending: 0, approved: 0, rejected: 0 };
+const toEventQueueStatus = (status: RequestStatusFilter): "pending" | "rejected" | undefined =>
+  status === "pending" || status === "rejected" ? status : undefined;
 
 const getStatusCounts = <T extends { status: "pending" | "approved" | "rejected" }>(
   items: T[]
@@ -46,6 +48,7 @@ export type RequestsSlice = {
   membershipRequestsQuery: string;
   membershipRequestsCostType: CostType;
   membershipRequestsStatus: RequestStatusFilter;
+  pendingMembershipRequestsCount: number;
   eventRequestsPage: number;
   eventRequestsTotal: number;
   eventRequestStatusCounts: RequestStatusCounts;
@@ -58,6 +61,7 @@ export type RequestsSlice = {
   dashboardEventRequestStatusCounts: RequestStatusCounts;
   dashboardEventRequestsQuery: string;
   dashboardEventRequestsCostType: CostType;
+  dashboardEventRequestsStatus: RequestStatusFilter;
   dashboardEventRequestsEventId: string | null;
   requestPageSize: number;
   requestsLoading: boolean;
@@ -68,11 +72,13 @@ export type RequestsSlice = {
     costType?: CostType,
     status?: RequestStatusFilter
   ) => Promise<void>;
+  loadPendingMembershipRequestsCount: () => Promise<void>;
   loadDashboardEventRequests: (
     eventId?: string | null,
     page?: number,
     query?: string,
-    costType?: CostType
+    costType?: CostType,
+    status?: RequestStatusFilter
   ) => Promise<void>;
   createMembershipRequest: (
     profileType: string,
@@ -108,18 +114,20 @@ export const createRequestsSlice: StateCreator<AuthSlice & RequestsSlice, [], []
   membershipRequestsQuery: "",
   membershipRequestsCostType: "all",
   membershipRequestsStatus: "pending",
+  pendingMembershipRequestsCount: 0,
   eventRequestsPage: 1,
   eventRequestsTotal: 0,
   eventRequestStatusCounts: EMPTY_STATUS_COUNTS,
   eventRequestsQuery: "",
   eventRequestsCostType: "all",
-  eventRequestsStatus: "all",
+  eventRequestsStatus: "pending",
   dashboardEventRequests: [],
   dashboardEventRequestsPage: 1,
   dashboardEventRequestsTotal: 0,
   dashboardEventRequestStatusCounts: EMPTY_STATUS_COUNTS,
   dashboardEventRequestsQuery: "",
   dashboardEventRequestsCostType: "all",
+  dashboardEventRequestsStatus: "pending",
   dashboardEventRequestsEventId: null,
   requestPageSize: 20,
   requestsLoading: false,
@@ -146,6 +154,10 @@ export const createRequestsSlice: StateCreator<AuthSlice & RequestsSlice, [], []
         membershipRequestsQuery: requestedQuery,
         membershipRequestsCostType: requestedCostType,
         membershipRequestsStatus: requestedStatus,
+        pendingMembershipRequestsCount:
+          requestedStatus === "pending"
+            ? result.total
+            : result.statusCounts?.pending ?? get().pendingMembershipRequestsCount,
         membershipRequestStatusCounts: result.statusCounts ?? EMPTY_STATUS_COUNTS,
         requestsLoading: false,
       });
@@ -165,30 +177,52 @@ export const createRequestsSlice: StateCreator<AuthSlice & RequestsSlice, [], []
       membershipRequestsQuery: requestedQuery,
       membershipRequestsCostType: "all",
       membershipRequestsStatus: requestedStatus,
+      pendingMembershipRequestsCount:
+        requestedStatus === "pending"
+          ? Array.isArray(result)
+            ? data.length
+            : result.total
+          : Array.isArray(result)
+            ? getStatusCounts(data).pending
+            : result.statusCounts?.pending ?? get().pendingMembershipRequestsCount,
       membershipRequestStatusCounts: Array.isArray(result)
         ? getStatusCounts(data)
         : result.statusCounts ?? EMPTY_STATUS_COUNTS,
       requestsLoading: false,
     });
   },
-  loadDashboardEventRequests: async (eventId, page, query, costType) => {
+  loadPendingMembershipRequestsCount: async () => {
+    const role = get().role;
+    if (!(role === "admin" || role === "treasurer" || role === "superadmin")) return;
+    const result = await listMemberRequests("", 1, 1, "all", "pending");
+    set({
+      pendingMembershipRequestsCount: result.total,
+      membershipRequestStatusCounts: {
+        ...get().membershipRequestStatusCounts,
+        pending: result.total,
+      },
+    });
+  },
+  loadDashboardEventRequests: async (eventId, page, query, costType, status) => {
     set({ requestsLoading: true });
     const requestedEventId =
       eventId === undefined ? get().dashboardEventRequestsEventId : eventId;
     const requestedPage = page ?? get().dashboardEventRequestsPage;
     const requestedQuery = query ?? get().dashboardEventRequestsQuery;
     const requestedCostType = costType ?? get().dashboardEventRequestsCostType;
+    const requestedStatus = status ?? get().dashboardEventRequestsStatus;
+    const adminStatus = toEventQueueStatus(requestedStatus);
     const result = requestedEventId
       ? await listEventRequests(
           requestedEventId,
-          undefined,
+          adminStatus,
           requestedQuery,
           requestedPage,
           get().requestPageSize,
           requestedCostType
         )
       : await listAdminEventRequests(
-          undefined,
+          adminStatus,
           requestedQuery,
           requestedPage,
           get().requestPageSize,
@@ -200,6 +234,7 @@ export const createRequestsSlice: StateCreator<AuthSlice & RequestsSlice, [], []
       dashboardEventRequestsTotal: result.total,
       dashboardEventRequestsQuery: requestedQuery,
       dashboardEventRequestsCostType: requestedCostType,
+      dashboardEventRequestsStatus: requestedStatus,
       dashboardEventRequestsEventId: requestedEventId,
       dashboardEventRequestStatusCounts: result.statusCounts ?? EMPTY_STATUS_COUNTS,
       requestsLoading: false,
@@ -227,7 +262,7 @@ export const createRequestsSlice: StateCreator<AuthSlice & RequestsSlice, [], []
     const requestedQuery = query ?? get().eventRequestsQuery;
     const requestedCostType = costType ?? get().eventRequestsCostType;
     const requestedStatus = status ?? get().eventRequestsStatus;
-    const adminStatus = requestedStatus === "all" ? undefined : requestedStatus;
+    const adminStatus = toEventQueueStatus(requestedStatus);
     if (role === "admin" || role === "treasurer" || role === "superadmin") {
       const result = eventId
         ? await listEventRequests(

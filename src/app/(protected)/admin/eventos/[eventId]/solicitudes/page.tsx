@@ -9,9 +9,15 @@ import { CostTypeFilter } from "@/components/ui/CostTypeFilter";
 import { DataTable } from "@/components/ui/DataTable";
 import { Input } from "@/components/ui/Input";
 import { Pagination } from "@/components/ui/Pagination";
+import { RequestStatusFilter } from "@/components/ui/RequestStatusFilter";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useAppStore } from "@/store";
-import type { EventRequest } from "@/lib/types";
+import type { EventRequest, RequestStatusFilter as RequestStatusFilterValue } from "@/lib/types";
+
+const eventRequestStatusOptions: Array<{ label: string; value: RequestStatusFilterValue }> = [
+  { label: "Pendientes", value: "pending" },
+  { label: "Rechazadas", value: "rejected" },
+];
 
 export default function AdminEventRequestsPage() {
   const params = useParams();
@@ -23,18 +29,22 @@ export default function AdminEventRequestsPage() {
     eventRequestStatusCounts,
     eventRequestsQuery,
     eventRequestsCostType,
+    eventRequestsStatus,
     requestPageSize,
     loadEventRequests,
   } = useAppStore();
   const [search, setSearch] = useState(eventRequestsQuery);
   const [costType, setCostType] = useState(eventRequestsCostType);
+  const [status, setStatus] = useState<RequestStatusFilterValue>(
+    eventRequestsStatus === "rejected" ? "rejected" : "pending"
+  );
   const deferredSearch = useDeferredValue(search);
 
   useEffect(() => {
     if (eventId) {
-      loadEventRequests(eventId, 1, deferredSearch, costType);
+      loadEventRequests(eventId, 1, deferredSearch, costType, status);
     }
-  }, [costType, deferredSearch, eventId, loadEventRequests]);
+  }, [costType, deferredSearch, eventId, loadEventRequests, status]);
 
   const currentRequests = useMemo(() => eventRequests, [eventRequests]);
 
@@ -74,14 +84,10 @@ export default function AdminEventRequestsPage() {
         breadcrumb={["Admin", "Eventos", "Solicitudes"]}
       />
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2">
         <Card className="space-y-2">
           <div className="text-xs uppercase tracking-[0.3em] text-[var(--muted)]">Pendientes</div>
           <div className="text-2xl font-semibold text-[var(--ink)]">{eventRequestStatusCounts.pending}</div>
-        </Card>
-        <Card className="space-y-2">
-          <div className="text-xs uppercase tracking-[0.3em] text-[var(--muted)]">Aprobadas</div>
-          <div className="text-2xl font-semibold text-[var(--ink)]">{eventRequestStatusCounts.approved}</div>
         </Card>
         <Card className="space-y-2">
           <div className="text-xs uppercase tracking-[0.3em] text-[var(--muted)]">Rechazadas</div>
@@ -103,7 +109,14 @@ export default function AdminEventRequestsPage() {
             placeholder="Buscar por socio, correo, sección estudiantil o comentarios"
             className="md:max-w-xl"
           />
-          <CostTypeFilter value={costType} onChange={setCostType} />
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <RequestStatusFilter
+              value={status}
+              onChange={setStatus}
+              options={eventRequestStatusOptions}
+            />
+            <CostTypeFilter value={costType} onChange={setCostType} />
+          </div>
         </div>
         {currentRequests.length === 0 ? (
           <div className="text-sm text-[var(--muted)]">No hay solicitudes registradas.</div>
@@ -114,7 +127,7 @@ export default function AdminEventRequestsPage() {
           page={eventRequestsPage}
           pageSize={requestPageSize}
           total={eventRequestsTotal}
-          onPageChange={(page) => loadEventRequests(eventId, page, deferredSearch, costType)}
+          onPageChange={(page) => loadEventRequests(eventId, page, deferredSearch, costType, status)}
         />
       </Card>
     </div>

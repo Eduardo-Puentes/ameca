@@ -18,7 +18,7 @@ export const adminNav: NavItem[] = [
   { label: "Panel", href: "/admin/dashboard", icon: LayoutGrid },
   { label: "Socios", href: "/admin/socios", icon: Users },
   { label: "Importar socios", href: "/admin/socios/importar", icon: Upload },
-  { label: "Solicitudes", href: "/admin/socios/solicitudes", icon: ClipboardList },
+  { label: "Membresías", href: "/admin/socios/solicitudes", icon: ClipboardList },
   { label: "Eventos", href: "/admin/eventos", icon: CalendarDays },
   { label: "Secciones estudiantiles", href: "/admin/secciones", icon: Building2 },
   { label: "Administradores", href: "/admin/administradores", icon: ShieldCheck },
