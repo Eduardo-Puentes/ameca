@@ -78,7 +78,7 @@ export default function AdminSolicitudesMembresiaPage() {
       <PageHeader
         title="Solicitudes de membresía"
         subtitle="Aprobaciones pendientes y comprobantes"
-        breadcrumb={["Admin", "Socios", "Solicitudes"]}
+        breadcrumb={["Admin", "Socios", "Membresías"]}
       />
 
       <Card>

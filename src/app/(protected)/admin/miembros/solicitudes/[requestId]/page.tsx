@@ -102,7 +102,7 @@ export default function AdminMembershipRequestDetailPage() {
       <PageHeader
         title="Solicitud de membresía"
         subtitle="Vista detallada para revisar y decidir la solicitud"
-        breadcrumb={["Admin", "Socios", "Solicitudes", "Detalle"]}
+        breadcrumb={["Admin", "Socios", "Membresías", "Detalle"]}
       />
 
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -110,7 +110,7 @@ export default function AdminMembershipRequestDetailPage() {
           href="/admin/socios/solicitudes"
           className="text-sm font-medium text-[var(--accent)]"
         >
-          Volver al listado
+          Volver a membresías
         </Link>
         {request ? <StatusBadge status={request.status} /> : null}
       </div>

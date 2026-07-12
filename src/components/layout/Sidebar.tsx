@@ -13,6 +13,7 @@ export type NavItem = {
   href: string;
   icon: LucideIcon;
   badge?: string;
+  badgeTone?: "neutral" | "danger";
 };
 
 export function Sidebar({
@@ -72,7 +73,14 @@ export function Sidebar({
               <Icon className="h-4 w-4" />
               {item.label}
               {item.badge ? (
-                <span className="ml-auto rounded-full bg-[var(--surface-3)] px-2 py-0.5 text-xs text-[var(--muted)]">
+                <span
+                  className={cn(
+                    "ml-auto min-w-5 rounded-full px-2 py-0.5 text-center text-xs font-semibold",
+                    item.badgeTone === "danger"
+                      ? "bg-[var(--danger)] text-white"
+                      : "bg-[var(--surface-3)] text-[var(--muted)]"
+                  )}
+                >
                   {item.badge}
                 </span>
               ) : null}

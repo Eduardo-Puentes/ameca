@@ -15,6 +15,7 @@ import { FileUpload } from "@/components/ui/FileUpload";
 import { Input } from "@/components/ui/Input";
 import { Modal } from "@/components/ui/Modal";
 import { Pagination } from "@/components/ui/Pagination";
+import { RequestStatusFilter } from "@/components/ui/RequestStatusFilter";
 import { Select } from "@/components/ui/Select";
 import { StatCard } from "@/components/ui/StatCard";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -34,6 +35,7 @@ import type {
   EventRequest,
   EventUpsertPayload,
   Presentation,
+  RequestStatusFilter as RequestStatusFilterValue,
   Section,
   SpeakerType,
 } from "@/lib/types";
@@ -45,6 +47,11 @@ import {
   formatSpeakerType,
 } from "@/lib/utils";
 
+const eventRequestStatusOptions: Array<{ label: string; value: RequestStatusFilterValue }> = [
+  { label: "Pendientes", value: "pending" },
+  { label: "Rechazadas", value: "rejected" },
+];
+
 export default function AdminEventoDetallePage() {
   const params = useParams();
   const eventId = params?.eventId as string;
@@ -55,6 +62,7 @@ export default function AdminEventoDetallePage() {
     eventRequestsTotal,
     eventRequestsQuery,
     eventRequestsCostType,
+    eventRequestsStatus,
     eventRequestStatusCounts,
     requestPageSize,
     attendanceRecords,
@@ -71,6 +79,9 @@ export default function AdminEventoDetallePage() {
   const [editSaving, setEditSaving] = useState(false);
   const [requestSearch, setRequestSearch] = useState(eventRequestsQuery);
   const [requestCostType, setRequestCostType] = useState(eventRequestsCostType);
+  const [requestStatus, setRequestStatus] = useState<RequestStatusFilterValue>(
+    eventRequestsStatus === "rejected" ? "rejected" : "pending"
+  );
   const [memberSearch, setMemberSearch] = useState("");
   const [eventMembers, setEventMembers] = useState<EventMemberRegistration[]>([]);
   const [eventMembersPage, setEventMembersPage] = useState(1);
@@ -116,9 +127,9 @@ export default function AdminEventoDetallePage() {
 
   useEffect(() => {
     if (eventId) {
-      loadEventRequests(eventId, 1, deferredRequestSearch, requestCostType);
+      loadEventRequests(eventId, 1, deferredRequestSearch, requestCostType, requestStatus);
     }
-  }, [deferredRequestSearch, eventId, loadEventRequests, requestCostType]);
+  }, [deferredRequestSearch, eventId, loadEventRequests, requestCostType, requestStatus]);
 
   useEffect(() => {
     if (!eventId) return;
@@ -243,17 +254,17 @@ export default function AdminEventoDetallePage() {
 
   const event = events.find((item) => item.id === eventId);
   const pendingRequests = eventRequestStatusCounts.pending;
-  const approvedRequests = eventRequestStatusCounts.approved;
+  const rejectedRequests = eventRequestStatusCounts.rejected;
   const attendanceCount = attendanceRecords.filter((record) => record.eventId === eventId).length;
 
   const summary = useMemo(
     () => [
       { label: "Solicitudes pendientes", value: pendingRequests },
-      { label: "Registros aprobados", value: approvedRequests },
+      { label: "Solicitudes rechazadas", value: rejectedRequests },
       { label: "Asistencias", value: attendanceCount },
       { label: "Secciones estudiantiles", value: sections.length },
     ],
-    [attendanceCount, approvedRequests, pendingRequests, sections.length]
+    [attendanceCount, pendingRequests, rejectedRequests, sections.length]
   );
   const quickActionClassName =
     "inline-flex h-10 items-center justify-center rounded-lg bg-[var(--accent-soft)] px-4 text-sm font-semibold text-[var(--accent-strong)] transition hover:bg-[var(--accent)] hover:text-white";
@@ -433,10 +444,10 @@ export default function AdminEventoDetallePage() {
           </Link>
           <Button
             size="sm"
-            variant="secondary"
+            variant="danger"
             onClick={() => setSectionDeleteModal(section)}
           >
-            Desactivar
+            Eliminar
           </Button>
         </div>
       ),
@@ -486,12 +497,6 @@ export default function AdminEventoDetallePage() {
   };
 
   const handleDeleteSection = async (section: Section) => {
-    if (section.pCount > 1) {
-      throw new Error(
-        "Retira primero a todos los integrantes de la sección estudiantil. Debe quedar solo el representante."
-      );
-    }
-
     await deleteSectionById(section.id);
     await loadSections(eventId);
   };
@@ -634,7 +639,14 @@ export default function AdminEventoDetallePage() {
             placeholder="Buscar por socio, correo, sección estudiantil o comentarios"
             className="md:max-w-xl"
           />
-          <CostTypeFilter value={requestCostType} onChange={setRequestCostType} />
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <RequestStatusFilter
+              value={requestStatus}
+              onChange={setRequestStatus}
+              options={eventRequestStatusOptions}
+            />
+            <CostTypeFilter value={requestCostType} onChange={setRequestCostType} />
+          </div>
         </div>
         <DataTable
           columns={requestColumns}
@@ -646,8 +658,48 @@ export default function AdminEventoDetallePage() {
           pageSize={requestPageSize}
           total={eventRequestsTotal}
           onPageChange={(page) =>
-            loadEventRequests(eventId, page, deferredRequestSearch, requestCostType)
+            loadEventRequests(eventId, page, deferredRequestSearch, requestCostType, requestStatus)
           }
+        />
+      </Card>
+
+      <Card className="space-y-4">
+        <div className="space-y-1">
+          <div className="text-lg font-semibold text-[var(--ink)]">Socios registrados</div>
+          <div className="text-sm text-[var(--muted)]">
+            Registros aprobados para este evento, con búsqueda por datos del socio, sección estudiantil o boleto.
+          </div>
+        </div>
+        <Input
+          value={memberSearch}
+          onChange={(inputEvent) => {
+            setMemberSearch(inputEvent.target.value);
+            setEventMembersPage(1);
+          }}
+          placeholder="Buscar por nombre, correo, teléfono, organización, perfil, sección estudiantil o boleto"
+          className="md:max-w-xl"
+        />
+        {eventMembersError ? (
+          <div className="rounded-lg border border-[var(--danger)] bg-[var(--danger-soft)] p-3 text-sm text-[var(--danger)]">
+            {eventMembersError}
+          </div>
+        ) : null}
+        {eventMembersLoading ? (
+          <div className="text-sm text-[var(--muted)]">Cargando registros...</div>
+        ) : eventMembers.length === 0 ? (
+          <div className="text-sm text-[var(--muted)]">No hay socios registrados.</div>
+        ) : (
+          <DataTable
+            columns={memberColumns}
+            data={eventMembers}
+            tableContainerClassName="max-h-[28rem] overflow-y-auto pr-1"
+          />
+        )}
+        <Pagination
+          page={eventMembersPage}
+          pageSize={requestPageSize}
+          total={eventMembersTotal}
+          onPageChange={setEventMembersPage}
         />
       </Card>
 
@@ -784,46 +836,6 @@ export default function AdminEventoDetallePage() {
             />
           )}
         </div>
-      </Card>
-
-      <Card className="space-y-4">
-        <div className="space-y-1">
-          <div className="text-lg font-semibold text-[var(--ink)]">Socios registrados</div>
-          <div className="text-sm text-[var(--muted)]">
-            Registros aprobados para este evento, con búsqueda por datos del socio, sección estudiantil o boleto.
-          </div>
-        </div>
-        <Input
-          value={memberSearch}
-          onChange={(inputEvent) => {
-            setMemberSearch(inputEvent.target.value);
-            setEventMembersPage(1);
-          }}
-          placeholder="Buscar por nombre, correo, teléfono, organización, perfil, sección estudiantil o boleto"
-          className="md:max-w-xl"
-        />
-        {eventMembersError ? (
-          <div className="rounded-lg border border-[var(--danger)] bg-[var(--danger-soft)] p-3 text-sm text-[var(--danger)]">
-            {eventMembersError}
-          </div>
-        ) : null}
-        {eventMembersLoading ? (
-          <div className="text-sm text-[var(--muted)]">Cargando registros...</div>
-        ) : eventMembers.length === 0 ? (
-          <div className="text-sm text-[var(--muted)]">No hay socios registrados.</div>
-        ) : (
-          <DataTable
-            columns={memberColumns}
-            data={eventMembers}
-            tableContainerClassName="max-h-[28rem] overflow-y-auto pr-1"
-          />
-        )}
-        <Pagination
-          page={eventMembersPage}
-          pageSize={requestPageSize}
-          total={eventMembersTotal}
-          onPageChange={setEventMembersPage}
-        />
       </Card>
 
       <div className="space-y-4">
@@ -978,11 +990,11 @@ export default function AdminEventoDetallePage() {
       <ConfirmActionModal
         open={!!sectionDeleteModal}
         onClose={() => setSectionDeleteModal(null)}
-        title="Desactivar sección estudiantil"
+        title="Eliminar sección estudiantil"
         description={
           sectionDeleteModal ? (
             <>
-              Estas a punto de desactivar{" "}
+              Estas a punto de eliminar{" "}
               <span className="font-semibold text-[var(--ink)]">
                 {sectionDeleteModal.name}
               </span>
@@ -990,30 +1002,24 @@ export default function AdminEventoDetallePage() {
             </>
           ) : null
         }
-        confirmLabel="Desactivar sección estudiantil"
-        confirmDisabled={!sectionDeleteModal || sectionDeleteModal.pCount > 1}
+        confirmLabel="Eliminar sección estudiantil"
+        confirmDisabled={!sectionDeleteModal}
         onConfirm={async () => {
           if (!sectionDeleteModal) return;
           await handleDeleteSection(sectionDeleteModal);
         }}
         successToast={{
           title: "Sección estudiantil eliminada",
-          message: "La sección estudiantil fue desactivada y retirada del evento.",
+          message: "La sección estudiantil y sus relaciones fueron retiradas del evento.",
           tone: "success",
         }}
-        errorTitle="No se puede desactivar"
+        errorTitle="No se puede eliminar"
       >
         {sectionDeleteModal ? (
-          sectionDeleteModal.pCount > 1 ? (
-            <div className="rounded-xl border border-[var(--warning)]/40 bg-[var(--warning)]/10 p-4 text-[var(--ink)]">
-              Retira primero a todos los integrantes de la sección estudiantil. Debe quedar solo el
-              representante.
-            </div>
-          ) : (
-            <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-4 text-[var(--ink)]">
-              Confirma solo si esta sección estudiantil ya no debe aparecer en el evento.
-            </div>
-          )
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-4 text-[var(--ink)]">
+            Se eliminarán las relaciones de sus integrantes con esta sección estudiantil. Las
+            solicitudes y registros del evento permanecerán, pero quedarán sin sección asignada.
+          </div>
         ) : null}
       </ConfirmActionModal>
 

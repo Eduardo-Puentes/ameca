@@ -621,7 +621,7 @@ export async function denyMemberRequest(id: string, comments?: string) {
 
 export async function listEventRequests(
   eventId: string,
-  status?: "pending" | "approved" | "rejected",
+  status?: "pending" | "rejected",
   query = "",
   page = 1,
   pageSize = 20,
@@ -630,6 +630,7 @@ export async function listEventRequests(
   await wait(200);
   const scoped = eventRequests.filter((req) => {
     if (req.eventId !== eventId) return false;
+    if (req.status === "approved") return false;
     if (costType === "all") return true;
     const isPaid = (req.calculatedCost ?? 0) > 0;
     return costType === "paid" ? isPaid : !isPaid;
@@ -675,7 +676,7 @@ export async function listMyEventRequests(eventId?: string) {
 }
 
 export async function listAdminEventRequests(
-  status?: "pending" | "approved" | "rejected",
+  status?: "pending" | "rejected",
   query = "",
   page = 1,
   pageSize = 20,
@@ -683,6 +684,7 @@ export async function listAdminEventRequests(
 ) {
   await wait(200);
   const byCost = eventRequests.filter((req) => {
+    if (req.status === "approved") return false;
     if (costType === "all") return true;
     const isPaid = (req.calculatedCost ?? 0) > 0;
     return costType === "paid" ? isPaid : !isPaid;
@@ -1085,10 +1087,10 @@ export async function deleteSection(id: string) {
   if (!section) {
     throw new Error("Sección estudiantil no encontrada.");
   }
-  if (section.pCount > 1) {
-    throw new Error("Retira primero a todos los socios de la sección estudiantil.");
-  }
   sections = sections.filter((item) => item.id !== id);
+  eventRequests = eventRequests.map((request) =>
+    request.sectionId === id ? { ...request, sectionId: null, sectionName: "" } : request
+  );
   return { ok: true };
 }
 

@@ -145,6 +145,7 @@ function AcceptedSectionsPanel({
   total,
   onQueryChange,
   onPageChange,
+  onDelete,
 }: {
   sections: Section[];
   query: string;
@@ -153,6 +154,7 @@ function AcceptedSectionsPanel({
   total: number;
   onQueryChange: (value: string) => void;
   onPageChange: (page: number) => void;
+  onDelete: (section: Section) => void;
 }) {
   const viewActionClassName =
     "flex h-10 w-full items-center justify-center rounded-xl bg-[var(--accent-soft)] px-4 text-sm font-semibold text-[var(--accent-strong)] shadow-[0_16px_30px_-18px_rgba(1,122,31,0.55)] transition duration-150 hover:bg-[var(--accent)] hover:text-white hover:shadow-[0_18px_32px_-16px_rgba(1,122,31,0.65)] active:scale-[0.985] active:translate-y-px";
@@ -170,18 +172,24 @@ function AcceptedSectionsPanel({
     {
       header: "Acciones",
       accessor: "actions",
-      className: "w-40 px-3 py-4 text-center",
-      render: (section: Section) =>
-        section.eventId ? (
+      className: "w-56 px-3 py-4 text-center",
+      render: (section: Section) => (
+        <div className="flex justify-center gap-2">
+          {section.eventId ? (
           <Link
             href={`/admin/eventos/${section.eventId}/secciones/${section.id}`}
             className={viewActionClassName}
           >
             Ver
           </Link>
-        ) : (
-          <span className="text-[var(--muted)]">Sin evento</span>
-        ),
+          ) : (
+            <span className="flex h-10 items-center text-[var(--muted)]">Sin evento</span>
+          )}
+          <Button size="sm" variant="danger" onClick={() => onDelete(section)}>
+            Eliminar
+          </Button>
+        </div>
+      ),
     },
   ];
 
@@ -220,6 +228,7 @@ export default function AdminSeccionesPage() {
     loadSectionRequests,
     approveSectionCreation,
     rejectSectionCreation,
+    deleteSectionById,
     requestPageSize,
   } = useAppStore();
   const [requestSearch, setRequestSearch] = useState(sectionRequestsQuery);
@@ -229,6 +238,7 @@ export default function AdminSeccionesPage() {
     type: "approve" | "reject";
     request: SectionRequest;
   } | null>(null);
+  const [sectionDeleteModal, setSectionDeleteModal] = useState<Section | null>(null);
   const deferredRequestSearch = useDeferredValue(requestSearch);
   const deferredSectionSearch = useDeferredValue(sectionSearch);
 
@@ -249,6 +259,11 @@ export default function AdminSeccionesPage() {
   const handleReject = async (request: SectionRequest) => {
     await rejectSectionCreation(request.id);
     await loadSectionRequests(sectionRequestsPage, deferredRequestSearch, requestStatus);
+  };
+
+  const handleDeleteSection = async (section: Section) => {
+    await deleteSectionById(section.id);
+    await loadAdminSections(sectionsPage, deferredSectionSearch);
   };
 
   return (
@@ -280,6 +295,7 @@ export default function AdminSeccionesPage() {
         total={sectionsTotal}
         onQueryChange={setSectionSearch}
         onPageChange={(page) => loadAdminSections(page, deferredSectionSearch)}
+        onDelete={setSectionDeleteModal}
       />
 
       <ConfirmActionModal
@@ -341,6 +357,52 @@ export default function AdminSeccionesPage() {
         successToast={{ title: "Sección estudiantil rechazada", tone: "danger" }}
         errorTitle="No se pudo rechazar la sección estudiantil"
       />
+
+      <ConfirmActionModal
+        open={!!sectionDeleteModal}
+        title="Eliminar sección estudiantil"
+        description={
+          sectionDeleteModal ? (
+            <>
+              Estas a punto de eliminar{" "}
+              <span className="font-medium text-[var(--ink)]">
+                {sectionDeleteModal.name}
+              </span>
+              {sectionDeleteModal.eventName ? (
+                <>
+                  {" "}
+                  del evento{" "}
+                  <span className="font-medium text-[var(--ink)]">
+                    {sectionDeleteModal.eventName}
+                  </span>
+                </>
+              ) : null}
+              .
+            </>
+          ) : null
+        }
+        confirmLabel="Eliminar sección estudiantil"
+        confirmVariant="danger"
+        confirmDisabled={!sectionDeleteModal}
+        onClose={() => setSectionDeleteModal(null)}
+        onConfirm={async () => {
+          if (!sectionDeleteModal) return;
+          await handleDeleteSection(sectionDeleteModal);
+        }}
+        successToast={{
+          title: "Sección estudiantil eliminada",
+          message: "La sección y sus relaciones con integrantes fueron retiradas.",
+          tone: "success",
+        }}
+        errorTitle="No se pudo eliminar la sección estudiantil"
+      >
+        {sectionDeleteModal ? (
+          <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-4 text-[var(--ink)]">
+            Se eliminarán las relaciones de sus integrantes con esta sección estudiantil. Las
+            solicitudes y registros de evento permanecerán, pero quedarán sin sección asignada.
+          </div>
+        ) : null}
+      </ConfirmActionModal>
     </div>
   );
 }

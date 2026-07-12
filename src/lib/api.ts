@@ -623,7 +623,7 @@ export async function denyMemberRequest(id: string, comments?: string) {
 
 export async function listEventRequests(
   eventId: string,
-  status?: "pending" | "approved" | "rejected",
+  status?: "pending" | "rejected",
   query = "",
   page = 1,
   pageSize = 20,
@@ -641,7 +641,7 @@ export async function listEventRequests(
 }
 
 export async function listAdminEventRequests(
-  status?: "pending" | "approved" | "rejected",
+  status?: "pending" | "rejected",
   query = "",
   page = 1,
   pageSize = 20,

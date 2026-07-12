@@ -3,7 +3,7 @@
 import type { RequestStatusFilter as RequestStatusFilterValue } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
-const options: Array<{ label: string; value: RequestStatusFilterValue }> = [
+const defaultOptions: Array<{ label: string; value: RequestStatusFilterValue }> = [
   { label: "Pendientes", value: "pending" },
   { label: "Aprobadas", value: "approved" },
   { label: "Rechazadas", value: "rejected" },
@@ -13,12 +13,14 @@ const options: Array<{ label: string; value: RequestStatusFilterValue }> = [
 type RequestStatusFilterProps = {
   value: RequestStatusFilterValue;
   onChange: (value: RequestStatusFilterValue) => void;
+  options?: Array<{ label: string; value: RequestStatusFilterValue }>;
   className?: string;
 };
 
 export function RequestStatusFilter({
   value,
   onChange,
+  options = defaultOptions,
   className,
 }: RequestStatusFilterProps) {
   return (
@@ -26,7 +28,8 @@ export function RequestStatusFilter({
       role="group"
       aria-label="Filtrar por estado"
       className={cn(
-        "grid w-full grid-cols-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-1 sm:inline-grid sm:w-auto sm:grid-cols-4",
+        "grid w-full rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-1 sm:inline-grid sm:w-auto",
+        options.length === 2 ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-4",
         className
       )}
     >
