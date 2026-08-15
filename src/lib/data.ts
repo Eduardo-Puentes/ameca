@@ -68,6 +68,7 @@ export const resetAdminUserPassword = pick(api.resetAdminUserPassword, mock.rese
 export const deleteAdminUser = pick(api.deleteAdminUser);
 export const listMyPresentations = pick(api.listMyPresentations, mock.listMyPresentations);
 export const uploadPresentation = pick(api.uploadPresentation, mock.uploadPresentation);
+export const lookupPresentationByCode = pick(api.lookupPresentationByCode, mock.lookupPresentationByCode);
 export const confirmPresentationCode = pick(api.confirmPresentationCode);
 export const deletePresentation = pick(api.deletePresentation, mock.deletePresentation);
 export const adminDeletePresentation = pick(api.adminDeletePresentation);

@@ -1347,6 +1347,30 @@ export async function uploadPresentation(_eventId: string, file: File) {
   };
 }
 
+export async function lookupPresentationByCode(eventId: string, code: string) {
+  await wait(200);
+  const [presentationType = "OP", area = "I"] = code.split("-");
+  return {
+    id: generateId("pres"),
+    eventId,
+    memberId: "",
+    title: "Presentación de ejemplo",
+    authors: "Autor principal; Coautor",
+    presenterFirstName: "Autor",
+    presenterLastName: "Principal",
+    primaryEmail: "autor@example.com",
+    organization: "AMECA",
+    presentationType,
+    area,
+    code,
+    documentLink: "#",
+    fileUrl: "#",
+    confirmed: false,
+    uploadedAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+}
+
 export async function deletePresentation(_id: string) {
   await wait(150);
   return { ok: true };

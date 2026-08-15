@@ -204,17 +204,17 @@ export default function AdminEventMemberDetailPage() {
                   >
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
-                        <div className="text-sm font-semibold text-[var(--ink)]">{presentation.name}</div>
+                        <div className="text-sm font-semibold text-[var(--ink)]">{presentation.title || presentation.name}</div>
                         <div className="text-xs text-[var(--muted)]">
-                          {presentation.presentationType} · {presentation.confirmationCode}
+                          {presentation.presentationType} · {presentation.code || presentation.confirmationCode}
                         </div>
-                        {presentation.description ? (
-                          <div className="mt-2 text-sm text-[var(--muted)]">{presentation.description}</div>
+                        {presentation.authors || presentation.description ? (
+                          <div className="mt-2 text-sm text-[var(--muted)]">{presentation.authors || presentation.description}</div>
                         ) : null}
                       </div>
-                      {presentation.fileUrl ? (
+                      {presentation.documentLink || presentation.fileUrl ? (
                         <a
-                          href={presentation.fileUrl}
+                          href={presentation.documentLink || presentation.fileUrl}
                           target="_blank"
                           rel="noreferrer"
                           className="text-sm font-medium text-[var(--accent)]"
