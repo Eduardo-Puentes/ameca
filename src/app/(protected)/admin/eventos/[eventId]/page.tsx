@@ -98,7 +98,7 @@ export default function AdminEventoDetallePage() {
   const [presentationsPage, setPresentationsPage] = useState(1);
   const [presentationsTotal, setPresentationsTotal] = useState(0);
   const [presentationsSearch, setPresentationsSearch] = useState("");
-  const [presentationTypeFilter, setPresentationTypeFilter] = useState<"" | "oral" | "poster">("");
+  const [presentationTypeFilter, setPresentationTypeFilter] = useState<"" | "OP" | "PP">("");
   const [presentationConfirmedFilter, setPresentationConfirmedFilter] = useState<"" | "true" | "false">("");
   const [presentationsLoading, setPresentationsLoading] = useState(false);
   const [presentationImportFile, setPresentationImportFile] = useState<File | null>(null);
@@ -378,15 +378,31 @@ export default function AdminEventoDetallePage() {
     { header: "Sección estudiantil", accessor: "sectionName" },
   ];
   const presentationColumns = [
-    { header: "Título", accessor: "name" },
-    { header: "Ponente", accessor: "presenterName" },
-    { header: "Correo", accessor: "presenterEmail" },
+    {
+      header: "Título",
+      accessor: "title",
+      render: (presentation: Presentation) => presentation.title || presentation.name || "",
+    },
+    {
+      header: "Ponente",
+      accessor: "presenterFirstName",
+      render: (presentation: Presentation) =>
+        [presentation.presenterFirstName, presentation.presenterLastName].filter(Boolean).join(" ") ||
+        presentation.presenterName ||
+        "",
+    },
+    {
+      header: "Correo",
+      accessor: "primaryEmail",
+      render: (presentation: Presentation) => presentation.primaryEmail || presentation.presenterEmail || "",
+    },
     { header: "Tipo", accessor: "presentationType" },
+    { header: "Área", accessor: "area" },
     {
       header: "Código",
-      accessor: "confirmationCode",
+      accessor: "code",
       render: (presentation: Presentation) => (
-        <span className="font-mono text-xs">{presentation.confirmationCode}</span>
+        <span className="font-mono text-xs">{presentation.code || presentation.confirmationCode}</span>
       ),
     },
     {
@@ -404,10 +420,10 @@ export default function AdminEventoDetallePage() {
       className: "w-36 px-3 py-4",
       render: (presentation: Presentation) => (
         <div className="flex gap-2">
-          {presentation.fileUrl ? (
+          {presentation.documentLink || presentation.fileUrl ? (
             <a
               className="inline-flex h-9 items-center rounded-lg bg-[var(--surface-3)] px-3 text-sm font-medium text-[var(--ink)]"
-              href={presentation.fileUrl}
+              href={presentation.documentLink || presentation.fileUrl}
               target="_blank"
               rel="noreferrer"
             >
@@ -757,6 +773,7 @@ export default function AdminEventoDetallePage() {
           <FileUpload
             label="CSV o Excel de ponencias"
             accept=".csv,.xlsx,.xls"
+            maxSizeMb={10}
             onChange={setPresentationImportFile}
           />
           <Button
@@ -779,13 +796,13 @@ export default function AdminEventoDetallePage() {
           <Select
             value={presentationTypeFilter}
             onChange={(event) => {
-              setPresentationTypeFilter(event.target.value as "" | "oral" | "poster");
+              setPresentationTypeFilter(event.target.value as "" | "OP" | "PP");
               setPresentationsPage(1);
             }}
           >
             <option value="">Todos los tipos</option>
-            <option value="oral">Oral</option>
-            <option value="poster">Poster</option>
+            <option value="OP">OP</option>
+            <option value="PP">PP</option>
           </Select>
           <Select
             value={presentationConfirmedFilter}
@@ -1032,7 +1049,7 @@ export default function AdminEventoDetallePage() {
             <>
               Estas a punto de quitar{" "}
               <span className="font-semibold text-[var(--ink)]">
-                {presentationDeleteModal.name || presentationDeleteModal.confirmationCode}
+                {presentationDeleteModal.title || presentationDeleteModal.name || presentationDeleteModal.code || presentationDeleteModal.confirmationCode}
               </span>
               .
             </>

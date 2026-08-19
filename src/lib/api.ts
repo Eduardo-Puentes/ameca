@@ -139,6 +139,8 @@ const humanizeError = (message: string, status: number, code?: string) => {
       "Solo socios profesionales pueden solicitar cambios de membresía, excepto estudiantes que pueden solicitar socio estudiante.",
     same_profile_type: "El perfil solicitado debe ser distinto al actual.",
     upgrade_requirements_not_met: "Faltan documentos requeridos para este upgrade.",
+    presentation_import_file_too_large: "El archivo de ponencias supera el tamaño máximo de 10 MB.",
+    presentation_limit_reached: "Solo puedes vincular hasta tres presentaciones para este evento.",
   };
 
   if (code && codeMappings[code]) {
@@ -202,6 +204,9 @@ const humanizeError = (message: string, status: number, code?: string) => {
   }
   if (status === 409) {
     return "Ya existe un registro con esos datos.";
+  }
+  if (status === 413) {
+    return "El archivo es demasiado grande.";
   }
   if (status >= 500) {
     return "Ocurrió un error en el servidor. Intenta de nuevo.";
@@ -1054,7 +1059,7 @@ export async function listMyPresentations(eventId: string) {
 export async function uploadPresentation(
   eventId: string,
   file: File,
-  payload?: { name?: string; description?: string; presentationType?: "POSTER" | "ORAL" }
+  payload?: { name?: string; description?: string; presentationType?: "OP" | "PP" }
 ) {
   const form = new FormData();
   form.append("file", file);
@@ -1065,6 +1070,11 @@ export async function uploadPresentation(
     method: "POST",
     body: form,
   });
+}
+
+export async function lookupPresentationByCode(eventId: string, code: string) {
+  const params = new URLSearchParams({ code });
+  return request<Presentation>(`/events/${eventId}/presentations/lookup?${params.toString()}`);
 }
 
 export async function confirmPresentationCode(eventId: string, code: string) {
@@ -1102,7 +1112,7 @@ export async function listEventPresentations(
   query = "",
   page = 1,
   pageSize = 20,
-  presentationType?: "poster" | "oral" | "POSTER" | "ORAL" | "",
+  presentationType?: "OP" | "PP" | "",
   confirmed?: boolean | ""
 ): Promise<PaginatedResponse<Presentation>> {
   const params = new URLSearchParams();

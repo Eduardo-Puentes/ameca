@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { CalendarDays, MapPin, QrCode, Ticket } from "lucide-react";
+import { CalendarDays, MapPin, QrCode, Search, Ticket } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageMetaContext";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
@@ -22,10 +22,17 @@ import {
   deletePresentation,
   getMyEventRegistration,
   listMyPresentations,
+  lookupPresentationByCode,
   updateMySpeakerProfile,
 } from "@/lib/data";
 import type { MemberEventRegistration, Presentation } from "@/lib/types";
 import { formatCurrency, formatDate } from "@/lib/utils";
+
+type ClaimPresentationType = "OP" | "PP";
+type ClaimArea = "I" | "II" | "III" | "IV" | "V" | "VI";
+
+const claimAreas: ClaimArea[] = ["I", "II", "III", "IV", "V", "VI"];
+const maxPresentationsPerEvent = 3;
 
 export default function MemberEventoRegistroPage() {
   const params = useParams();
@@ -36,7 +43,12 @@ export default function MemberEventoRegistroPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [qrOpen, setQrOpen] = useState(false);
-  const [claimCode, setClaimCode] = useState("");
+  const [claimType, setClaimType] = useState<ClaimPresentationType>("OP");
+  const [claimArea, setClaimArea] = useState<ClaimArea>("I");
+  const [claimNumber, setClaimNumber] = useState("");
+  const [searchedPresentation, setSearchedPresentation] = useState<Presentation | null>(null);
+  const [searchedCode, setSearchedCode] = useState("");
+  const [searchingPresentation, setSearchingPresentation] = useState(false);
   const [speakerTitle, setSpeakerTitle] = useState("");
   const [speakerDescription, setSpeakerDescription] = useState("");
   const [speakerPhoto, setSpeakerPhoto] = useState<File | null>(null);
@@ -79,13 +91,37 @@ export default function MemberEventoRegistroPage() {
       .catch(() => setPresentations(registration.presentations ?? []));
   }, [eventId, registration]);
 
+  const builtClaimCode = `${claimType}-${claimArea}-${claimNumber.trim()}`;
+  const presentationLimitReached = presentations.length >= maxPresentationsPerEvent;
+  const canSearchPresentation = Boolean(claimNumber.trim()) && !presentationLimitReached;
+
+  const handleSearchPresentation = async () => {
+    if (!eventId || !canSearchPresentation) return;
+    try {
+      setSearchingPresentation(true);
+      const item = await lookupPresentationByCode(eventId, builtClaimCode);
+      setSearchedPresentation(item);
+      setSearchedCode(builtClaimCode);
+    } catch (searchError) {
+      setSearchedPresentation(null);
+      setSearchedCode("");
+      const message = searchError instanceof Error ? searchError.message : "No se encontró esa presentación.";
+      pushToast({ title: "Presentación no encontrada", message, tone: "danger" });
+    } finally {
+      setSearchingPresentation(false);
+    }
+  };
+
   const handleClaimPresentation = async () => {
-    if (!eventId || !claimCode.trim()) return;
+    const codeToClaim = searchedCode || builtClaimCode;
+    if (!eventId || !codeToClaim.trim()) return;
     try {
       setClaimingPresentation(true);
-      const claimed = await confirmPresentationCode(eventId, claimCode);
+      const claimed = await confirmPresentationCode(eventId, codeToClaim);
       setPresentations((prev) => [claimed, ...prev.filter((item) => item.id !== claimed.id)]);
-      setClaimCode("");
+      setSearchedPresentation(null);
+      setSearchedCode("");
+      setClaimNumber("");
       pushToast({ title: "Presentación vinculada", tone: "success" });
     } catch (claimError) {
       const message = claimError instanceof Error ? claimError.message : "No se pudo vincular la presentación.";
@@ -214,24 +250,141 @@ export default function MemberEventoRegistroPage() {
         <div>
           <div className="text-lg font-semibold text-[var(--ink)]">Presentaciones</div>
           <div className="text-sm text-[var(--muted)]">
-            Escribe el código de confirmación de una ponencia importada para vincularla a tu registro.
+            Busca tu ponencia importada por tipo, área y número de código para vincularla a tu registro.
           </div>
+          {presentationLimitReached ? (
+            <div className="mt-2 text-sm font-medium text-[var(--warning)]">
+              Ya vinculaste el máximo de tres presentaciones para este evento.
+            </div>
+          ) : null}
         </div>
-        <div className="grid gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-3 md:grid-cols-[1fr_auto]">
-          <Input
-            placeholder="Código de confirmación, por ejemplo OR-ABC123"
-            value={claimCode}
-            onChange={(event) => setClaimCode(event.target.value)}
-          />
+        <div className="grid gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-3 lg:grid-cols-[minmax(11rem,1fr)_minmax(8rem,0.75fr)_minmax(10rem,1fr)_auto]">
+          <div>
+            <label className="mb-2 block text-xs font-medium text-[var(--muted)]" htmlFor="claim-type">
+              Tipo
+            </label>
+            <Select
+              id="claim-type"
+              value={claimType}
+              onChange={(event) => {
+                setClaimType(event.target.value as ClaimPresentationType);
+                setSearchedPresentation(null);
+                setSearchedCode("");
+              }}
+              disabled={presentationLimitReached}
+            >
+              <option value="OP">Oral presentation</option>
+              <option value="PP">Poster Presentation</option>
+            </Select>
+          </div>
+          <div>
+            <label className="mb-2 block text-xs font-medium text-[var(--muted)]" htmlFor="claim-area">
+              Área
+            </label>
+            <Select
+              id="claim-area"
+              value={claimArea}
+              onChange={(event) => {
+                setClaimArea(event.target.value as ClaimArea);
+                setSearchedPresentation(null);
+                setSearchedCode("");
+              }}
+              disabled={presentationLimitReached}
+            >
+              {claimAreas.map((area) => (
+                <option key={area} value={area}>
+                  {area}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div>
+            <label className="mb-2 block text-xs font-medium text-[var(--muted)]" htmlFor="claim-number">
+              Número
+            </label>
+            <Input
+              id="claim-number"
+              inputMode="numeric"
+              placeholder="Ej. 001"
+              value={claimNumber}
+              onChange={(event) => {
+                setClaimNumber(event.target.value.replace(/\D/g, ""));
+                setSearchedPresentation(null);
+                setSearchedCode("");
+              }}
+              disabled={presentationLimitReached}
+            />
+          </div>
           <Button
-            onClick={handleClaimPresentation}
-            disabled={!claimCode.trim()}
-            loading={claimingPresentation}
-            loadingText="Vinculando..."
+            className="self-end"
+            onClick={handleSearchPresentation}
+            disabled={!canSearchPresentation}
+            loading={searchingPresentation}
+            loadingText="Buscando..."
           >
-            Vincular código
+            <Search className="h-4 w-4" />
+            Buscar
           </Button>
         </div>
+
+        {searchedPresentation ? (
+          <div className="rounded-lg border border-[var(--border)] bg-white/80 p-4">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <div className="text-xs font-medium uppercase text-[var(--muted)]">{searchedCode}</div>
+                <div className="mt-1 text-sm font-semibold text-[var(--ink)]">
+                  {searchedPresentation.title || searchedPresentation.name}
+                </div>
+                <div className="mt-1 text-xs text-[var(--muted)]">
+                  {[searchedPresentation.presentationType, searchedPresentation.area, searchedPresentation.organization]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </div>
+                <div className="mt-2 grid gap-1 text-xs text-[var(--muted)] sm:grid-cols-2">
+                  {searchedPresentation.presenterFirstName || searchedPresentation.presenterLastName || searchedPresentation.presenterName ? (
+                    <div>
+                      <span className="font-medium text-[var(--ink)]">Presenter:</span>{" "}
+                      {[searchedPresentation.presenterFirstName, searchedPresentation.presenterLastName].filter(Boolean).join(" ") ||
+                        searchedPresentation.presenterName}
+                    </div>
+                  ) : null}
+                  {searchedPresentation.email ? (
+                    <div>
+                      <span className="font-medium text-[var(--ink)]">Email:</span>{" "}
+                      {searchedPresentation.email}
+                    </div>
+                  ) : null}
+                  {searchedPresentation.primaryEmail || searchedPresentation.presenterEmail ? (
+                    <div>
+                      <span className="font-medium text-[var(--ink)]">Presenter email:</span>{" "}
+                      {searchedPresentation.primaryEmail || searchedPresentation.presenterEmail}
+                    </div>
+                  ) : null}
+                </div>
+                {searchedPresentation.authors || searchedPresentation.description ? (
+                  <div className="mt-2 text-sm text-[var(--muted)]">
+                    {searchedPresentation.authors || searchedPresentation.description}
+                  </div>
+                ) : null}
+              </div>
+              <Button
+                size="sm"
+                onClick={handleClaimPresentation}
+                disabled={
+                  claimingPresentation ||
+                  presentationLimitReached ||
+                  Boolean(searchedPresentation.confirmed && searchedPresentation.memberId !== registration.memberId)
+                }
+                loading={claimingPresentation}
+                loadingText="Vinculando..."
+              >
+                {searchedPresentation.confirmed && searchedPresentation.memberId !== registration.memberId
+                  ? "Ya vinculada"
+                  : "Vincular"}
+              </Button>
+            </div>
+          </div>
+        ) : null}
 
         {presentations.length === 0 ? (
           <div className="text-sm text-[var(--muted)]">No hay presentaciones vinculadas.</div>
@@ -243,15 +396,17 @@ export default function MemberEventoRegistroPage() {
                 className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[var(--border)] bg-white/70 px-3 py-2 text-sm"
               >
                 <div>
-                  <div className="font-medium text-[var(--ink)]">{item.name || item.fileName}</div>
-                  {item.description ? <div className="text-xs text-[var(--muted)]">{item.description}</div> : null}
-                  {item.confirmationCode ? (
-                    <div className="font-mono text-xs text-[var(--muted)]">{item.confirmationCode}</div>
+                  <div className="font-medium text-[var(--ink)]">{item.title || item.name || item.fileName}</div>
+                  {item.authors || item.description ? (
+                    <div className="text-xs text-[var(--muted)]">{item.authors || item.description}</div>
+                  ) : null}
+                  {item.code || item.confirmationCode ? (
+                    <div className="font-mono text-xs text-[var(--muted)]">{item.code || item.confirmationCode}</div>
                   ) : null}
                 </div>
                 <div className="flex items-center gap-2">
-                  {item.fileUrl ? (
-                    <a className="text-[var(--accent)]" href={item.fileUrl} target="_blank" rel="noreferrer">
+                  {item.documentLink || item.fileUrl ? (
+                    <a className="text-[var(--accent)]" href={item.documentLink || item.fileUrl} target="_blank" rel="noreferrer">
                       Ver
                     </a>
                   ) : null}
@@ -322,7 +477,7 @@ export default function MemberEventoRegistroPage() {
           <>
             Estás a punto de desvincular{" "}
             <span className="font-semibold text-[var(--ink)]">
-              {presentationToDelete?.name || presentationToDelete?.fileName}
+              {presentationToDelete?.title || presentationToDelete?.name || presentationToDelete?.fileName}
             </span>
             . La ponencia importada se conservará.
           </>

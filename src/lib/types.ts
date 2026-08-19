@@ -561,11 +561,27 @@ export type Presentation = {
   eventMemberId?: string;
   eventId: string;
   memberId: string;
+  email?: string;
+  presenterFirstName?: string;
+  presenterLastName?: string;
+  primaryEmail?: string;
+  organization?: string;
+  secondaryEmail?: string | null;
+  title?: string;
+  authors?: string;
+  area?: "I" | "II" | "III" | "IV" | "V" | "VI" | string;
+  documentLink?: string;
+  code?: string;
+  evaluador1?: string | null;
+  evaluador2?: string | null;
+  evaluador3?: string | null;
+  dictamen?: string | null;
+  calificacion?: number | null;
   name?: string;
   description?: string;
   presenterName?: string;
   presenterEmail?: string;
-  presentationType?: "poster" | "oral" | "POSTER" | "ORAL";
+  presentationType?: "OP" | "PP" | "poster" | "oral" | "POSTER" | "ORAL";
   confirmationCode?: string;
   confirmed?: boolean;
   confirmedAt?: number | string | null;
@@ -580,10 +596,10 @@ export type Presentation = {
 export type PresentationImportResult = {
   items: Presentation[];
   errors: Array<{ row: number; error: string }>;
-  emailErrors: Array<{ email: string; error: string }>;
+  emailErrors?: Array<{ email: string; error: string }>;
   count: number;
   errorCount: number;
-  emailErrorCount: number;
+  emailErrorCount?: number;
 };
 
 export type RegistrationStatus = {
