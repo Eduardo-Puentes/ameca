@@ -285,7 +285,7 @@ export default function AdminEventoDetallePage() {
       render: (req: EventRequest) => (
         <Link
           href={`/admin/eventos/${req.eventId}/solicitudes/${req.id}`}
-          className="inline-flex h-9 w-full items-center justify-center rounded-lg bg-[var(--surface-2)] px-3 text-sm font-medium text-[var(--ink)] transition hover:bg-[var(--surface-3)]"
+          className="inline-flex min-h-9 w-full items-center justify-center rounded-lg bg-[var(--surface-2)] px-3 py-2 text-center text-sm font-medium leading-tight text-[var(--ink)] transition hover:bg-[var(--surface-3)]"
         >
           Ver
         </Link>
@@ -340,7 +340,7 @@ export default function AdminEventoDetallePage() {
         <div className="flex flex-wrap gap-2">
           <Link
             href={`/admin/eventos/${eventId}/miembros/${registration.id}`}
-            className="inline-flex h-9 items-center justify-center rounded-lg bg-[var(--surface-3)] px-3 text-sm font-medium text-[var(--ink)] transition hover:bg-[var(--surface-2)]"
+            className="inline-flex min-h-9 max-w-full items-center justify-center rounded-lg bg-[var(--surface-3)] px-3 py-2 text-center text-sm font-medium leading-tight text-[var(--ink)] transition hover:bg-[var(--surface-2)]"
           >
             Ver
           </Link>
@@ -422,7 +422,7 @@ export default function AdminEventoDetallePage() {
         <div className="flex gap-2">
           {presentation.documentLink || presentation.fileUrl ? (
             <a
-              className="inline-flex h-9 items-center rounded-lg bg-[var(--surface-3)] px-3 text-sm font-medium text-[var(--ink)]"
+              className="inline-flex min-h-9 max-w-full items-center rounded-lg bg-[var(--surface-3)] px-3 py-2 text-center text-sm font-medium leading-tight text-[var(--ink)]"
               href={presentation.documentLink || presentation.fileUrl}
               target="_blank"
               rel="noreferrer"
@@ -454,7 +454,7 @@ export default function AdminEventoDetallePage() {
         <div className="flex justify-center gap-2">
           <Link
             href={`/admin/eventos/${eventId}/secciones/${section.id}`}
-            className="inline-flex h-9 items-center justify-center rounded-lg bg-[var(--surface-3)] px-3 text-sm font-medium text-[var(--ink)] transition hover:bg-[var(--surface-2)]"
+            className="inline-flex min-h-9 max-w-full items-center justify-center rounded-lg bg-[var(--surface-3)] px-3 py-2 text-center text-sm font-medium leading-tight text-[var(--ink)] transition hover:bg-[var(--surface-2)]"
           >
             Ver
           </Link>
@@ -595,7 +595,7 @@ export default function AdminEventoDetallePage() {
       <Card className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="text-xs uppercase tracking-[0.3em] text-[var(--muted)]">Estado</div>
+            <div className="break-words text-xs uppercase tracking-[0.12em] text-[var(--muted)]">Estado</div>
             <div className="text-lg font-semibold text-[var(--ink)]">{event.location}</div>
           </div>
           <div className="flex items-center gap-2">
@@ -889,7 +889,7 @@ export default function AdminEventoDetallePage() {
             </button>
           </div>
           <div className="rounded-xl border border-[var(--border)] bg-[var(--surface-2)] p-4">
-            <div className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">
+            <div className="break-words text-xs uppercase tracking-[0.12em] text-[var(--muted)]">
               Estado del registro
             </div>
             <div className="mt-2 text-base font-semibold text-[var(--ink)]">

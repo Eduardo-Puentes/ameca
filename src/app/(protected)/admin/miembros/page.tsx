@@ -94,7 +94,7 @@ export default function AdminMiembrosPage() {
         <div className="flex flex-wrap gap-2">
           <Link
             href={`/admin/socios/${member.id}`}
-            className="inline-flex h-9 items-center justify-center rounded-lg bg-[var(--accent-soft)] px-3 text-sm font-semibold text-[var(--accent-strong)] transition hover:bg-[var(--accent)] hover:text-white"
+            className="inline-flex min-h-9 max-w-full items-center justify-center rounded-lg bg-[var(--accent-soft)] px-3 py-2 text-center text-sm font-semibold leading-tight text-[var(--accent-strong)] transition hover:bg-[var(--accent)] hover:text-white"
           >
             Ver perfil
           </Link>

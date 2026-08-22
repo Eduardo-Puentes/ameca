@@ -47,7 +47,7 @@ export default function StaffEscanerPage() {
       <Card className="space-y-4">
         <div className="grid gap-4 md:grid-cols-2">
           <div className="space-y-2">
-            <label className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">
+            <label className="block break-words text-xs uppercase tracking-[0.12em] text-[var(--muted)]">
               Evento
             </label>
             <Select
@@ -62,7 +62,7 @@ export default function StaffEscanerPage() {
             </Select>
           </div>
           <div className="space-y-2">
-            <label className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">
+            <label className="block break-words text-xs uppercase tracking-[0.12em] text-[var(--muted)]">
               Token
             </label>
             <Input

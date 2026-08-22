@@ -32,22 +32,22 @@ export function Topbar({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
           {breadcrumb && breadcrumb.length > 0 ? (
-            <div className="text-xs uppercase tracking-[0.3em] text-[var(--muted)]">
+            <div className="break-words text-xs uppercase tracking-[0.12em] text-[var(--muted)]">
               {breadcrumb.join(" / ")}
             </div>
           ) : null}
-          <div className="text-xl font-semibold text-[var(--ink)] md:text-2xl">{title}</div>
-          {subtitle ? <div className="text-sm text-[var(--muted)]">{subtitle}</div> : null}
+          <div className="break-words text-xl font-semibold text-[var(--ink)] md:text-2xl">{title}</div>
+          {subtitle ? <div className="break-words text-sm text-[var(--muted)]">{subtitle}</div> : null}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2">
           <Badge tone="info" className="hidden sm:inline-flex">
             Sistema activo
           </Badge>
-          <div className="hidden items-center gap-2 rounded-full bg-[var(--surface-2)] px-3 py-1 text-sm sm:flex">
-            <span className="font-semibold text-[var(--ink)]">{user?.name ?? "Invitado"}</span>
-            <span className="text-[var(--muted)]">{roleLabel}</span>
+          <div className="hidden min-w-0 max-w-xs items-center gap-2 rounded-full bg-[var(--surface-2)] px-3 py-1 text-sm sm:flex">
+            <span className="min-w-0 truncate font-semibold text-[var(--ink)]">{user?.name ?? "Invitado"}</span>
+            <span className="shrink-0 text-[var(--muted)]">{roleLabel}</span>
           </div>
-          <div className="flex items-center gap-2 rounded-full bg-[var(--surface-2)] px-3 py-1 text-xs sm:hidden">
+          <div className="flex min-w-0 items-center gap-2 rounded-full bg-[var(--surface-2)] px-3 py-1 text-xs sm:hidden">
             {roleLabel}
           </div>
           <button className="hidden rounded-full bg-[var(--surface-2)] p-2 text-[var(--ink)] sm:inline-flex">

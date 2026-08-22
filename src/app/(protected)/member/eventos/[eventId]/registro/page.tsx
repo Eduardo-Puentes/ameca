@@ -91,9 +91,10 @@ export default function MemberEventoRegistroPage() {
       .catch(() => setPresentations(registration.presentations ?? []));
   }, [eventId, registration]);
 
-  const builtClaimCode = `${claimType}-${claimArea}-${claimNumber.trim()}`;
+  const normalizedClaimNumber = claimNumber.trim().padStart(3, "0");
+  const builtClaimCode = `${claimType}-${claimArea}-${normalizedClaimNumber}`;
   const presentationLimitReached = presentations.length >= maxPresentationsPerEvent;
-  const canSearchPresentation = Boolean(claimNumber.trim()) && !presentationLimitReached;
+  const canSearchPresentation = Boolean(claimNumber.trim()) && claimNumber.trim().length <= 3 && !presentationLimitReached;
 
   const handleSearchPresentation = async () => {
     if (!eventId || !canSearchPresentation) return;
@@ -308,7 +309,7 @@ export default function MemberEventoRegistroPage() {
               placeholder="Ej. 001"
               value={claimNumber}
               onChange={(event) => {
-                setClaimNumber(event.target.value.replace(/\D/g, ""));
+                setClaimNumber(event.target.value.replace(/\D/g, "").slice(0, 3));
                 setSearchedPresentation(null);
                 setSearchedCode("");
               }}

@@ -11,11 +11,11 @@ export function FormField({
 }) {
   return (
     <div className="space-y-2">
-      <label className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">
+      <label className="block break-words text-xs uppercase tracking-[0.12em] text-[var(--muted)]">
         {label}
       </label>
       {children}
-      {helper ? <div className="text-xs text-[var(--muted)]">{helper}</div> : null}
+      {helper ? <div className="break-words text-xs text-[var(--muted)]">{helper}</div> : null}
     </div>
   );
 }

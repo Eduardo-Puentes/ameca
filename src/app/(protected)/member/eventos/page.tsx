@@ -44,7 +44,7 @@ export default function MemberEventosPage() {
           </div>
           <Link
             href="/socio/secciones"
-            className="mt-3 inline-flex h-9 items-center rounded-lg bg-[var(--surface)] px-3 text-sm font-medium text-[var(--accent)] transition hover:bg-[var(--accent-soft)]"
+            className="mt-3 inline-flex min-h-9 max-w-full items-center rounded-lg bg-[var(--surface)] px-3 py-2 text-sm font-medium leading-tight text-[var(--accent)] transition hover:bg-[var(--accent-soft)]"
           >
             Ir a secciones estudiantiles
           </Link>

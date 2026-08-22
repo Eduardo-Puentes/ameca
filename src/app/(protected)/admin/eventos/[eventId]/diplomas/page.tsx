@@ -133,8 +133,8 @@ export default function AdminDiplomasPage() {
       <Card className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <div className="text-xs uppercase tracking-[0.3em] text-[var(--muted)]">Evento</div>
-            <div className="text-lg font-semibold text-[var(--ink)]">{event.name}</div>
+            <div className="break-words text-xs uppercase tracking-[0.12em] text-[var(--muted)]">Evento</div>
+            <div className="break-words text-lg font-semibold text-[var(--ink)]">{event.name}</div>
             <div className="text-sm text-[var(--muted)]">
               {formatDate(event.startDate)} • {event.duration} día(s) • {event.location}
             </div>
@@ -179,21 +179,21 @@ export default function AdminDiplomasPage() {
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="space-y-2">
-          <div className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">Asistencia</div>
+          <div className="break-words text-xs uppercase tracking-[0.12em] text-[var(--muted)]">Asistencia</div>
           <div className="text-2xl font-semibold text-[var(--ink)]">{totalAttendees}</div>
           <div className="text-sm text-[var(--muted)]">
             Personas con al menos un día registrado.
           </div>
         </Card>
         <Card className="space-y-2">
-          <div className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">Elegibles</div>
+          <div className="break-words text-xs uppercase tracking-[0.12em] text-[var(--muted)]">Elegibles</div>
           <div className="text-2xl font-semibold text-[var(--ink)]">{eligibleNow}</div>
           <div className="text-sm text-[var(--muted)]">
             Basado en mínimo de 1 día.
           </div>
         </Card>
         <Card className="space-y-2">
-          <div className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">Diplomas</div>
+          <div className="break-words text-xs uppercase tracking-[0.12em] text-[var(--muted)]">Diplomas</div>
           <div className="text-2xl font-semibold text-[var(--ink)]">{records.length}</div>
           <div className="text-sm text-[var(--muted)]">
             Generados para este evento.
