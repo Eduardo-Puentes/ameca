@@ -60,7 +60,7 @@ export default function MemberSolicitudesPage() {
       render: (req: MembershipRequest) => (
         <Link
           href={`/socio/solicitudes/membresia/${req.id}`}
-          className="inline-flex h-9 items-center justify-center rounded-lg bg-[var(--surface-2)] px-3 text-sm font-medium text-[var(--ink)] transition hover:bg-[var(--surface-3)]"
+          className="inline-flex min-h-9 max-w-full items-center justify-center rounded-lg bg-[var(--surface-2)] px-3 py-2 text-center text-sm font-medium leading-tight text-[var(--ink)] transition hover:bg-[var(--surface-3)]"
         >
           Ver
         </Link>
@@ -82,7 +82,7 @@ export default function MemberSolicitudesPage() {
       render: (req: EventRequest) => (
         <Link
           href={`/socio/solicitudes/eventos/${req.id}`}
-          className="inline-flex h-9 items-center justify-center rounded-lg bg-[var(--surface-2)] px-3 text-sm font-medium text-[var(--ink)] transition hover:bg-[var(--surface-3)]"
+          className="inline-flex min-h-9 max-w-full items-center justify-center rounded-lg bg-[var(--surface-2)] px-3 py-2 text-center text-sm font-medium leading-tight text-[var(--ink)] transition hover:bg-[var(--surface-3)]"
         >
           Ver
         </Link>

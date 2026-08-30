@@ -40,3 +40,29 @@ body {
   color: var(--ink);
   font-family: var(--font-ameca-sans), "Space Grotesk", sans-serif;
 }
+
+button,
+input,
+select,
+textarea {
+  max-width: 100%;
+}
+
+button,
+[role="button"] {
+  min-width: 0;
+}
+
+button,
+a,
+label,
+th,
+td,
+dt,
+dd {
+  overflow-wrap: break-word;
+}
+
+select {
+  text-overflow: ellipsis;
+}

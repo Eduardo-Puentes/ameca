@@ -42,7 +42,8 @@ export function RequestStatusFilter({
             aria-pressed={active}
             onClick={() => onChange(option.value)}
             className={cn(
-              "h-9 min-w-0 rounded-md px-2 text-xs font-medium transition sm:min-w-24 sm:px-3 sm:text-sm",
+              "min-h-9 min-w-0 rounded-md px-2 py-1.5 text-center text-xs font-medium leading-tight transition sm:min-w-24 sm:px-3 sm:text-sm",
+              "whitespace-normal break-words",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]",
               active
                 ? "bg-white text-[var(--ink)] shadow-sm"

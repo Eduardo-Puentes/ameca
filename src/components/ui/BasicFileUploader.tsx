@@ -19,7 +19,7 @@ export function BasicFileUploader({
 
   return (
     <div className="space-y-2">
-      <div className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">{label}</div>
+      <div className="break-words text-xs uppercase tracking-[0.12em] text-[var(--muted)]">{label}</div>
       <div className="flex flex-wrap items-center gap-3 rounded-xl border border-dashed border-[var(--border)] bg-[var(--surface-2)]/85 px-3 py-3">
         <Input
           type="file"
@@ -42,9 +42,9 @@ export function BasicFileUploader({
         </Button>
       </div>
       {fileName ? (
-        <div className="text-xs text-[var(--muted)]">Archivo seleccionado: {fileName}</div>
+        <div className="break-words text-xs text-[var(--muted)]">Archivo seleccionado: {fileName}</div>
       ) : null}
-      {helper ? <div className="text-xs text-[var(--muted)]">{helper}</div> : null}
+      {helper ? <div className="break-words text-xs text-[var(--muted)]">{helper}</div> : null}
     </div>
   );
 }

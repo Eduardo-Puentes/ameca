@@ -31,9 +31,9 @@ export function Modal({
           className
         )}
       >
-        <div className="mb-4 flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-[var(--ink)]">{title}</h3>
-          <Button variant="ghost" size="sm" onClick={onClose}>
+        <div className="mb-4 flex items-start justify-between gap-3">
+          <h3 className="min-w-0 break-words text-lg font-semibold text-[var(--ink)]">{title}</h3>
+          <Button className="shrink-0" variant="ghost" size="sm" onClick={onClose}>
             Cerrar
           </Button>
         </div>

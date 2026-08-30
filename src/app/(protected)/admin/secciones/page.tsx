@@ -32,7 +32,7 @@ function SectionRequestStatusFilter({
     <div
       role="group"
       aria-label="Filtrar solicitudes de sección estudiantil"
-      className="inline-grid grid-cols-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-1"
+      className="grid w-full grid-cols-2 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-1 sm:inline-grid sm:w-auto"
     >
       {options.map((option) => {
         const active = option.value === value;
@@ -43,7 +43,8 @@ function SectionRequestStatusFilter({
             aria-pressed={active}
             onClick={() => onChange(option.value)}
             className={cn(
-              "h-9 min-w-28 rounded-md px-3 text-sm font-medium transition",
+              "min-h-9 min-w-0 rounded-md px-2 py-1.5 text-center text-xs font-medium leading-tight transition sm:min-w-28 sm:px-3 sm:text-sm",
+              "whitespace-normal break-words",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]",
               active
                 ? "bg-white text-[var(--ink)] shadow-sm"

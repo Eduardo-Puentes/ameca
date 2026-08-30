@@ -22,9 +22,9 @@ const variantClasses: Record<ButtonVariant, string> = {
 };
 
 const sizeClasses = {
-  sm: "h-9 px-3 text-sm",
-  md: "h-10 px-4 text-sm",
-  lg: "h-11 px-5 text-base",
+  sm: "min-h-9 px-3 py-2 text-sm",
+  md: "min-h-10 px-4 py-2 text-sm",
+  lg: "min-h-11 px-5 py-2 text-base",
 };
 
 export function Button({
@@ -40,7 +40,8 @@ export function Button({
   return (
     <button
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition",
+        "inline-flex max-w-full min-w-0 items-center justify-center gap-2 rounded-lg text-center font-medium leading-tight transition",
+        "whitespace-normal break-words [&>svg]:shrink-0",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]",
         "disabled:opacity-50 disabled:pointer-events-none",
         variantClasses[variant],

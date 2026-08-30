@@ -68,7 +68,7 @@ export default function AdminEventRequestsPage() {
       render: (req: EventRequest) => (
         <Link
           href={`/admin/eventos/${req.eventId}/solicitudes/${req.id}`}
-          className="inline-flex h-9 items-center justify-center rounded-lg bg-[var(--surface-2)] px-3 text-sm font-medium text-[var(--ink)] transition hover:bg-[var(--surface-3)]"
+          className="inline-flex min-h-9 max-w-full items-center justify-center rounded-lg bg-[var(--surface-2)] px-3 py-2 text-center text-sm font-medium leading-tight text-[var(--ink)] transition hover:bg-[var(--surface-3)]"
         >
           Ver
         </Link>
@@ -86,11 +86,11 @@ export default function AdminEventRequestsPage() {
 
       <div className="grid gap-4 md:grid-cols-2">
         <Card className="space-y-2">
-          <div className="text-xs uppercase tracking-[0.3em] text-[var(--muted)]">Pendientes</div>
+          <div className="break-words text-xs uppercase tracking-[0.12em] text-[var(--muted)]">Pendientes</div>
           <div className="text-2xl font-semibold text-[var(--ink)]">{eventRequestStatusCounts.pending}</div>
         </Card>
         <Card className="space-y-2">
-          <div className="text-xs uppercase tracking-[0.3em] text-[var(--muted)]">Rechazadas</div>
+          <div className="break-words text-xs uppercase tracking-[0.12em] text-[var(--muted)]">Rechazadas</div>
           <div className="text-2xl font-semibold text-[var(--ink)]">{eventRequestStatusCounts.rejected}</div>
         </Card>
       </div>

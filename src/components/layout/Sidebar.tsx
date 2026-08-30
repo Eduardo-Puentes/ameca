@@ -46,8 +46,8 @@ export function Sidebar({
             alt={`Logo ${brand.brandName}`}
             className="h-12 w-12 object-contain"
           />
-          <div>
-            <div className="text-xs uppercase tracking-[0.25em] text-[var(--muted)]">
+          <div className="min-w-0">
+            <div className="truncate text-xs uppercase tracking-[0.16em] text-[var(--muted)]">
               {brand.brandName}
             </div>
             <div className="text-lg font-semibold text-[var(--ink)]">Plataforma</div>
@@ -64,18 +64,18 @@ export function Sidebar({
               href={item.href}
               onClick={() => onNavigate?.()}
               className={cn(
-                "flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition",
+                "flex min-w-0 items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition",
                 active
                   ? "bg-[var(--accent-soft)] text-[var(--accent-strong)]"
                   : "text-[var(--ink)] hover:bg-[var(--surface-2)]"
               )}
             >
-              <Icon className="h-4 w-4" />
-              {item.label}
+              <Icon className="h-4 w-4 shrink-0" />
+              <span className="min-w-0 truncate">{item.label}</span>
               {item.badge ? (
                 <span
                   className={cn(
-                    "ml-auto min-w-5 rounded-full px-2 py-0.5 text-center text-xs font-semibold",
+                    "ml-auto min-w-5 shrink-0 rounded-full px-2 py-0.5 text-center text-xs font-semibold",
                     item.badgeTone === "danger"
                       ? "bg-[var(--danger)] text-white"
                       : "bg-[var(--surface-3)] text-[var(--muted)]"
