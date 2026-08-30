@@ -648,14 +648,14 @@ export default function AdminEventoDetallePage() {
             Vista completa de solicitudes para este evento, con búsqueda y paginación.
           </div>
         </div>
-        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-col gap-3 md:flex-row md:flex-wrap md:items-center md:justify-between">
           <Input
             value={requestSearch}
             onChange={(inputEvent) => setRequestSearch(inputEvent.target.value)}
             placeholder="Buscar por socio, correo, sección estudiantil o comentarios"
-            className="md:max-w-xl"
+            className="md:min-w-64 md:max-w-xl md:flex-1"
           />
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center md:justify-end">
             <RequestStatusFilter
               value={requestStatus}
               onChange={setRequestStatus}
