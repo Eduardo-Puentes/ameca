@@ -7,6 +7,7 @@ import type {
   DiplomaTemplate,
   Event,
   EventMemberRegistration,
+  EventPresentationMetrics,
   EventRegistrationPreview,
   EventUpsertPayload,
   EventRequest,
@@ -1380,6 +1381,23 @@ export async function listEventSpeakers(_eventId: string, _query = "", page = 1,
   await wait(200);
   void _query;
   return { items: [], total: 0, page, pageSize, unfilteredTotal: 0 };
+}
+
+export async function getEventPresentationMetrics(_eventId: string): Promise<EventPresentationMetrics> {
+  await wait(150);
+  void _eventId;
+  return {
+    totalPresentations: 0,
+    linkedPresentations: 0,
+    eventMembersWithLinkedPresentations: 0,
+    totalEventMembers: 0,
+  };
+}
+
+export async function exportEventPresentationMembers(_eventId: string): Promise<Blob> {
+  await wait(150);
+  void _eventId;
+  return new Blob([], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
 }
 
 export async function downloadPresentation(_presentationId: string) {
