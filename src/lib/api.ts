@@ -9,6 +9,7 @@ import type {
   DiplomaRecord,
   DiplomaTemplate,
   Event,
+  EventPresentationMetrics,
   EventRegistrationPreview,
   EventMemberRegistration,
   EventUpsertPayload,
@@ -283,6 +284,51 @@ async function request<T>(
   }
 
   return response.json() as Promise<T>;
+}
+
+async function requestBlob(path: string, options: RequestInit = {}, withAuth = true): Promise<Blob> {
+  const headers = new Headers(options.headers ?? {});
+  const token = tokenStorage.get();
+  if (withAuth && token) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
+
+  const response = await fetch(`${API_URL}${path}`, {
+    ...options,
+    headers,
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    const raw = await response.text();
+    let message = raw;
+    let code: string | undefined;
+    try {
+      const parsed = JSON.parse(raw);
+      if (typeof parsed?.detail === "string") {
+        message = parsed.detail;
+      } else if (
+        typeof parsed?.detail === "object" &&
+        parsed.detail !== null &&
+        typeof parsed.detail.message === "string"
+      ) {
+        message = parsed.detail.message;
+        if (typeof parsed.detail.code === "string") {
+          code = parsed.detail.code;
+        }
+      } else if (typeof parsed?.message === "string") {
+        message = parsed.message;
+      }
+      if (!code && typeof parsed?.code === "string") {
+        code = parsed.code;
+      }
+    } catch {
+      // raw text response
+    }
+    throw new Error(humanizeError(message || response.statusText, response.status, code));
+  }
+
+  return response.blob();
 }
 
 export async function authLogin(role: Role) {
@@ -1126,6 +1172,14 @@ export async function listEventPresentations(
   return request<PaginatedResponse<Presentation>>(
     `/admin/events/${eventId}/presentations?${params.toString()}`
   );
+}
+
+export async function getEventPresentationMetrics(eventId: string) {
+  return request<EventPresentationMetrics>(`/admin/events/${eventId}/presentations/metrics`);
+}
+
+export async function exportEventPresentationMembers(eventId: string) {
+  return requestBlob(`/admin/events/${eventId}/presentations/members/export`);
 }
 
 export async function importEventPresentations(eventId: string, file: File) {

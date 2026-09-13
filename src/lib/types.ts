@@ -602,6 +602,13 @@ export type PresentationImportResult = {
   emailErrorCount?: number;
 };
 
+export type EventPresentationMetrics = {
+  totalPresentations: number;
+  linkedPresentations: number;
+  eventMembersWithLinkedPresentations: number;
+  totalEventMembers: number;
+};
+
 export type RegistrationStatus = {
   status: RequestStatus;
   comments?: string;

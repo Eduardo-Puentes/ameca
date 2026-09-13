@@ -74,6 +74,11 @@ export const deletePresentation = pick(api.deletePresentation, mock.deletePresen
 export const adminDeletePresentation = pick(api.adminDeletePresentation);
 export const listEventSpeakers = pick(api.listEventSpeakers, mock.listEventSpeakers);
 export const listEventPresentations = pick(api.listEventPresentations);
+export const getEventPresentationMetrics = pick(api.getEventPresentationMetrics, mock.getEventPresentationMetrics);
+export const exportEventPresentationMembers = pick(
+  api.exportEventPresentationMembers,
+  mock.exportEventPresentationMembers
+);
 export const importEventPresentations = pick(api.importEventPresentations);
 export const updateEventMemberSpeaker = pick(api.updateEventMemberSpeaker);
 export const revokeEventMemberSpeaker = pick(api.revokeEventMemberSpeaker);

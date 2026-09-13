@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
+import { Download } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageMetaContext";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -23,6 +24,8 @@ import { useToastStore } from "@/components/ui/Toast";
 import { useAppStore } from "@/store";
 import {
   adminDeletePresentation,
+  exportEventPresentationMembers,
+  getEventPresentationMetrics,
   importEventPresentations,
   listEventMembers,
   listEventPresentations,
@@ -32,6 +35,7 @@ import {
 } from "@/lib/data";
 import type {
   EventMemberRegistration,
+  EventPresentationMetrics,
   EventRequest,
   EventUpsertPayload,
   Presentation,
@@ -103,6 +107,8 @@ export default function AdminEventoDetallePage() {
   const [presentationsLoading, setPresentationsLoading] = useState(false);
   const [presentationImportFile, setPresentationImportFile] = useState<File | null>(null);
   const [presentationImporting, setPresentationImporting] = useState(false);
+  const [presentationMetrics, setPresentationMetrics] = useState<EventPresentationMetrics | null>(null);
+  const [presentationExporting, setPresentationExporting] = useState(false);
   const [presentationDeleteModal, setPresentationDeleteModal] = useState<Presentation | null>(null);
   const [sectionDeleteModal, setSectionDeleteModal] = useState<Section | null>(null);
   const [speakerModalRegistration, setSpeakerModalRegistration] =
@@ -114,12 +120,29 @@ export default function AdminEventoDetallePage() {
   const deferredSpeakersSearch = useDeferredValue(speakersSearch);
   const deferredPresentationsSearch = useDeferredValue(presentationsSearch);
 
+  const loadPresentationMetrics = useCallback(async () => {
+    if (!eventId) return;
+    try {
+      const metrics = await getEventPresentationMetrics(eventId);
+      setPresentationMetrics(metrics);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "No se pudieron cargar las métricas de ponencias.";
+      pushToast({ title: "Error al cargar métricas", message, tone: "danger" });
+    }
+  }, [eventId, pushToast]);
+
   useEffect(() => {
     if (eventId) {
       loadAttendance(eventId);
       loadSections(eventId);
+      loadPresentationMetrics();
     }
-  }, [eventId, loadAttendance, loadSections]);
+  }, [eventId, loadAttendance, loadPresentationMetrics, loadSections]);
+
+  useEffect(() => {
+    setPresentationMetrics(null);
+  }, [eventId]);
 
   useEffect(() => {
     setRequestSearch(eventRequestsQuery);
@@ -266,6 +289,12 @@ export default function AdminEventoDetallePage() {
     ],
     [attendanceCount, pendingRequests, rejectedRequests, sections.length]
   );
+  const linkedPresentationLabel = presentationMetrics
+    ? `${presentationMetrics.linkedPresentations} / ${presentationMetrics.totalPresentations}`
+    : "Cargando...";
+  const linkedPresenterLabel = presentationMetrics
+    ? `${presentationMetrics.eventMembersWithLinkedPresentations} / ${presentationMetrics.totalEventMembers}`
+    : "Cargando...";
   const quickActionClassName =
     "inline-flex h-10 items-center justify-center rounded-lg bg-[var(--accent-soft)] px-4 text-sm font-semibold text-[var(--accent-strong)] transition hover:bg-[var(--accent)] hover:text-white";
   const registrationLabel = event?.open ? "Aceptando solicitudes" : "Registro cerrado";
@@ -552,6 +581,7 @@ export default function AdminEventoDetallePage() {
       const result = await importEventPresentations(eventId, presentationImportFile);
       setPresentationImportFile(null);
       await refreshSpeakerAndPresentationData();
+      await loadPresentationMetrics();
       pushToast({
         title: "Importación terminada",
         message: `${result.count} ponencia(s), ${result.errorCount} error(es).`,
@@ -568,6 +598,33 @@ export default function AdminEventoDetallePage() {
   const handleDeletePresentation = async (presentation: Presentation) => {
     await adminDeletePresentation(presentation.id);
     await refreshSpeakerAndPresentationData();
+    await loadPresentationMetrics();
+  };
+
+  const handleExportPresentationMembers = async () => {
+    if (!event) return;
+    try {
+      setPresentationExporting(true);
+      const blob = await exportEventPresentationMembers(event.id);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const filenameSafeEvent = event.name
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9_-]+/g, "-")
+        .replace(/^-+|-+$/g, "");
+      link.href = url;
+      link.download = `ponencias-${filenameSafeEvent || "evento"}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "No se pudo descargar el Excel.";
+      pushToast({ title: "Error al descargar", message, tone: "danger" });
+    } finally {
+      setPresentationExporting(false);
+    }
   };
 
   if (!event) {
@@ -632,6 +689,40 @@ export default function AdminEventoDetallePage() {
           <div>Estudiante: {formatCurrency(event.profilePrices.student)}</div>
           <div>Asoc. profesional: {formatCurrency(event.profilePrices.associatedProfessional)}</div>
           <div>Asoc. estudiante: {formatCurrency(event.profilePrices.associatedStudent)}</div>
+        </div>
+        <div className="grid gap-3 border-t border-[var(--border)] pt-3 lg:grid-cols-[1fr_1fr_auto]">
+          <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-3">
+            <div className="break-words text-xs uppercase tracking-[0.12em] text-[var(--muted)]">
+              Ponencias vinculadas
+            </div>
+            <div className="mt-1 text-xl font-semibold text-[var(--ink)]">
+              {linkedPresentationLabel}
+            </div>
+          </div>
+          <div className="rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-3">
+            <div className="break-words text-xs uppercase tracking-[0.12em] text-[var(--muted)]">
+              Socios con ponencias
+            </div>
+            <div className="mt-1 text-xl font-semibold text-[var(--ink)]">
+              {linkedPresenterLabel}
+            </div>
+          </div>
+          <Button
+            className="h-full min-h-20 self-stretch lg:min-w-44"
+            type="button"
+            variant="secondary"
+            onClick={handleExportPresentationMembers}
+            loading={presentationExporting}
+            loadingText="Descargando..."
+            disabled={
+              !presentationMetrics ||
+              presentationMetrics.eventMembersWithLinkedPresentations === 0 ||
+              presentationExporting
+            }
+          >
+            <Download className="h-4 w-4" aria-hidden="true" />
+            Descargar Excel
+          </Button>
         </div>
       </Card>
 
