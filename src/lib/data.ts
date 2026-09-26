@@ -79,6 +79,7 @@ export const exportEventPresentationMembers = pick(
   api.exportEventPresentationMembers,
   mock.exportEventPresentationMembers
 );
+export const exportEventPresentations = pick(api.exportEventPresentations);
 export const importEventPresentations = pick(api.importEventPresentations);
 export const updateEventMemberSpeaker = pick(api.updateEventMemberSpeaker);
 export const revokeEventMemberSpeaker = pick(api.revokeEventMemberSpeaker);
@@ -117,6 +118,7 @@ export const denyMemberRequest = pick(api.denyMemberRequest, mock.denyMemberRequ
 export const listEventRequests = pick(api.listEventRequests, mock.listEventRequests);
 export const listAdminEventRequests = pick(api.listAdminEventRequests, mock.listAdminEventRequests);
 export const listEventMembers = pick(api.listEventMembers, mock.listEventMembers);
+export const exportEventMembers = pick(api.exportEventMembers);
 export const getEventMember = pick(api.getEventMember, mock.getEventMember);
 export const deleteEventMember = pick(api.deleteEventMember, mock.deleteEventMember);
 export const getEventRequest = pick(api.getEventRequest, mock.getEventRequest);

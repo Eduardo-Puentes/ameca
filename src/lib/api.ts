@@ -722,6 +722,10 @@ export async function listEventMembers(
   );
 }
 
+export async function exportEventMembers(eventId: string) {
+  return requestBlob(`/admin/events/${eventId}/members/export`);
+}
+
 export async function getEventMember(id: string): Promise<EventMemberRegistration> {
   return request<EventMemberRegistration>(`/admin/event-members/${id}`);
 }
@@ -1180,6 +1184,10 @@ export async function getEventPresentationMetrics(eventId: string) {
 
 export async function exportEventPresentationMembers(eventId: string) {
   return requestBlob(`/admin/events/${eventId}/presentations/members/export`);
+}
+
+export async function exportEventPresentations(eventId: string) {
+  return requestBlob(`/admin/events/${eventId}/presentations/export`);
 }
 
 export async function importEventPresentations(eventId: string, file: File) {

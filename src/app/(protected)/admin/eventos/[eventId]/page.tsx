@@ -24,7 +24,9 @@ import { useToastStore } from "@/components/ui/Toast";
 import { useAppStore } from "@/store";
 import {
   adminDeletePresentation,
+  exportEventMembers,
   exportEventPresentationMembers,
+  exportEventPresentations,
   getEventPresentationMetrics,
   importEventPresentations,
   listEventMembers,
@@ -92,6 +94,7 @@ export default function AdminEventoDetallePage() {
   const [eventMembersTotal, setEventMembersTotal] = useState(0);
   const [eventMembersLoading, setEventMembersLoading] = useState(false);
   const [eventMembersError, setEventMembersError] = useState<string | null>(null);
+  const [eventMembersExporting, setEventMembersExporting] = useState(false);
   const [speakers, setSpeakers] = useState<EventMemberRegistration[]>([]);
   const [speakersSearch, setSpeakersSearch] = useState("");
   const [speakersPage, setSpeakersPage] = useState(1);
@@ -109,6 +112,7 @@ export default function AdminEventoDetallePage() {
   const [presentationImporting, setPresentationImporting] = useState(false);
   const [presentationMetrics, setPresentationMetrics] = useState<EventPresentationMetrics | null>(null);
   const [presentationExporting, setPresentationExporting] = useState(false);
+  const [presentationsExporting, setPresentationsExporting] = useState(false);
   const [presentationDeleteModal, setPresentationDeleteModal] = useState<Presentation | null>(null);
   const [sectionDeleteModal, setSectionDeleteModal] = useState<Section | null>(null);
   const [speakerModalRegistration, setSpeakerModalRegistration] =
@@ -546,6 +550,14 @@ export default function AdminEventoDetallePage() {
     await loadSections(eventId);
   };
 
+  const safeEventFilename = useCallback((eventName: string) => {
+    return eventName
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9_-]+/g, "-")
+      .replace(/^-+|-+$/g, "") || "evento";
+  }, []);
+
   const handleSaveSpeakerType = async () => {
     if (!speakerModalRegistration) return;
     const registration = speakerModalRegistration;
@@ -608,13 +620,8 @@ export default function AdminEventoDetallePage() {
       const blob = await exportEventPresentationMembers(event.id);
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
-      const filenameSafeEvent = event.name
-        .trim()
-        .toLowerCase()
-        .replace(/[^a-z0-9_-]+/g, "-")
-        .replace(/^-+|-+$/g, "");
       link.href = url;
-      link.download = `ponencias-${filenameSafeEvent || "evento"}.xlsx`;
+      link.download = `ponencias-${safeEventFilename(event.name)}.xlsx`;
       document.body.appendChild(link);
       link.click();
       link.remove();
@@ -624,6 +631,48 @@ export default function AdminEventoDetallePage() {
       pushToast({ title: "Error al descargar", message, tone: "danger" });
     } finally {
       setPresentationExporting(false);
+    }
+  };
+
+  const handleExportEventMembers = async () => {
+    if (!event) return;
+    try {
+      setEventMembersExporting(true);
+      const blob = await exportEventMembers(event.id);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `socios-registrados-${safeEventFilename(event.name)}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "No se pudo descargar el Excel.";
+      pushToast({ title: "Error al descargar socios", message, tone: "danger" });
+    } finally {
+      setEventMembersExporting(false);
+    }
+  };
+
+  const handleExportPresentations = async () => {
+    if (!event) return;
+    try {
+      setPresentationsExporting(true);
+      const blob = await exportEventPresentations(event.id);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `ponencias-general-${safeEventFilename(event.name)}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "No se pudo descargar el Excel.";
+      pushToast({ title: "Error al descargar ponencias", message, tone: "danger" });
+    } finally {
+      setPresentationsExporting(false);
     }
   };
 
@@ -777,6 +826,26 @@ export default function AdminEventoDetallePage() {
             Registros aprobados para este evento, con búsqueda por datos del socio, sección estudiantil o boleto.
           </div>
         </div>
+        <div className="grid gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-3 lg:grid-cols-[1fr_auto]">
+          <div className="space-y-1">
+            <div className="text-sm font-semibold text-[var(--ink)]">Exportar socios registrados</div>
+            <div className="text-sm text-[var(--muted)]">
+              Descarga un Excel con datos del socio, sección, costo, asistencia y participación como ponente.
+            </div>
+          </div>
+          <Button
+            className="self-end"
+            type="button"
+            variant="secondary"
+            onClick={handleExportEventMembers}
+            loading={eventMembersExporting}
+            loadingText="Descargando..."
+            disabled={eventMembersExporting}
+          >
+            <Download className="h-4 w-4" aria-hidden="true" />
+            Exportar socios
+          </Button>
+        </div>
         <Input
           value={memberSearch}
           onChange={(inputEvent) => {
@@ -873,6 +942,26 @@ export default function AdminEventoDetallePage() {
             disabled={!presentationImportFile || presentationImporting}
           >
             {presentationImporting ? "Importando..." : "Importar"}
+          </Button>
+        </div>
+        <div className="grid gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-3 lg:grid-cols-[1fr_auto]">
+          <div className="space-y-1">
+            <div className="text-sm font-semibold text-[var(--ink)]">Exportar ponencias</div>
+            <div className="text-sm text-[var(--muted)]">
+              Descarga un Excel con pestañas para PP vinculadas, PP pendientes, OP pendientes y OP vinculadas.
+            </div>
+          </div>
+          <Button
+            className="self-end"
+            type="button"
+            variant="secondary"
+            onClick={handleExportPresentations}
+            loading={presentationsExporting}
+            loadingText="Descargando..."
+            disabled={presentationsExporting}
+          >
+            <Download className="h-4 w-4" aria-hidden="true" />
+            Exportar ponencias
           </Button>
         </div>
         <div className="grid gap-3 lg:grid-cols-[1fr_12rem_12rem]">
