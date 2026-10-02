@@ -11,7 +11,7 @@ export function Table({
   ...props
 }: TableProps) {
   return (
-    <div className={cn("w-full max-w-full overflow-x-auto", containerClassName)}>
+    <div tabIndex={0} role="region" aria-label="Tabla de datos; desplázate para ver todas las columnas" className={cn("w-full max-w-full overflow-x-auto", containerClassName)}>
       <table
         className={cn(
           "w-full min-w-max border-separate border-spacing-y-2 text-left text-sm",

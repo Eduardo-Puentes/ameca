@@ -6,14 +6,14 @@
   --surface-2: #e9ede7;
   --surface-3: #dde4dd;
   --ink: #1b1d1b;
-  --muted: #59655f;
+  --muted: #48564e;
   --border: #c8d2cb;
-  --accent: #019927;
-  --accent-strong: #017a1f;
+  --accent: #006e24;
+  --accent-strong: #005c1d;
   --accent-soft: #bae0c3;
-  --success: #019927;
+  --success: #006e24;
   --success-soft: #e1f2e6;
-  --warning: #fb9104;
+  --warning: #995000;
   --warning-soft: #fde7c5;
   --danger: #b42318;
   --danger-strong: #8a1b13;
@@ -65,4 +65,16 @@ dd {
 
 select {
   text-overflow: ellipsis;
+}
+
+/* Shared usability safeguards for narrow screens and keyboard navigation. */
+:where(input, select, textarea):disabled { cursor: not-allowed; opacity: .65; }
+:where(a, button, input, select, textarea):focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+:where(td, th) { overflow-wrap: anywhere; }
+:where(td) { max-width: 32rem; }
+@media (max-width: 640px) {
+  input, select, textarea { font-size: 16px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
 }

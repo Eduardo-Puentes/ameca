@@ -1,12 +1,6 @@
 "use client";
-
-import { Button } from "@/components/ui/Button";
-
-const buildQrUrl = (token: string, size = 180) =>
-  `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(
-    token
-  )}`;
-
+import { useEffect, useState } from "react";
+import QRCode from "qrcode";
 export function QRCodeBlock({
   token,
   helper,
@@ -14,38 +8,68 @@ export function QRCodeBlock({
   token: string;
   helper?: string;
 }) {
-  const isLoading = !token || token === "Cargando...";
-  const qrUrl = !isLoading ? buildQrUrl(token) : "";
-
+  const [image, setImage] = useState("");
+  const [error, setError] = useState("");
+  useEffect(() => {
+    let active = true;
+    if (token && token !== "Cargando...")
+      QRCode.toDataURL(token, {
+        width: 480,
+        margin: 4,
+        errorCorrectionLevel: "M",
+      })
+        .then((value) => {
+          if (active) {
+            setImage(value);
+            setError("");
+          }
+        })
+        .catch(() => {
+          if (active)
+            setError(
+              "No se pudo generar el QR. Puedes usar el código de acceso.",
+            );
+        });
+    return () => {
+      active = false;
+    };
+  }, [token]);
   return (
-    <div className="grid gap-4 md:grid-cols-[160px_1fr]">
-      <div className="flex h-40 w-40 items-center justify-center rounded-2xl border border-dashed border-[var(--border)] bg-[var(--surface-2)] text-xs text-[var(--muted)]">
-        {isLoading ? (
-          token || "Generando..."
-        ) : (
+    <div className="grid gap-4 sm:grid-cols-[200px_1fr]">
+      <div className="rounded-xl bg-white p-2">
+        {image ? (
           <img
-            src={qrUrl}
-            alt="QR de acceso"
-            className="h-32 w-32 rounded-lg object-contain"
+            src={image}
+            alt="QR de acceso al evento"
+            width={192}
+            height={192}
           />
+        ) : (
+          <p role="status">{error || "Generando QR..."}</p>
         )}
       </div>
-      <div className="space-y-2 text-sm text-[var(--muted)]">
-        <div className="font-semibold text-[var(--ink)]">QR de acceso</div>
-        {helper ? <div>{helper}</div> : null}
-        {!isLoading ? (
-          <div className="text-xs text-[var(--muted)]">Token: {token}</div>
-        ) : null}
-        <Button
-          variant="secondary"
-          onClick={() => {
-            if (!qrUrl) return;
-            window.open(qrUrl, "_blank", "noopener,noreferrer");
-          }}
-          disabled={isLoading}
+      <div className="min-w-0 space-y-3">
+        <h3 className="font-semibold">Boleto de acceso</h3>
+        {helper && <p>{helper}</p>}
+        <p className="text-sm">
+          Presenta este QR o el código al personal de acceso. Guarda una copia
+          antes del evento.
+        </p>
+        <p
+          className="break-all font-mono text-sm"
+          aria-label="Código de acceso"
         >
-          Descargar QR
-        </Button>
+          {token}
+        </p>
+        {image && (
+          <a
+            className="inline-block rounded-lg bg-[var(--accent)] px-4 py-2 text-white"
+            href={image}
+            download="boleto-ameca.png"
+          >
+            Descargar QR
+          </a>
+        )}
       </div>
     </div>
   );

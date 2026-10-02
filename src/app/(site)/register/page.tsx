@@ -51,7 +51,7 @@ export default function RegisterPage() {
     }
 
     try {
-      await registerMember({
+      const result = await registerMember({
         fullName: fullName.trim(),
         email: email.trim(),
         password,
@@ -62,10 +62,10 @@ export default function RegisterPage() {
       });
       pushToast({
         title: "Registro exitoso",
-        message: "Tu cuenta está lista. Ya puedes iniciar sesión.",
+        message: result.verificationRequired ? "Revisa tu correo para verificar tu cuenta antes de iniciar sesión." : "Tu cuenta está lista. Ya puedes iniciar sesión.",
         tone: "success",
       });
-      router.push("/login");
+      router.push(result.verificationRequired ? "/check-email?type=verification" : "/login");
     } catch (error) {
       const message = error instanceof Error ? error.message : "No se pudo crear la cuenta.";
       pushToast({ title: "Registro fallido", message, tone: "danger" });

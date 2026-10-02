@@ -16,10 +16,8 @@ export function SiteNavigation() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(true);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
     let active = true;
 
     listEvents()
@@ -91,7 +89,7 @@ export function SiteNavigation() {
     ...congressItems,
   ];
   const mobileDrawer =
-    mobileOpen && mounted
+    mobileOpen
       ? createPortal(
           <div className="fixed inset-0 z-[9999] md:hidden" role="dialog" aria-modal="true">
             <div

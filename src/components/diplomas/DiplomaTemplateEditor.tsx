@@ -50,6 +50,19 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
+// Keep incomplete input local so clearing a number does not jump back to zero.
+function NumberField({value, label, max = 100, onChange}: {
+  value: number; label: string; max?: number; onChange: (value: number) => void;
+}) {
+  const [text, setText] = useState(String(value));
+  const [previous, setPrevious] = useState(value);
+  if (previous !== value) {setPrevious(value); setText(String(value));}
+  return <Input type="number" aria-label={label} min={0} max={max} step="0.1" value={text}
+    onChange={event => setText(event.target.value)}
+    onBlur={() => {const parsed = Number(text); const next = text.trim() && Number.isFinite(parsed) ? clamp(parsed, 0, max) : value; setText(String(next)); onChange(next);}}
+    onKeyDown={event => {if(event.key === "Enter") {event.preventDefault(); event.currentTarget.blur();}}} />;
+}
+
 export function DiplomaTemplateEditor({
   template,
   event,
@@ -70,11 +83,13 @@ export function DiplomaTemplateEditor({
   const [fieldToDelete, setFieldToDelete] = useState<DiplomaField | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
-  useEffect(() => {
+  const [previousTemplate, setPreviousTemplate] = useState(template);
+  if (previousTemplate !== template) {
+    setPreviousTemplate(template);
     setDraft(template);
     setSelectedId(template.fields[0]?.id ?? null);
     setAssetFile(null);
-  }, [template]);
+  }
 
   const previewContext = useMemo(
     () => buildPreviewContext({ member: participant, event, attendedDays: 2, issueDate: "2026-02-21" }),
@@ -377,6 +392,7 @@ export function DiplomaTemplateEditor({
                   </div>
                   <div className="mt-3 grid gap-2">
                     <Select
+                      aria-label="Tipo de campo"
                       value={field.key}
                       onChange={(event) => {
                         const key = event.target.value as DiplomaField["key"];
@@ -400,29 +416,16 @@ export function DiplomaTemplateEditor({
                     ) : null}
                     <div className="grid grid-cols-4 gap-2 text-xs">
                       {(["x", "y", "width", "height"] as const).map((prop) => (
-                        <Input
-                          key={prop}
-                          type="number"
+                        <NumberField key={prop} label={`${field.label}: ${prop}`}
                           value={Math.round(field[prop] * 10) / 10}
-                          onChange={(event) =>
-                            updateField(field.id, {
-                              [prop]: clamp(Number(event.target.value), 0, 100),
-                            } as Partial<DiplomaField>)
-                          }
-                        />
+                          onChange={value => updateField(field.id, {[prop]: value} as Partial<DiplomaField>)} />
                       ))}
                     </div>
                     <div className="grid grid-cols-3 gap-2">
-                      <Input
-                        type="number"
-                        value={field.style.fontSize}
-                        onChange={(event) =>
-                          updateField(field.id, {
-                            style: { ...field.style, fontSize: Number(event.target.value) },
-                          })
-                        }
-                      />
+                      <NumberField label="Tamaño de letra" max={200} value={field.style.fontSize}
+                        onChange={value => updateField(field.id, {style: {...field.style, fontSize: Math.max(1, value)}})} />
                       <Select
+                        aria-label="Alineación del texto"
                         value={field.style.align}
                         onChange={(event) =>
                           updateField(field.id, {
@@ -439,6 +442,7 @@ export function DiplomaTemplateEditor({
                       </Select>
                       <Input
                         type="color"
+                        aria-label="Color del texto"
                         value={field.style.color}
                         onChange={(event) =>
                           updateField(field.id, {

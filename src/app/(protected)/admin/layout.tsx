@@ -20,7 +20,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const role = useAppStore((state) => state.role);
   const navItems = (role === "superadmin"
     ? adminNav
-    : adminNav.filter((item) => item.href !== "/admin/administradores")
+    : adminNav.filter((item) => !["/admin/administradores", "/admin/comunicados"].includes(item.href))
   ).map((item) =>
     item.href === "/admin/socios/solicitudes" && pendingMembershipRequestsCount > 0
       ? {

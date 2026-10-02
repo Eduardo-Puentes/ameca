@@ -39,6 +39,8 @@ export function FieldBox({
       </div>
       <button
         type="button"
+        aria-label={`Seleccionar tamaño de ${field.label}; usa los campos de ancho y alto para editar con teclado`}
+        onClick={() => onSelect(field.id)}
         className="absolute -bottom-1.5 -right-1.5 h-3 w-3 rounded bg-[var(--accent)]"
         onMouseDown={(event) => {
           event.stopPropagation();

@@ -22,6 +22,8 @@ export const adminNav: NavItem[] = [
   { label: "Eventos", href: "/admin/eventos", icon: CalendarDays },
   { label: "Secciones estudiantiles", href: "/admin/secciones", icon: Building2 },
   { label: "Administradores", href: "/admin/administradores", icon: ShieldCheck },
+  { label: "Comunicados", href: "/admin/comunicados", icon: ClipboardList },
+  { label: "Escáner", href: "/admin/escaner", icon: QrCode },
   { label: "Configuración", href: "/admin/configuracion", icon: Settings },
 ];
 

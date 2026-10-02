@@ -10,12 +10,12 @@ export function FormField({
   children: ReactNode;
 }) {
   return (
-    <div className="space-y-2">
-      <label className="block break-words text-xs uppercase tracking-[0.12em] text-[var(--muted)]">
+    <label className="block space-y-2">
+      <span className="block break-words text-xs uppercase tracking-[0.12em] text-[var(--muted)]">
         {label}
-      </label>
+      </span>
       {children}
       {helper ? <div className="break-words text-xs text-[var(--muted)]">{helper}</div> : null}
-    </div>
+    </label>
   );
 }

@@ -1,0 +1,562 @@
+[
+  {
+    "template": "/admin/administradores",
+    "route": "/admin/administradores",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/admin/comunicados",
+    "route": "/admin/comunicados",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/admin/configuracion",
+    "route": "/admin/configuracion",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/admin/dashboard",
+    "route": "/admin/dashboard",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/admin/escaner",
+    "route": "/admin/escaner",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/admin/eventos/[eventId]/asistencia",
+    "route": "/admin/eventos/event/asistencia",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/admin/eventos/[eventId]/diplomas",
+    "route": "/admin/eventos/event/diplomas",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/admin/eventos/[eventId]/diplomas/plantilla",
+    "route": "/admin/eventos/event/diplomas/plantilla",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/admin/eventos/[eventId]/metricas",
+    "route": "/admin/eventos/event/metricas",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/admin/eventos/[eventId]/miembros/[eventMemberId]",
+    "route": "/admin/eventos/event/miembros/registration",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/admin/eventos/[eventId]",
+    "route": "/admin/eventos/event",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/admin/eventos/[eventId]/presentaciones/[presentationId]",
+    "route": "/admin/eventos/event/presentaciones/presentation",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/admin/eventos/[eventId]/secciones/[sectionId]",
+    "route": "/admin/eventos/event/secciones/section",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/admin/eventos/[eventId]/solicitudes/[requestId]",
+    "route": "/admin/eventos/event/solicitudes/request",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/admin/eventos/[eventId]/solicitudes",
+    "route": "/admin/eventos/event/solicitudes",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/admin/eventos",
+    "route": "/admin/eventos",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/admin/miembros/[memberId]",
+    "route": "/admin/miembros/member",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/admin/miembros",
+    "route": "/admin/miembros",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/admin/miembros/solicitudes/[requestId]",
+    "route": "/admin/miembros/solicitudes/membership",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/admin/miembros/solicitudes",
+    "route": "/admin/miembros/solicitudes",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/admin/organizaciones",
+    "route": "/admin/organizaciones",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/admin/secciones",
+    "route": "/admin/secciones",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/admin/socios/[memberId]",
+    "route": "/admin/socios/member",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/admin/socios/importar",
+    "route": "/admin/socios/importar",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/admin/socios",
+    "route": "/admin/socios",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/admin/socios/solicitudes/[requestId]",
+    "route": "/admin/socios/solicitudes/membership",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/admin/socios/solicitudes",
+    "route": "/admin/socios/solicitudes",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/member/dashboard",
+    "route": "/member/dashboard",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/member/diplomas",
+    "route": "/member/diplomas",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/member/eventos/[eventId]/boleto",
+    "route": "/member/eventos/event/boleto",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/member/eventos/[eventId]",
+    "route": "/member/eventos/event",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/member/eventos/[eventId]/registro",
+    "route": "/member/eventos/event/registro",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/member/eventos",
+    "route": "/member/eventos",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/member/membresia",
+    "route": "/member/membresia",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/member/organizacion",
+    "route": "/member/organizacion",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/member/perfil",
+    "route": "/member/perfil",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/member/secciones",
+    "route": "/member/secciones",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/member/solicitudes/eventos/[requestId]",
+    "route": "/member/solicitudes/eventos/request",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/member/solicitudes/membresia/[requestId]",
+    "route": "/member/solicitudes/membresia/membership",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/member/solicitudes",
+    "route": "/member/solicitudes",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/staff/configuracion",
+    "route": "/staff/configuracion",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/staff/escaner",
+    "route": "/staff/escaner",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/staff/validaciones",
+    "route": "/staff/validaciones",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/check-email",
+    "route": "/check-email",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/consejo/[slug]",
+    "route": "/consejo/dr-cesar-ozuna-lopez",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/eventos/[eventId]",
+    "route": "/eventos/event",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/eventos/[eventId]/ponentes",
+    "route": "/eventos/event/ponentes",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/eventos",
+    "route": "/eventos",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/forgot-password",
+    "route": "/forgot-password",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/latin-food-2026",
+    "route": "/latin-food-2026",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/login",
+    "route": "/login",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/organizacion/aceptar",
+    "route": "/organizacion/aceptar",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/",
+    "route": "/",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/register",
+    "route": "/register",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/reset-password",
+    "route": "/reset-password",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "template": "/verify",
+    "route": "/verify",
+    "status": 200,
+    "width": 1440,
+    "redirected": false,
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  }
+]

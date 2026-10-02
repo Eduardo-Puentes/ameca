@@ -35,10 +35,13 @@ export function Button({
   loadingText,
   children,
   disabled,
+  type = "submit",
   ...props
 }: ButtonProps) {
   return (
     <button
+      type={type}
+      aria-busy={loading}
       className={cn(
         "inline-flex max-w-full min-w-0 items-center justify-center gap-2 rounded-lg text-center font-medium leading-tight transition",
         "whitespace-normal break-words [&>svg]:shrink-0",

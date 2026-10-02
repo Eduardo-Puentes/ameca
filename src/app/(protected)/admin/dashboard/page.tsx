@@ -190,6 +190,7 @@ export default function AdminDashboardPage() {
           </div>
           <div className="w-full max-w-xs">
             <Select
+              aria-label="Filtrar por evento"
               value={eventFilterId}
               onChange={(event) => setEventFilterId(event.target.value)}
             >

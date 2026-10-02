@@ -1,0 +1,450 @@
+[
+  {
+    "path": "/admin/administradores",
+    "route": "/admin/administradores",
+    "url": "http://127.0.0.1:3125/admin/administradores",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/admin/comunicados",
+    "route": "/admin/comunicados",
+    "url": "http://127.0.0.1:3125/admin/comunicados",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/admin/configuracion",
+    "route": "/admin/configuracion",
+    "url": "http://127.0.0.1:3125/admin/configuracion",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/admin/dashboard",
+    "route": "/admin/dashboard",
+    "url": "http://127.0.0.1:3125/admin/dashboard",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/admin/escaner",
+    "route": "/admin/escaner",
+    "url": "http://127.0.0.1:3125/admin/escaner",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/admin/eventos/[eventId]/asistencia",
+    "route": "/admin/eventos/event/asistencia",
+    "url": "http://127.0.0.1:3125/admin/eventos/event/asistencia",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/admin/eventos/[eventId]/diplomas",
+    "route": "/admin/eventos/event/diplomas",
+    "url": "http://127.0.0.1:3125/admin/eventos/event/diplomas",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/admin/eventos/[eventId]/diplomas/plantilla",
+    "route": "/admin/eventos/event/diplomas/plantilla",
+    "url": "http://127.0.0.1:3125/admin/eventos/event/diplomas/plantilla",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/admin/eventos/[eventId]/metricas",
+    "route": "/admin/eventos/event/metricas",
+    "url": "http://127.0.0.1:3125/admin/eventos/event/metricas",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/admin/eventos/[eventId]/miembros/[eventMemberId]",
+    "route": "/admin/eventos/event/miembros/registration",
+    "url": "http://127.0.0.1:3125/admin/eventos/event/miembros/registration",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/admin/eventos/[eventId]",
+    "route": "/admin/eventos/event",
+    "url": "http://127.0.0.1:3125/admin/eventos/event",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/admin/eventos/[eventId]/presentaciones/[presentationId]",
+    "route": "/admin/eventos/event/presentaciones/presentation",
+    "url": "http://127.0.0.1:3125/admin/eventos/event/presentaciones/presentation",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/admin/eventos/[eventId]/secciones/[sectionId]",
+    "route": "/admin/eventos/event/secciones/section",
+    "url": "http://127.0.0.1:3125/admin/eventos/event/secciones/section",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/admin/eventos/[eventId]/solicitudes/[requestId]",
+    "route": "/admin/eventos/event/solicitudes/request",
+    "url": "http://127.0.0.1:3125/admin/eventos/event/solicitudes/request",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/admin/eventos/[eventId]/solicitudes",
+    "route": "/admin/eventos/event/solicitudes",
+    "url": "http://127.0.0.1:3125/admin/eventos/event/solicitudes",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/admin/eventos",
+    "route": "/admin/eventos",
+    "url": "http://127.0.0.1:3125/admin/eventos",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/admin/miembros/[memberId]",
+    "route": "/admin/miembros/member",
+    "url": "http://127.0.0.1:3125/admin/miembros/member",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/admin/miembros",
+    "route": "/admin/miembros",
+    "url": "http://127.0.0.1:3125/admin/miembros",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/admin/miembros/solicitudes/[requestId]",
+    "route": "/admin/miembros/solicitudes/membership",
+    "url": "http://127.0.0.1:3125/admin/miembros/solicitudes/membership",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/admin/miembros/solicitudes",
+    "route": "/admin/miembros/solicitudes",
+    "url": "http://127.0.0.1:3125/admin/miembros/solicitudes",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/admin/organizaciones",
+    "route": "/admin/organizaciones",
+    "url": "http://127.0.0.1:3125/admin/organizaciones",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/admin/secciones",
+    "route": "/admin/secciones",
+    "url": "http://127.0.0.1:3125/admin/secciones",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/admin/socios/[memberId]",
+    "route": "/admin/socios/member",
+    "url": "http://127.0.0.1:3125/admin/socios/member",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/admin/socios/importar",
+    "route": "/admin/socios/importar",
+    "url": "http://127.0.0.1:3125/admin/socios/importar",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/admin/socios",
+    "route": "/admin/socios",
+    "url": "http://127.0.0.1:3125/admin/socios",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/admin/socios/solicitudes/[requestId]",
+    "route": "/admin/socios/solicitudes/membership",
+    "url": "http://127.0.0.1:3125/admin/socios/solicitudes/membership",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/admin/socios/solicitudes",
+    "route": "/admin/socios/solicitudes",
+    "url": "http://127.0.0.1:3125/admin/socios/solicitudes",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/member/dashboard",
+    "route": "/member/dashboard",
+    "url": "http://127.0.0.1:3125/member/dashboard",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/member/diplomas",
+    "route": "/member/diplomas",
+    "url": "http://127.0.0.1:3125/member/diplomas",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/member/eventos/[eventId]/boleto",
+    "route": "/member/eventos/event/boleto",
+    "url": "http://127.0.0.1:3125/member/eventos/event/boleto",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/member/eventos/[eventId]",
+    "route": "/member/eventos/event",
+    "url": "http://127.0.0.1:3125/member/eventos/event",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/member/eventos/[eventId]/registro",
+    "route": "/member/eventos/event/registro",
+    "url": "http://127.0.0.1:3125/member/eventos/event/registro",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/member/eventos",
+    "route": "/member/eventos",
+    "url": "http://127.0.0.1:3125/member/eventos",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/member/membresia",
+    "route": "/member/membresia",
+    "url": "http://127.0.0.1:3125/member/membresia",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/member/organizacion",
+    "route": "/member/organizacion",
+    "url": "http://127.0.0.1:3125/member/organizacion",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/member/perfil",
+    "route": "/member/perfil",
+    "url": "http://127.0.0.1:3125/member/perfil",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/member/secciones",
+    "route": "/member/secciones",
+    "url": "http://127.0.0.1:3125/member/secciones",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/member/solicitudes/eventos/[requestId]",
+    "route": "/member/solicitudes/eventos/request",
+    "url": "http://127.0.0.1:3125/member/solicitudes/eventos/request",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/member/solicitudes/membresia/[requestId]",
+    "route": "/member/solicitudes/membresia/membership",
+    "url": "http://127.0.0.1:3125/member/solicitudes/membresia/membership",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/member/solicitudes",
+    "route": "/member/solicitudes",
+    "url": "http://127.0.0.1:3125/member/solicitudes",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/staff/configuracion",
+    "route": "/staff/configuracion",
+    "url": "http://127.0.0.1:3125/staff/configuracion",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/staff/escaner",
+    "route": "/staff/escaner",
+    "url": "http://127.0.0.1:3125/staff/escaner",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/staff/validaciones",
+    "route": "/staff/validaciones",
+    "url": "http://127.0.0.1:3125/staff/validaciones",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/check-email",
+    "route": "/check-email",
+    "url": "http://127.0.0.1:3125/check-email",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/consejo/[slug]",
+    "route": "/consejo/dr-cesar-ozuna-lopez",
+    "url": "http://127.0.0.1:3125/consejo/dr-cesar-ozuna-lopez",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/eventos/[eventId]",
+    "route": "/eventos/event",
+    "url": "http://127.0.0.1:3125/eventos/event",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/eventos/[eventId]/ponentes",
+    "route": "/eventos/event/ponentes",
+    "url": "http://127.0.0.1:3125/eventos/event/ponentes",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/eventos",
+    "route": "/eventos",
+    "url": "http://127.0.0.1:3125/eventos",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/forgot-password",
+    "route": "/forgot-password",
+    "url": "http://127.0.0.1:3125/forgot-password",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/latin-food-2026",
+    "route": "/latin-food-2026",
+    "url": "http://127.0.0.1:3125/latin-food-2026",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/login",
+    "route": "/login",
+    "url": "http://127.0.0.1:3125/login",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/organizacion/aceptar",
+    "route": "/organizacion/aceptar",
+    "url": "http://127.0.0.1:3125/organizacion/aceptar",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/",
+    "route": "/",
+    "url": "http://127.0.0.1:3125/",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/register",
+    "route": "/register",
+    "url": "http://127.0.0.1:3125/register",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/reset-password",
+    "route": "/reset-password",
+    "url": "http://127.0.0.1:3125/reset-password",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  },
+  {
+    "path": "/verify",
+    "route": "/verify",
+    "url": "http://127.0.0.1:3125/verify",
+    "overflow": false,
+    "errors": [],
+    "violations": []
+  }
+]

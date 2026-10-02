@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Local audit output (the checked-in summary is in docs/)
+/ui-audit-results.json

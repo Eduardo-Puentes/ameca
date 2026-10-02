@@ -27,7 +27,7 @@ export const createEventsSlice: StateCreator<EventsSlice, [], [], EventsSlice> =
     const data = await listEvents();
     set({
       events: data,
-      selectedEventId: data[0]?.id ?? null,
+      selectedEventId: data.some(event => event.id === get().selectedEventId) ? get().selectedEventId : data[0]?.id ?? null,
       eventsLoading: false,
     });
   },

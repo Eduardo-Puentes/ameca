@@ -414,7 +414,7 @@ export default function AdminEventoDetallePage() {
     {
       header: "Título",
       accessor: "title",
-      render: (presentation: Presentation) => presentation.title || presentation.name || "",
+      render: (presentation: Presentation) => <Link className="text-[var(--accent)] underline" href={`/admin/eventos/${eventId}/presentaciones/${presentation.id}`}>{presentation.title || presentation.name || presentation.code}</Link>,
     },
     {
       header: "Ponente",
@@ -679,7 +679,8 @@ export default function AdminEventoDetallePage() {
   if (!event) {
     return (
       <div className="space-y-6">
-        <PageHeader title="Evento" subtitle="No encontrado" breadcrumb={["Admin", "Eventos"]} />
+        <div className="flex flex-wrap gap-4"><Link className="underline" href={`/admin/eventos/${eventId}/metricas`}>Ver métricas del evento</Link><Link className="underline" href={`/admin/escaner?eventId=${eventId}`}>Escanear boletos</Link></div>
+      <PageHeader title="Evento" subtitle="No encontrado" breadcrumb={["Admin", "Eventos"]} />
         <Card>Evento no encontrado.</Card>
       </div>
     );
@@ -974,7 +975,8 @@ export default function AdminEventoDetallePage() {
             placeholder="Buscar por título, código, ponente o correo"
           />
           <Select
-            value={presentationTypeFilter}
+            aria-label="Tipo de ponencia"
+              value={presentationTypeFilter}
             onChange={(event) => {
               setPresentationTypeFilter(event.target.value as "" | "OP" | "PP");
               setPresentationsPage(1);
@@ -985,7 +987,8 @@ export default function AdminEventoDetallePage() {
             <option value="PP">PP</option>
           </Select>
           <Select
-            value={presentationConfirmedFilter}
+            aria-label="Estado de vinculación"
+              value={presentationConfirmedFilter}
             onChange={(event) => {
               setPresentationConfirmedFilter(event.target.value as "" | "true" | "false");
               setPresentationsPage(1);

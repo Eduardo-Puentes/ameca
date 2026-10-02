@@ -1,9 +1,7 @@
 "use client";
-
-import type { ReactNode } from "react";
+import { useEffect, useId, useRef, type ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "./Button";
-
 export function Modal({
   open,
   onClose,
@@ -17,28 +15,56 @@ export function Modal({
   children: ReactNode;
   className?: string;
 }) {
-  if (!open) return null;
-
+  const ref = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
+  useEffect(() => {
+    const dialog = ref.current;
+    if (!open || !dialog) return;
+    const previous = document.activeElement as HTMLElement | null;
+    const overflow = document.body.style.overflow;
+    dialog.showModal();
+    document.body.style.overflow = "hidden";
+    return () => {
+      dialog.close();
+      document.body.style.overflow = overflow;
+      previous?.focus();
+    };
+  }, [open]);
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-      <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-        onClick={onClose}
-      />
-      <div
-        className={cn(
-          "relative z-10 w-full max-w-lg rounded-2xl bg-[var(--surface)] p-6 shadow-xl",
-          className
-        )}
-      >
-        <div className="mb-4 flex items-start justify-between gap-3">
-          <h3 className="min-w-0 break-words text-lg font-semibold text-[var(--ink)]">{title}</h3>
-          <Button className="shrink-0" variant="ghost" size="sm" onClick={onClose}>
-            Cerrar
-          </Button>
-        </div>
-        {children}
-      </div>
-    </div>
+    <dialog
+      ref={ref}
+      aria-labelledby={titleId}
+      onCancel={(e) => {
+        e.preventDefault();
+        onClose();
+      }}
+      className={cn(
+        "fixed inset-0 m-auto max-h-[90dvh] w-[calc(100%_-_2rem)] max-w-lg overflow-y-auto rounded-2xl border-0 bg-[var(--surface)] p-6 text-[var(--ink)] shadow-xl backdrop:bg-black/40 backdrop:backdrop-blur-sm",
+        className,
+      )}
+    >
+      {open && (
+        <>
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <h2
+              id={titleId}
+              className="min-w-0 break-words text-lg font-semibold"
+            >
+              {title}
+            </h2>
+            <Button
+              type="button"
+              className="shrink-0"
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+            >
+              Cerrar
+            </Button>
+          </div>
+          {children}
+        </>
+      )}
+    </dialog>
   );
 }

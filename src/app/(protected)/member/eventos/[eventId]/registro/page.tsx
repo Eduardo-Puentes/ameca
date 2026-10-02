@@ -468,6 +468,7 @@ export default function MemberEventoRegistroPage() {
       ) : null}
 
       <Modal open={qrOpen} onClose={() => setQrOpen(false)} title="QR de acceso">
+        <Link className="mb-4 inline-block underline" href={`/socio/eventos/${eventId}/boleto`}>Abrir mi boleto</Link>
         <QRCodeBlock token={registration.ticketToken} helper="Úsalo para entrada y registro de asistencia." />
       </Modal>
 

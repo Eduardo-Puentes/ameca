@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import { Input } from "@/components/ui/Input";
 
 export function FileUpload({
@@ -14,15 +14,19 @@ export function FileUpload({
   maxSizeMb?: number;
   onChange?: (file: File | null) => void;
 }) {
+  const id = useId();
   const [error, setError] = useState("");
   const maxSizeBytes = maxSizeMb ? maxSizeMb * 1024 * 1024 : null;
 
   return (
     <div className="space-y-2">
-      <label className="block break-words text-xs uppercase tracking-[0.12em] text-[var(--muted)]">
+      <label htmlFor={id} className="block break-words text-xs uppercase tracking-[0.12em] text-[var(--muted)]">
         {label}
       </label>
       <Input
+        id={id}
+        aria-describedby={`${id}-help`}
+        aria-invalid={!!error}
         type="file"
         accept={accept}
         onChange={(event) => {
@@ -37,9 +41,9 @@ export function FileUpload({
           onChange?.(file);
         }}
       />
-      {error ? <div className="text-xs font-medium text-[var(--danger)]">{error}</div> : null}
+      {error ? <div role="alert" className="text-xs font-medium text-[var(--danger)]">{error}</div> : null}
       {maxSizeMb ? (
-        <div className="text-xs text-[var(--muted)]">Tamaño máximo: {maxSizeMb} MB.</div>
+        <div id={`${id}-help`} className="text-xs text-[var(--muted)]">Tamaño máximo: {maxSizeMb} MB.</div>
       ) : null}
     </div>
   );

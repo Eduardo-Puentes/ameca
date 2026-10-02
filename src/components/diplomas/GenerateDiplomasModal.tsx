@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Modal } from "@/components/ui/Modal";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -20,15 +20,17 @@ export function GenerateDiplomasModal({
   totalAttendees: number;
   onGenerate: (minRequiredDays: number) => void;
 }) {
-  const [minDays, setMinDays] = useState(1);
+  const [minDays, setMinDays] = useState<number | "">(1);
 
   const eligibleCount = Object.values(attendedDaysByMember).filter(
-    (days) => days >= minDays
+    (days) => days >= (minDays || 1)
   ).length;
 
-  useEffect(() => {
+  const [previousOpen, setPreviousOpen] = useState(open);
+  if (previousOpen !== open) {
+    setPreviousOpen(open);
     setMinDays(1);
-  }, [open]);
+  }
 
   return (
     <Modal open={open} onClose={onClose} title="Generar diplomas">
@@ -48,7 +50,7 @@ export function GenerateDiplomasModal({
               max={duration}
               value={minDays}
               onChange={(event) =>
-                setMinDays(Math.min(duration, Math.max(1, Number(event.target.value))))
+                setMinDays(event.target.value === "" ? "" : Number(event.target.value))
               }
             />
             <input
@@ -70,8 +72,9 @@ export function GenerateDiplomasModal({
             Cancelar
           </Button>
           <Button
+            disabled={minDays === "" || minDays < 1 || minDays > duration || !Number.isInteger(minDays)}
             onClick={() => {
-              onGenerate(minDays);
+              onGenerate(Number(minDays));
               onClose();
             }}
           >

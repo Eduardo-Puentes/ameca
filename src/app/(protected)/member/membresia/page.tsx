@@ -202,6 +202,7 @@ export default function MemberMembresiaPage() {
               Tipo solicitado
             </label>
             <Select
+              aria-label="Tipo de membresía solicitado"
               value={selectedRequestedType}
               onChange={(event) => handleRequestedTypeChange(event.target.value as ProfileType)}
             >

@@ -34,7 +34,7 @@ export default function HomePage() {
       </section>
 
       <section aria-label="Contenido destacado" className="w-full">
-        <div className="flex snap-x snap-mandatory overflow-x-auto">
+        <div tabIndex={0} role="region" aria-label="Contenido destacado; desplázate para ver más" className="flex snap-x snap-mandatory overflow-x-auto">
           {sliderItems.map((item) => (
             <div
               key={item.title}

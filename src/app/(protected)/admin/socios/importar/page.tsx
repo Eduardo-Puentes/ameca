@@ -325,6 +325,7 @@ export default function ImportMembersPage() {
             <div className="text-xs uppercase text-[var(--muted)]">Excel</div>
             <Input
               type="file"
+              aria-label="Archivo Excel de socios"
               accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
               onChange={(event) => {
                 setFile(event.target.files?.[0] ?? null);

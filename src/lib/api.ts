@@ -50,7 +50,7 @@ const ROLE_CREDENTIALS: Record<Role, { email: string; password: string }> = {
 
 type AuthUser = { id: string; name: string; email: string; role: BackendRole };
 type AuthResponse = { token: string; user: AuthUser };
-type RegisterResponse = { ok: boolean; emailError?: string | null };
+type RegisterResponse = { ok: boolean; verificationRequired?: boolean; emailError?: string | null };
 type MemberResponse = Partial<Member> & {
   full_name?: string;
   phone_number?: string;
@@ -1240,3 +1240,26 @@ export async function updateMySpeakerProfile(
 export async function downloadPresentation(presentationId: string) {
   return request<{ url: string }>(`/admin/presentations/${presentationId}/download`);
 }
+
+
+export type EventMetrics = {
+  event: { id: string; name: string }; generatedAt: number;
+  registrations: { total: number; byProfile: Record<string, number> };
+  presentations: { total: number; claimed: number; unclaimed: number; claimPercentage: number; presenters: number };
+  requests: Record<string, number>;
+  sections: { approved: number; registeredParticipants: number };
+  attendance: { checkedIn: number; percentage: number };
+};
+export const getEventMetrics = (id: string) => request<EventMetrics>(`/admin/events/${id}/metrics`);
+export const getAdminPresentation = (id: string) => request<Presentation>(`/admin/presentations/${id}`);
+export const editAdminPresentation = (id: string, payload: Record<string, unknown>) =>
+  request<Presentation>(`/admin/presentations/${id}`, { method: "PATCH", body: JSON.stringify(payload) });
+export const unlinkAdminPresentation = (id: string) =>
+  request<Presentation>(`/admin/presentations/${id}/unlink`, { method: "POST" });
+export type Announcement = { id: string; version: string; subject: string; body: string; queuedAt: number | null; counts: Record<string, number>; total: number };
+export const listAnnouncements = () => request<{ items: Announcement[]; audience: number; enabled: boolean }>("/admin/announcements");
+export const createAnnouncement = (subject: string, body: string) => request<Announcement>("/admin/announcements", { method: "POST", body: JSON.stringify({ subject, body }) });
+export const previewAnnouncement = (subject: string, body: string) => request<{html: string; text: string}>("/admin/announcements/preview", { method: "POST", body: JSON.stringify({ subject, body }) });
+export const sendAnnouncement = (id: string, version: string) => request<Announcement>(`/admin/announcements/${id}/send`, { method: "POST", body: JSON.stringify({ confirm: true, version }) });
+
+export const editAnnouncement = (id: string, subject: string, body: string) => request<Announcement>(`/admin/announcements/${id}`, {method: "PATCH", body: JSON.stringify({subject,body})});

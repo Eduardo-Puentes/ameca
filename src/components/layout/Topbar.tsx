@@ -1,6 +1,5 @@
 "use client";
 
-import { Bell } from "lucide-react";
 import { useAppStore } from "@/store";
 import { Badge } from "@/components/ui/Badge";
 
@@ -36,7 +35,7 @@ export function Topbar({
               {breadcrumb.join(" / ")}
             </div>
           ) : null}
-          <div className="break-words text-xl font-semibold text-[var(--ink)] md:text-2xl">{title}</div>
+          <h1 className="break-words text-xl font-semibold text-[var(--ink)] md:text-2xl">{title}</h1>
           {subtitle ? <div className="break-words text-sm text-[var(--muted)]">{subtitle}</div> : null}
         </div>
         <div className="flex min-w-0 items-center gap-2">
@@ -50,9 +49,6 @@ export function Topbar({
           <div className="flex min-w-0 items-center gap-2 rounded-full bg-[var(--surface-2)] px-3 py-1 text-xs sm:hidden">
             {roleLabel}
           </div>
-          <button className="hidden rounded-full bg-[var(--surface-2)] p-2 text-[var(--ink)] sm:inline-flex">
-            <Bell className="h-4 w-4" />
-          </button>
         </div>
       </div>
     </div>

@@ -25,7 +25,7 @@ export type AuthSlice = {
     academicDegree: string;
     state: string;
     institution: string;
-  }) => Promise<{ emailError?: string | null }>;
+  }) => Promise<{ emailError?: string | null; verificationRequired?: boolean }>;
   hydrateSession: () => Promise<void>;
   logout: () => Promise<void>;
 };
@@ -77,7 +77,7 @@ export const createAuthSlice: StateCreator<AuthSlice, [], [], AuthSlice> = (set)
       const response = await authRegister(payload);
       tokenStorage.clear();
       set({ user: null, token: null, role: null, authLoading: false, authReady: true });
-      return { emailError: response.emailError };
+      return { emailError: response.emailError, verificationRequired: "verificationRequired" in response ? Boolean(response.verificationRequired) : false };
     } catch (error) {
       set({ authLoading: false, authReady: true });
       throw error;
