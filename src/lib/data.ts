@@ -61,6 +61,7 @@ export const updateAdminMembershipPrices = pick(api.updateAdminMembershipPrices)
 export const getAdminSectionDiscounts = pick(api.getAdminSectionDiscounts);
 export const updateAdminSectionDiscounts = pick(api.updateAdminSectionDiscounts);
 export const listMembers = pick(api.listMembers, mock.listMembers);
+export const exportMembers = pick(api.exportMembers);
 export const listAdminUsers = pick(api.listAdminUsers);
 export const createAdminUser = pick(api.createAdminUser, mock.createAdminUser);
 export const updateAdminUser = pick(api.updateAdminUser);
