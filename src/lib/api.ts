@@ -549,6 +549,10 @@ export async function importMembers(file: File, dryRun: boolean): Promise<Member
   });
 }
 
+export async function exportMembers() {
+  return requestBlob("/members/admin/export");
+}
+
 export async function listAdminUsers(): Promise<AdminUser[]> {
   return request<AdminUser[]>("/admin/users");
 }

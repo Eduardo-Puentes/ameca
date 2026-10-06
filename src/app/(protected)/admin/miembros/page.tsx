@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { FileSpreadsheet } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageMetaContext";
 import { Card } from "@/components/ui/Card";
 import { DataTable } from "@/components/ui/DataTable";
@@ -11,6 +12,7 @@ import { Input } from "@/components/ui/Input";
 import { Pagination } from "@/components/ui/Pagination";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useToastStore } from "@/components/ui/Toast";
+import { exportMembers } from "@/lib/data";
 import { useAppStore } from "@/store";
 import type { Member } from "@/lib/types";
 import { formatDate, formatProfileType } from "@/lib/utils";
@@ -22,6 +24,7 @@ export default function AdminMiembrosPage() {
   const [page, setPage] = useState(1);
   const [memberToDelete, setMemberToDelete] = useState<Member | null>(null);
   const [verifyingMemberId, setVerifyingMemberId] = useState<string | null>(null);
+  const [exportingMembers, setExportingMembers] = useState(false);
   const pageSize = 10;
   const deferredSearch = useDeferredValue(search);
 
@@ -57,6 +60,26 @@ export default function AdminMiembrosPage() {
     const start = (page - 1) * pageSize;
     return filteredMembers.slice(start, start + pageSize);
   }, [filteredMembers, page]);
+
+  const handleExportMembers = async () => {
+    try {
+      setExportingMembers(true);
+      const blob = await exportMembers();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "socios-ameca.xlsx";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "No se pudo descargar el Excel.";
+      pushToast({ title: "Error al descargar socios", message, tone: "danger" });
+    } finally {
+      setExportingMembers(false);
+    }
+  };
 
   const columns = [
     {
@@ -141,11 +164,23 @@ export default function AdminMiembrosPage() {
       />
 
       <Card className="space-y-4">
-        <div>
-          <div className="text-lg font-semibold text-[var(--ink)]">Socios registrados</div>
-          <div className="text-sm text-[var(--muted)]">
-            Solo se muestran socios verificados y correctamente registrados en la app.
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <div className="text-lg font-semibold text-[var(--ink)]">Socios registrados</div>
+            <div className="text-sm text-[var(--muted)]">
+              Solo se muestran socios verificados y correctamente registrados en la app.
+            </div>
           </div>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={handleExportMembers}
+            loading={exportingMembers}
+            loadingText="Exportando..."
+          >
+            <FileSpreadsheet size={18} aria-hidden="true" />
+            Exportar socios
+          </Button>
         </div>
         <Input
           value={search}
