@@ -1045,6 +1045,13 @@ export async function generateDiplomas(eventId: string, _minRequiredDays?: numbe
   });
 }
 
+export async function lookupAttendee(eventId: string, token: string) {
+  return request<AttendanceRecord & { eventName: string }>("/staff/attendance/lookup", {
+    method: "POST",
+    body: JSON.stringify({ event_id: eventId, qr_token: token }),
+  });
+}
+
 export async function recordAttendanceScan(eventId: string, token: string) {
   return request<AttendanceRecord>("/staff/attendance/scan", {
     method: "POST",

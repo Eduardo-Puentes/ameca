@@ -1,52 +1,24 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useParams } from "next/navigation";
 import { PageHeader } from "@/components/layout/PageMetaContext";
 import { Card } from "@/components/ui/Card";
 import { DataTable } from "@/components/ui/DataTable";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { Button } from "@/components/ui/Button";
-import { Input } from "@/components/ui/Input";
-import { useToastStore } from "@/components/ui/Toast";
 import { useAppStore } from "@/store";
+import { TicketScanner } from "@/components/attendance/TicketScanner";
 import type { AttendanceRecord } from "@/lib/types";
 
 export default function AdminAsistenciaPage() {
   const params = useParams();
   const eventId = params?.eventId as string;
-  const { events, attendanceRecords, loadAttendance, scanToken } = useAppStore();
-  const pushToast = useToastStore((state) => state.pushToast);
-  const [token, setToken] = useState("");
-  const [scanning, setScanning] = useState(false);
-
+  const { attendanceRecords, loadAttendance } = useAppStore();
   useEffect(() => {
     if (eventId) {
       loadAttendance(eventId);
     }
   }, [eventId, loadAttendance]);
-
-  const event = events.find((item) => item.id === eventId);
-
-  const handleScan = async () => {
-    if (!eventId || !token.trim()) return;
-    try {
-      setScanning(true);
-      const record = await scanToken(eventId, token.trim());
-      if (record.status === "duplicate") {
-        pushToast({ title: "Escaneo duplicado", tone: "danger" });
-      } else {
-        pushToast({ title: "Asistencia registrada", tone: "success" });
-      }
-      setToken("");
-      await loadAttendance(eventId);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "No se pudo registrar el escaneo.";
-      pushToast({ title: "Error de asistencia", message, tone: "danger" });
-    } finally {
-      setScanning(false);
-    }
-  };
 
   const columns = [
     { header: "Socio", accessor: "memberName" },
@@ -68,30 +40,7 @@ export default function AdminAsistenciaPage() {
         breadcrumb={["Admin", "Eventos", "Asistencia"]}
       />
 
-      <Card className="space-y-4">
-        <div className="flex flex-wrap items-end gap-4">
-          <div className="flex-1">
-            <div className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">Token</div>
-            <Input
-              placeholder="Escanea o pega el token"
-              value={token}
-              onChange={(event) => setToken(event.target.value)}
-            />
-          </div>
-          <Button
-            onClick={handleScan}
-            disabled={!token.trim()}
-            loading={scanning}
-            loadingText="Registrando..."
-          >
-            Registrar escaneo
-          </Button>
-          <Button variant="secondary">Exportar reporte</Button>
-        </div>
-        <div className="text-sm text-[var(--muted)]">
-          Evento: {event?.name ?? "Sin cargar"} · El backend registra un check-in único por boleto.
-        </div>
-      </Card>
+      <TicketScanner eventId={eventId} embedded />
 
       <Card>
         <DataTable columns={columns} data={attendanceRecords.filter((r) => r.eventId === eventId)} />

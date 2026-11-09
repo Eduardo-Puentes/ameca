@@ -1,18 +1,30 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { BrowserQRCodeReader, type IScannerControls } from "@zxing/browser";
 import { PageHeader } from "@/components/layout/PageMetaContext";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
+import { Modal } from "@/components/ui/Modal";
+import { lookupAttendee } from "@/lib/data";
 import { useAppStore } from "@/store";
-export function TicketScanner() {
+export function TicketScanner({
+  eventId,
+  embedded = false,
+}: {
+  eventId?: string;
+  embedded?: boolean;
+}) {
   const { events, selectedEventId, selectEvent, scanToken } = useAppStore();
   const [token, setToken] = useState("");
   const [busy, setBusy] = useState(false);
   const [camera, setCamera] = useState(false);
-  const [message, setMessage] = useState("");
+  const [attendee, setAttendee] = useState<
+    (Awaited<ReturnType<typeof lookupAttendee>> & { token: string }) | null
+  >(null);
+  const [confirmed, setConfirmed] = useState(false);
+  const activeEventId = eventId ?? selectedEventId;
   const [error, setError] = useState("");
   const video = useRef<HTMLVideoElement>(null);
   const controls = useRef<IScannerControls | null>(null);
@@ -21,6 +33,30 @@ export function TicketScanner() {
     const id = new URLSearchParams(window.location.search).get("eventId");
     if (id) selectEvent(id);
   }, [selectEvent]);
+  const loadAttendee = useCallback(async (code: string) => {
+    if (lock.current || !activeEventId || !code.trim()) return;
+    lock.current = true;
+    setBusy(true);
+    setCamera(false);
+    setError("");
+    setConfirmed(false);
+    try {
+      const record = await lookupAttendee(activeEventId, code.trim());
+      setAttendee({ ...record, token: code.trim() });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No se pudo cargar al asistente.");
+    } finally {
+      lock.current = false;
+      setBusy(false);
+    }
+  }, [activeEventId]);
+  function closeAttendee() {
+    if (lock.current) return;
+    setAttendee(null);
+    setToken("");
+    setError("");
+    setConfirmed(false);
+  }
   useEffect(() => {
     if (!camera || !video.current) return;
     let disposed = false;
@@ -30,13 +66,12 @@ export function TicketScanner() {
         { video: { facingMode: "environment" }, audio: false },
         video.current,
         (result, _error, scanner) => {
-          if (result && !disposed) {
+          if (result && !disposed && !lock.current) {
+            disposed = true;
             setToken(result.getText());
             scanner.stop();
             setCamera(false);
-            setMessage(
-              "Código leído. Revisa el evento y confirma el registro de asistencia.",
-            );
+            void loadAttendee(result.getText());
           }
         },
       )
@@ -57,25 +92,18 @@ export function TicketScanner() {
       controls.current?.stop();
       controls.current = null;
     };
-  }, [camera]);
-  async function submit() {
-    if (lock.current || !selectedEventId || !token.trim()) return;
+  }, [camera, loadAttendee]);
+  async function confirmAttendance() {
+    if (lock.current || !attendee || attendee.attended) return;
     lock.current = true;
     setBusy(true);
     setError("");
-    setMessage("");
     try {
-      const record = await scanToken(selectedEventId, token.trim());
-      setMessage(
-        record.status === "duplicate"
-          ? "Este boleto ya registró su entrada. No se creó otra asistencia."
-          : `Entrada registrada: ${record.memberName || "socio"}.`,
-      );
-      setToken("");
+      const record = await scanToken(attendee.eventId, attendee.token);
+      setAttendee({ ...attendee, ...record, attended: true });
+      setConfirmed(record.status !== "duplicate");
     } catch (e) {
-      setError(
-        e instanceof Error ? e.message : "No se pudo registrar la entrada.",
-      );
+      setError(e instanceof Error ? e.message : "No se pudo registrar la asistencia.");
     } finally {
       lock.current = false;
       setBusy(false);
@@ -83,20 +111,21 @@ export function TicketScanner() {
   }
   return (
     <div className="space-y-6">
-      <PageHeader
+      {!embedded && <PageHeader
         title="Escáner de boletos"
-        subtitle="Escanea el QR o introduce el código para registrar la entrada"
-      />
+        subtitle="Carga al asistente con su QR o código y confirma su asistencia"
+      />}
       <Card className="space-y-4">
-        <label className="block space-y-1">
+        {!eventId && <label className="block space-y-1">
           Evento
           <Select
             value={selectedEventId ?? ""}
-            disabled={busy}
+            disabled={busy || !!attendee}
             onChange={(e) => {
               selectEvent(e.target.value);
               setToken("");
-              setMessage("");
+              setAttendee(null);
+              setError("");
               setCamera(false);
             }}
           >
@@ -107,10 +136,10 @@ export function TicketScanner() {
               </option>
             ))}
           </Select>
-        </label>
+        </label>}
         <Button
           variant="secondary"
-          disabled={!selectedEventId || busy}
+          disabled={!activeEventId || busy || !!attendee}
           onClick={() => {
             setError("");
             setCamera(!camera);
@@ -131,7 +160,7 @@ export function TicketScanner() {
           className="space-y-3"
           onSubmit={(e) => {
             e.preventDefault();
-            void submit();
+            void loadAttendee(token);
           }}
         >
           <label className="block space-y-1">
@@ -148,19 +177,15 @@ export function TicketScanner() {
           <Button
             type="submit"
             loading={busy}
-            disabled={!selectedEventId || !token.trim()}
+            loadingText="Cargando..."
+            disabled={!activeEventId || !token.trim() || !!attendee}
           >
-            Confirmar entrada
+            Cargar asistente
           </Button>
         </form>
-        {error && (
+        {error && !attendee && (
           <p role="alert" className="text-[var(--danger)]">
             {error}
-          </p>
-        )}
-        {message && (
-          <p role="status" className="rounded-lg bg-[var(--surface-2)] p-3">
-            {message}
           </p>
         )}
         <p className="text-sm text-[var(--muted)]">
@@ -168,6 +193,44 @@ export function TicketScanner() {
           para el evento seleccionado.
         </p>
       </Card>
+      <Modal open={!!attendee} onClose={closeAttendee} title="Asistente del evento">
+        {attendee && (
+          <div className="space-y-4">
+            <dl className="space-y-3">
+              <div>
+                <dt className="text-sm text-[var(--muted)]">Nombre</dt>
+                <dd className="font-semibold">{attendee.memberName}</dd>
+              </div>
+              <div>
+                <dt className="text-sm text-[var(--muted)]">Correo</dt>
+                <dd className="break-all">{attendee.memberEmail}</dd>
+              </div>
+              <div>
+                <dt className="text-sm text-[var(--muted)]">Evento</dt>
+                <dd>{attendee.eventName}</dd>
+              </div>
+            </dl>
+            <p role="status" className="rounded-lg bg-[var(--surface-2)] p-3">
+              {confirmed
+                ? "Asistencia registrada correctamente."
+                : attendee.attended
+                  ? "Este asistente ya registró su entrada al evento."
+                  : "Sin asistencia registrada. Confirma para registrar su entrada."}
+            </p>
+            {error && <p role="alert" className="text-[var(--danger)]">{error}</p>}
+            <div className="flex flex-wrap gap-3">
+              {!attendee.attended && (
+                <Button onClick={() => void confirmAttendance()} loading={busy} loadingText="Registrando...">
+                  Confirmar asistencia
+                </Button>
+              )}
+              <Button variant="secondary" disabled={busy} onClick={closeAttendee}>
+                {attendee.attended ? "Cargar siguiente asistente" : "Cancelar"}
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

@@ -28,7 +28,7 @@ export const createAttendanceSlice: StateCreator<AttendanceSlice, [], [], Attend
   },
   scanToken: async (eventId, token) => {
     const record = await recordAttendanceScan(eventId, token);
-    set({ attendanceRecords: [record, ...get().attendanceRecords] });
+    set({ attendanceRecords: [record, ...get().attendanceRecords.filter((item) => item.id !== record.id)] });
     return record;
   },
 });
