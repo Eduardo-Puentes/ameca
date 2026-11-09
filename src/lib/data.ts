@@ -166,6 +166,7 @@ export const listDiplomasByEvent = pick(api.listDiplomasByEvent, mock.listDiplom
 export const sendDiplomas = pick(api.sendDiplomas, mock.sendDiplomas);
 export const sendDiplomaRecord = pick(api.sendDiplomaRecord, mock.sendDiplomaRecord);
 export const listMyDiplomas = pick(api.listMyDiplomas, mock.listMyDiplomas);
+export const lookupAttendee = pick(api.lookupAttendee, mock.lookupAttendee);
 export const recordAttendanceScan = pick(api.recordAttendanceScan, mock.recordAttendanceScan);
 export const searchAttendance = pick(api.searchAttendance, mock.searchAttendance);
 export const listAttendance = pick(api.listAttendance, mock.listAttendance);

@@ -251,8 +251,9 @@ export async function listPublicEventSpeakers(eventId: string) {
 }
 
 export async function getMyTicket(eventId: string) {
-  await wait(150);
-  return { token: `TCK-${eventId}-member`, event_id: eventId };
+  const registration = (await listMyEvents()).find((item) => item.eventId === eventId);
+  if (!registration) throw new Error("No tienes un registro aprobado para este evento.");
+  return { token: registration.ticketToken, event_id: eventId };
 }
 
 export async function listMyEvents(): Promise<MemberEventRegistration[]> {
@@ -1243,41 +1244,36 @@ export async function listMyDiplomas(memberId: string) {
   return diplomaRecords.filter((record) => record.memberId === memberId);
 }
 
-export async function recordAttendanceScan(eventId: string, token: string, day: number) {
-  await wait(200);
-  const member = members.find((item) => item.id === token) ?? members[0];
-  const event = events.find((item) => item.id === eventId);
-  const eventDay = (() => {
-    if (!event?.startDate) return undefined;
-    const base = new Date(event.startDate);
-    if (Number.isNaN(base.getTime())) return undefined;
-    const date = new Date(base);
-    date.setDate(base.getDate() + Math.max(day - 1, 0));
-    return date.toISOString().split("T")[0];
-  })();
-  const existing = attendanceRecords.find(
-    (record) => record.eventId === eventId && record.memberId === member.id && record.day === day
+export async function lookupAttendee(eventId: string, token: string) {
+  await wait(150);
+  const registration = buildEventMemberRegistrations(eventId).find(
+    (item) => item.ticketToken === token.trim()
   );
-  if (existing) {
-    const duplicate: AttendanceRecord = {
-      ...existing,
-      id: generateId("att"),
-      scannedAt: new Date().toISOString().replace("T", " ").slice(0, 16),
-      status: "duplicate",
-    };
-    attendanceRecords = [duplicate, ...attendanceRecords];
-    return duplicate;
-  }
-  const record: AttendanceRecord = {
-    id: generateId("att"),
+  if (!registration) throw new Error("Boleto no encontrado para este evento.");
+  return {
+    id: registration.id,
     eventId,
-    memberId: member.id,
-    memberName: member.fullName,
-    memberEmail: member.email,
-    day,
-    eventDay,
-    scannedAt: new Date().toISOString().replace("T", " ").slice(0, 16),
-    scannedBy: "staff-001",
+    eventName: events.find((item) => item.id === eventId)?.name ?? "",
+    memberId: registration.memberId,
+    memberName: registration.memberName,
+    memberEmail: registration.memberEmail,
+    attended: registration.attended,
+  };
+}
+
+export async function recordAttendanceScan(eventId: string, token: string) {
+  const attendee = await lookupAttendee(eventId, token);
+  const existing = attendanceRecords.find(
+    (record) => record.eventId === eventId && record.memberId === attendee.memberId
+  );
+  if (existing) return { ...existing, attended: true, status: "duplicate" as const };
+  const record: AttendanceRecord = {
+    id: attendee.id,
+    eventId,
+    memberId: attendee.memberId,
+    memberName: attendee.memberName,
+    memberEmail: attendee.memberEmail,
+    attended: true,
     status: "ok",
   };
   attendanceRecords = [record, ...attendanceRecords];
