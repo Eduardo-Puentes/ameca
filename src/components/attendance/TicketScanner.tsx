@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
 import { Modal } from "@/components/ui/Modal";
 import { lookupAttendee } from "@/lib/data";
+import { formatProfileType } from "@/lib/utils";
 import { useAppStore } from "@/store";
 export function TicketScanner({
   eventId,
@@ -200,6 +201,10 @@ export function TicketScanner({
               <div>
                 <dt className="text-sm text-[var(--muted)]">Nombre</dt>
                 <dd className="font-semibold">{attendee.memberName}</dd>
+              </div>
+              <div>
+                <dt className="text-sm text-[var(--muted)]">Tipo de perfil</dt>
+                <dd>{formatProfileType(attendee.profileType)}</dd>
               </div>
               <div>
                 <dt className="text-sm text-[var(--muted)]">Correo</dt>
