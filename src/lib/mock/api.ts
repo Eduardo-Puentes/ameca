@@ -1257,6 +1257,7 @@ export async function lookupAttendee(eventId: string, token: string) {
     memberId: registration.memberId,
     memberName: registration.memberName,
     memberEmail: registration.memberEmail,
+    profileType: registration.profileType,
     attended: registration.attended,
   };
 }
@@ -1273,6 +1274,7 @@ export async function recordAttendanceScan(eventId: string, token: string) {
     memberId: attendee.memberId,
     memberName: attendee.memberName,
     memberEmail: attendee.memberEmail,
+    profileType: attendee.profileType,
     attended: true,
     status: "ok",
   };

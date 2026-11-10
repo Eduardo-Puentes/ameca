@@ -685,6 +685,7 @@ export type AttendanceRecord = {
   memberId: string;
   memberName: string;
   memberEmail?: string;
+  profileType?: ProfileType | string;
   attended?: boolean;
   status?: "ok" | "duplicate";
   day?: number;
