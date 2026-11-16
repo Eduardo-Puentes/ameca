@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/Card";
 import { ConfirmActionModal } from "@/components/ui/ConfirmActionModal";
 import { FileUpload } from "@/components/ui/FileUpload";
 import { Input } from "@/components/ui/Input";
+import { CertificateDownloadButton, useEventCertificates } from "@/components/diplomas/CertificateDownloadButton";
 import { EventTicketModal } from "@/components/account/EventTicketModal";
 import { Select } from "@/components/ui/Select";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -54,6 +55,7 @@ export default function MemberEventoRegistroPage() {
   const [claimingPresentation, setClaimingPresentation] = useState(false);
   const [savingSpeakerProfile, setSavingSpeakerProfile] = useState(false);
   const [deletingPresentationId, setDeletingPresentationId] = useState<string | null>(null);
+  const certificates = useEventCertificates(eventId, presentations.map((item) => item.id).join(","));
   const [presentationToDelete, setPresentationToDelete] = useState<Presentation | null>(null);
 
   useEffect(() => {
@@ -194,7 +196,7 @@ export default function MemberEventoRegistroPage() {
       />
 
       <div className="grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
-        <Card className="space-y-4">
+        <Card id="constancias" className="space-y-4 scroll-mt-6">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <div className="text-lg font-semibold text-[var(--ink)]">{registration.event.name}</div>
@@ -226,6 +228,11 @@ export default function MemberEventoRegistroPage() {
               <div className="mt-1 font-semibold text-[var(--ink)]">{formatDate(registration.approvedAt)}</div>
             </div>
           </div>
+          <CertificateDownloadButton
+            certificate={certificates.items.find((item) => item.typeId === "attendance")}
+            loading={certificates.loading} error={certificates.error} onRetry={certificates.retry}
+            label="Constancia de asistencia"
+          />
         </Card>
 
         <Card className="space-y-4">
@@ -404,7 +411,12 @@ export default function MemberEventoRegistroPage() {
                     <div className="font-mono text-xs text-[var(--muted)]">{item.code || item.confirmationCode}</div>
                   ) : null}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <CertificateDownloadButton
+                    certificate={certificates.items.find((certificate) => certificate.presentationId === item.id)}
+                    loading={certificates.loading} error={certificates.error} onRetry={certificates.retry}
+                    label={item.presentationType === "PP" ? "Constancia de póster" : "Constancia de presentación oral"}
+                  />
                   {item.documentLink || item.fileUrl ? (
                     <a className="text-[var(--accent)]" href={item.documentLink || item.fileUrl} target="_blank" rel="noreferrer">
                       Ver

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { CalendarDays, Crown, MapPin, QrCode, Ticket, Users } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageMetaContext";
+import { AttendanceCertificateButton } from "@/components/diplomas/CertificateDownloadButton";
 import { EventTicketModal } from "@/components/account/EventTicketModal";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -98,6 +99,7 @@ export default function MemberDashboardPage() {
                   <QrCode className="h-6 w-6" />
                   Mostrar mi QR de acceso
                 </Button>
+                <AttendanceCertificateButton eventId={registration.eventId} />
               </div>
             ))}
           </div>
@@ -193,6 +195,7 @@ export default function MemberDashboardPage() {
                       Ver registro
                     </Button>
                   </Link>
+                  <AttendanceCertificateButton eventId={registration.eventId} />
                   <div className="inline-flex h-10 items-center gap-2 rounded-lg bg-[var(--surface)] px-3 text-sm font-medium text-[var(--ink)]">
                     <Ticket className="h-4 w-4 text-[var(--accent)]" />
                     {registration.ticketToken}

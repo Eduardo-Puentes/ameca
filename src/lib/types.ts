@@ -677,6 +677,30 @@ export type DiplomaRecord = {
   issuedAt?: number | string | null;
   sentAt?: number | string | null;
   previewData?: Record<string, string>;
+  available?: boolean;
+  eventName?: string;
+  certificateType?: string;
+  presentationId?: string | null;
+  generationError?: string | null;
+};
+
+export type CertificateType = "attendance" | "poster" | "oral_presentation";
+
+export type CertificateTypeStatus = {
+  typeId: CertificateType;
+  displayName: string;
+  ready: boolean;
+};
+
+export type MemberCertificate = {
+  scope: "attendance" | "presentation";
+  presentationId: string | null;
+  title: string;
+  available: boolean;
+  recordId: string | null;
+  typeId?: CertificateType;
+  displayName?: string | null;
+  reason?: "attendance_required" | "not_available" | null;
 };
 
 export type AttendanceRecord = {
