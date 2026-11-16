@@ -10,8 +10,7 @@ import { Card } from "@/components/ui/Card";
 import { ConfirmActionModal } from "@/components/ui/ConfirmActionModal";
 import { FileUpload } from "@/components/ui/FileUpload";
 import { Input } from "@/components/ui/Input";
-import { Modal } from "@/components/ui/Modal";
-import { QRCodeBlock } from "@/components/ui/QRCodeBlock";
+import { EventTicketModal } from "@/components/account/EventTicketModal";
 import { Select } from "@/components/ui/Select";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { Textarea } from "@/components/ui/Textarea";
@@ -467,10 +466,14 @@ export default function MemberEventoRegistroPage() {
         </Card>
       ) : null}
 
-      <Modal open={qrOpen} onClose={() => setQrOpen(false)} title="QR de acceso">
-        <Link className="mb-4 inline-block underline" href={`/socio/eventos/${eventId}/boleto`}>Abrir mi boleto</Link>
-        <QRCodeBlock token={registration.ticketToken} helper="Úsalo para entrada y registro de asistencia." />
-      </Modal>
+      <EventTicketModal
+        ticket={qrOpen ? {
+          eventId,
+          eventName: registration.event.name,
+          token: registration.ticketToken,
+        } : null}
+        onClose={() => setQrOpen(false)}
+      />
 
       <ConfirmActionModal
         open={!!presentationToDelete}

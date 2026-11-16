@@ -16,7 +16,7 @@ const isEpochDay = (value: number) => {
   return seconds % 86_400 === 0;
 };
 
-const normalizeDate = (value: DateLike) => {
+export const normalizeDate = (value: DateLike) => {
   if (value === null || value === undefined || value === "") return null;
 
   if (typeof value === "number") {

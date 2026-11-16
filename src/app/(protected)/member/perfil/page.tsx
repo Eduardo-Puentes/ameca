@@ -1,14 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { PageHeader } from "@/components/layout/PageMetaContext";
 import { ChangePasswordCard } from "@/components/account/ChangePasswordCard";
 import { Card } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
 import { FormField } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/Input";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { useToastStore } from "@/components/ui/Toast";
 import { useAppStore } from "@/store";
 import {
   formatAcademicDegree,
@@ -18,9 +16,8 @@ import {
 } from "@/lib/utils";
 
 export default function MemberPerfilPage() {
-  const { members, loadMembers, updateMemberProfile } = useAppStore();
+  const { members, loadMembers } = useAppStore();
   const user = useAppStore((state) => state.user);
-  const pushToast = useToastStore((state) => state.pushToast);
 
   useEffect(() => {
     loadMembers();
@@ -30,26 +27,7 @@ export default function MemberPerfilPage() {
     return members.find((item) => item.email === user?.email) ?? members[0];
   }, [members, user]);
 
-  const [form, setForm] = useState({ fullName: "", email: "", institution: "" });
-  const [saving, setSaving] = useState(false);
   const expirationDate = formatDate(member?.expirationDate, "Sin vencimiento");
-
-  const handleSave = async () => {
-    if (!member) return;
-    try {
-      setSaving(true);
-      await updateMemberProfile(member.id, {
-        fullName: form.fullName || member.fullName,
-        institution: form.institution || member.institution || "",
-      });
-      pushToast({ title: "Perfil actualizado", tone: "success" });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : "No se pudo guardar el perfil.";
-      pushToast({ title: "Error al guardar", message, tone: "danger" });
-    } finally {
-      setSaving(false);
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -64,26 +42,13 @@ export default function MemberPerfilPage() {
           <div className="text-lg font-semibold text-[var(--ink)]">Datos principales</div>
           <div className="grid gap-4">
             <FormField label="Nombre completo">
-              <Input
-                value={form.fullName || member?.fullName || ""}
-                onChange={(event) => setForm((prev) => ({ ...prev, fullName: event.target.value }))}
-              />
+              <Input value={member?.fullName ?? ""} readOnly />
             </FormField>
             <FormField label="Correo">
-              <Input
-                value={form.email || member?.email || ""}
-                onChange={(event) => setForm((prev) => ({ ...prev, email: event.target.value }))}
-                disabled
-              />
+              <Input value={member?.email ?? ""} disabled />
             </FormField>
             <FormField label="Institución / universidad">
-              <Input
-                value={form.institution || member?.institution || ""}
-                onChange={(event) =>
-                  setForm((prev) => ({ ...prev, institution: event.target.value }))
-                }
-                placeholder="Ej. Universidad de Guadalajara"
-              />
+              <Input value={member?.institution ?? ""} readOnly />
             </FormField>
             <div className="grid gap-3 rounded-lg border border-[var(--border)] bg-[var(--surface-2)] p-3 text-sm md:grid-cols-2">
               <div>
@@ -104,9 +69,6 @@ export default function MemberPerfilPage() {
               </div>
             </div>
           </div>
-          <Button onClick={handleSave} loading={saving} loadingText="Guardando...">
-            Guardar cambios
-          </Button>
         </Card>
 
         <Card className="space-y-4">

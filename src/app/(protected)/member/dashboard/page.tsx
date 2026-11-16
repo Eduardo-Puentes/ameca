@@ -2,17 +2,19 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { CalendarDays, Crown, MapPin, Ticket, Users } from "lucide-react";
+import { CalendarDays, Crown, MapPin, QrCode, Ticket, Users } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageMetaContext";
+import { EventTicketModal } from "@/components/account/EventTicketModal";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { listMyEvents, listMySectionInvites, listMySections } from "@/lib/data";
 import type { MemberEventRegistration, MySection, SectionInvite } from "@/lib/types";
-import { formatCurrency, formatDate } from "@/lib/utils";
+import { formatCurrency, formatDate, normalizeDate } from "@/lib/utils";
 
 export default function MemberDashboardPage() {
   const [registrations, setRegistrations] = useState<MemberEventRegistration[]>([]);
+  const [selectedTicket, setSelectedTicket] = useState<MemberEventRegistration | null>(null);
   const [sections, setSections] = useState<MySection[]>([]);
   const [sectionInvites, setSectionInvites] = useState<SectionInvite[]>([]);
   const [loading, setLoading] = useState(true);
@@ -39,10 +41,22 @@ export default function MemberDashboardPage() {
       .finally(() => {
         if (active) setLoading(false);
       });
-    return () => {
+      return () => {
       active = false;
     };
   }, []);
+
+  const now = new Date();
+  const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  const upcomingRegistrations = registrations
+    .map((registration) => ({ registration, start: normalizeDate(registration.event.startDate) }))
+    .filter(({ registration, start }) => {
+      if (!start) return false;
+      const startDay = Date.UTC(start.getUTCFullYear(), start.getUTCMonth(), start.getUTCDate());
+      const endDay = startDay + Math.max(1, registration.event.duration || 1) * 86_400_000;
+      return endDay > today;
+    })
+    .sort((a, b) => a.start!.getTime() - b.start!.getTime());
 
   return (
     <div className="space-y-6">
@@ -50,6 +64,53 @@ export default function MemberDashboardPage() {
         title="Mis eventos"
         subtitle="Eventos aprobados y boletos disponibles"
         breadcrumb={["Socio", "Panel"]}
+      />
+
+      {!loading && !error && upcomingRegistrations.length > 0 && (
+        <Card className="space-y-4 border-[var(--accent)]">
+          <div>
+            <h2 className="text-xl font-semibold text-[var(--ink)]">Próximos eventos</h2>
+            <p className="mt-1 text-sm text-[var(--muted)]">
+              Tu acceso a los eventos de hoy y próximos. Abre tu QR para ingresar.
+            </p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2">
+            {upcomingRegistrations.map(({ registration }) => (
+              <div key={registration.id} className="flex flex-col gap-4 rounded-xl bg-[var(--accent-soft)] p-5">
+                <div className="flex-1 space-y-2">
+                  <h3 className="text-lg font-semibold text-[var(--ink)]">{registration.event.name}</h3>
+                  <div className="flex items-center gap-2 text-sm text-[var(--muted)]">
+                    <CalendarDays className="h-4 w-4 shrink-0" />
+                    {formatDate(registration.event.startDate)} • {registration.event.duration} día(s)
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-[var(--muted)]">
+                    <MapPin className="h-4 w-4 shrink-0" />
+                    {registration.event.location}
+                  </div>
+                </div>
+                <Button
+                  type="button"
+                  size="lg"
+                  className="min-h-14 w-full"
+                  onClick={() => setSelectedTicket(registration)}
+                  aria-label={`Mostrar QR de acceso para ${registration.event.name}`}
+                >
+                  <QrCode className="h-6 w-6" />
+                  Mostrar mi QR de acceso
+                </Button>
+              </div>
+            ))}
+          </div>
+        </Card>
+      )}
+
+      <EventTicketModal
+        ticket={selectedTicket ? {
+          eventId: selectedTicket.eventId,
+          eventName: selectedTicket.event.name,
+          token: selectedTicket.ticketToken,
+        } : null}
+        onClose={() => setSelectedTicket(null)}
       />
 
       <Card className="space-y-4">
