@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { useParams } from "next/navigation";
 import { PageHeader } from "@/components/layout/PageMetaContext";
+import { CertificateTemplateStatus } from "@/components/diplomas/CertificateTemplateStatus";
 import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { DataTable } from "@/components/ui/DataTable";
@@ -55,18 +55,20 @@ export default function AdminDiplomasPage() {
   const attendedDaysByMember = summary?.attendedDaysByMember ?? {};
   const eligibleNow = Object.values(attendedDaysByMember).filter((days) => days >= 1).length;
 
-  const canGenerate =
-    !!template?.templateAssetUrl && (template?.fields?.length ?? 0) > 0;
+  const canGenerate = false; // Bulk issuance UI is pending; designs are project-managed.
 
   const columns = [
     { header: "Socio", accessor: "memberName" },
     { header: "Correo", accessor: "memberEmail" },
+    { header: "Tipo de constancia", accessor: "certificateType" },
+    { header: "Presentación", accessor: "presentationId" },
     { header: "Días asistidos", accessor: "attendedDays" },
     {
       header: "Estado",
       accessor: "status",
       render: (item: DiplomaRecord) => <StatusBadge status={item.status} />,
     },
+    { header: "Error de generación", accessor: "generationError" },
     {
       header: "Acciones",
       accessor: "actions",
@@ -126,7 +128,7 @@ export default function AdminDiplomasPage() {
     <div className="space-y-6">
       <PageHeader
         title="Diplomas"
-        subtitle="Configura plantillas, genera y envía certificados"
+        subtitle="Consulta las constancias de este evento"
         breadcrumb={["Admin", "Eventos", event.name, "Diplomas"]}
       />
 
@@ -142,12 +144,6 @@ export default function AdminDiplomasPage() {
           <StatusBadge status={event.status} />
         </div>
         <div className="flex flex-wrap gap-2">
-          <Link
-            href={`/admin/eventos/${event.id}/diplomas/plantilla`}
-            className="rounded-lg bg-[var(--surface-2)] px-4 py-2 text-sm font-semibold text-[var(--ink)]"
-          >
-            Configurar plantilla
-          </Link>
           <Button
             variant="secondary"
             onClick={() => setCloseOpen(true)}
@@ -157,25 +153,7 @@ export default function AdminDiplomasPage() {
         </div>
       </Card>
 
-      {!canGenerate ? (
-        <Card className="space-y-2 border border-dashed border-[var(--warning)] bg-[var(--warning-soft)]">
-          <div className="text-sm font-semibold text-[var(--ink)]">Plantilla incompleta</div>
-          <div className="text-sm text-[var(--muted)]">
-            Debes cargar una plantilla y definir campos antes de generar diplomas.
-          </div>
-          <Button
-            variant="secondary"
-            onClick={async () => {
-              if (!template) {
-                await loadTemplate(eventId);
-              }
-              pushToast({ title: "Configura la plantilla primero", tone: "warning" });
-            }}
-          >
-            Revisar plantilla
-          </Button>
-        </Card>
-      ) : null}
+      <CertificateTemplateStatus eventId={eventId} />
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card className="space-y-2">
@@ -209,7 +187,7 @@ export default function AdminDiplomasPage() {
           <Button
             onClick={async () => {
               if (!canGenerate) {
-                pushToast({ title: "Configura la plantilla antes", tone: "warning" });
+                pushToast({ title: "La generación masiva desde esta pantalla aún no está disponible", tone: "warning" });
                 return;
               }
               if (event.duration > 1) {
@@ -227,7 +205,7 @@ export default function AdminDiplomasPage() {
             variant="secondary"
             onClick={async () => {
               if (!canGenerate) {
-                pushToast({ title: "Configura la plantilla antes", tone: "warning" });
+                pushToast({ title: "La generación masiva desde esta pantalla aún no está disponible", tone: "warning" });
                 return;
               }
               if (records.length === 0) {

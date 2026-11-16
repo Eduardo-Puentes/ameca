@@ -1000,7 +1000,22 @@ export async function listMyDiplomas(memberId: string): Promise<DiplomaRecord[]>
 }
 
 export async function downloadMyDiploma(recordId: string) {
-  return request<{ url: string }>(`/members/me/diplomas/${recordId}/download`);
+  const blob = await requestBlob(`/members/me/diplomas/${recordId}/file`);
+  return { url: URL.createObjectURL(blob) };
+}
+
+export async function listMyEventCertificates(eventId: string) {
+  return request<import("./types").MemberCertificate[]>(`/members/me/events/${eventId}/certificates`);
+}
+
+export async function listCertificateTypes(eventId: string) {
+  return request<import("./types").CertificateTypeStatus[]>(`/admin/events/${eventId}/certificate-types`);
+}
+
+export async function generateCertificate(eventId: string, typeId: string, memberId: string, presentationId?: string) {
+  return request<DiplomaRecord>(`/admin/events/${eventId}/certificate-types/${typeId}/generate`, {
+    method: "POST", body: JSON.stringify({ member_id: memberId, presentation_id: presentationId || null }),
+  });
 }
 
 export async function getDiplomaTemplate(eventId: string): Promise<DiplomaTemplate | null> {
