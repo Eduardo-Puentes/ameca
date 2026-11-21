@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Download, ExternalLink, LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
-import { downloadMyDiploma, generateMyAttendanceCertificate } from "@/lib/api";
+import { downloadMyDiploma, generateMyCertificate } from "@/lib/api";
 import type { MemberCertificate } from "@/lib/types";
 
 function CertificateLoading({ message }: { message: string }) {
@@ -25,7 +25,11 @@ function downloadPdf(url: string, recordId: string) {
   link.remove();
 }
 
-function CertificatePdfPreview({ recordId, eventId }: { recordId: string; eventId?: never } | { eventId: string; recordId?: never }) {
+type CertificatePdfSource =
+  | { recordId: string; eventId?: never; presentationId?: never }
+  | { recordId?: never; eventId: string; presentationId?: string };
+
+function CertificatePdfPreview({ recordId, eventId, presentationId }: CertificatePdfSource) {
   const [result, setResult] = useState<{ url: string; recordId: string } | { error: string } | null>(null);
   const [attempt, setAttempt] = useState(0);
   const [previewLoading, setPreviewLoading] = useState(true);
@@ -35,7 +39,7 @@ function CertificatePdfPreview({ recordId, eventId }: { recordId: string; eventI
     let active = true;
     let objectUrl: string | undefined;
     async function loadPdf() {
-      const id = recordId ?? (await generateMyAttendanceCertificate(eventId)).recordId;
+      const id = recordId ?? (await generateMyCertificate(eventId, presentationId)).recordId;
       if (!active) return;
       const { url } = await downloadMyDiploma(id);
       objectUrl = url;
@@ -53,7 +57,7 @@ function CertificatePdfPreview({ recordId, eventId }: { recordId: string; eventI
       active = false;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [recordId, eventId, attempt]);
+  }, [recordId, eventId, presentationId, attempt]);
 
   if (!result) return <CertificateLoading message={eventId ? "Generando tu constancia..." : "Cargando tu constancia..."} />;
   if ("error" in result) return (
@@ -119,7 +123,8 @@ export function CertificateModal({ certificate, eventId, loading, error, onRetry
       ) : available && certificate?.recordId ? (
         <CertificatePdfPreview key={certificate.recordId} recordId={certificate.recordId} />
       ) : generationEventId ? (
-        <CertificatePdfPreview key={generationEventId} eventId={generationEventId} />
+        <CertificatePdfPreview key={certificate?.presentationId ?? generationEventId}
+          eventId={generationEventId} presentationId={certificate?.presentationId ?? undefined} />
       ) : (
         <div className="space-y-2">
           <h3 className="font-semibold">Aún no disponible</h3>

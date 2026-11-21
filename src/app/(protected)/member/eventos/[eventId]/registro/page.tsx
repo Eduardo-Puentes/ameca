@@ -414,6 +414,7 @@ export default function MemberEventoRegistroPage() {
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <CertificateDownloadButton
+                    eventId={eventId}
                     certificate={certificates.items.find((certificate) => certificate.presentationId === item.id)}
                     loading={certificates.loading} error={certificates.error} onRetry={certificates.retry}
                     label={item.presentationType === "PP" ? "Constancia de póster" : "Constancia de presentación oral"}
