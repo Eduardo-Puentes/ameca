@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { Download, ExternalLink, LoaderCircle } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "@/components/ui/Modal";
-import { downloadMyDiploma } from "@/lib/api";
+import { downloadMyDiploma, generateMyAttendanceCertificate } from "@/lib/api";
 import type { MemberCertificate } from "@/lib/types";
 
 function CertificateLoading({ message }: { message: string }) {
@@ -16,8 +16,17 @@ function CertificateLoading({ message }: { message: string }) {
   );
 }
 
-function CertificatePdfPreview({ recordId }: { recordId: string }) {
-  const [result, setResult] = useState<{ url: string; error: string } | null>(null);
+function downloadPdf(url: string, recordId: string) {
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `constancia-${recordId}.pdf`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+}
+
+function CertificatePdfPreview({ recordId, eventId }: { recordId: string; eventId?: never } | { eventId: string; recordId?: never }) {
+  const [result, setResult] = useState<{ url: string; recordId: string } | { error: string } | null>(null);
   const [attempt, setAttempt] = useState(0);
   const [previewLoading, setPreviewLoading] = useState(true);
   const [previewFailed, setPreviewFailed] = useState(false);
@@ -25,21 +34,29 @@ function CertificatePdfPreview({ recordId }: { recordId: string }) {
   useEffect(() => {
     let active = true;
     let objectUrl: string | undefined;
-    downloadMyDiploma(recordId).then(({ url }) => {
+    async function loadPdf() {
+      const id = recordId ?? (await generateMyAttendanceCertificate(eventId)).recordId;
+      if (!active) return;
+      const { url } = await downloadMyDiploma(id);
       objectUrl = url;
-      if (active) setResult({ url, error: "" });
-      else URL.revokeObjectURL(url);
-    }).catch((exc) => {
-      if (active) setResult({ url: "", error: exc instanceof Error ? exc.message : "No se pudo cargar la constancia." });
+      if (!active) {
+        URL.revokeObjectURL(url);
+        return;
+      }
+      setResult({ url, recordId: id });
+      if (eventId) downloadPdf(url, id);
+    }
+    loadPdf().catch((exc) => {
+      if (active) setResult({ error: exc instanceof Error ? exc.message : "No se pudo cargar la constancia." });
     });
     return () => {
       active = false;
       if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [recordId, attempt]);
+  }, [recordId, eventId, attempt]);
 
-  if (!result) return <CertificateLoading message="Cargando tu constancia..." />;
-  if (result.error) return (
+  if (!result) return <CertificateLoading message={eventId ? "Generando tu constancia..." : "Cargando tu constancia..."} />;
+  if ("error" in result) return (
     <div className="space-y-4">
       <p role="alert" className="text-sm text-[var(--danger)]">{result.error}</p>
       <Button type="button" onClick={() => {
@@ -51,19 +68,10 @@ function CertificatePdfPreview({ recordId }: { recordId: string }) {
     </div>
   );
 
-  const download = () => {
-    const link = document.createElement("a");
-    link.href = result.url;
-    link.download = `constancia-${recordId}.pdf`;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  };
-
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
-        <Button type="button" onClick={download}>
+        <Button type="button" onClick={() => downloadPdf(result.url, result.recordId)}>
           <Download className="h-4 w-4" /> Descargar PDF
         </Button>
         <a href={result.url} target="_blank" rel="noopener noreferrer"
@@ -89,8 +97,9 @@ function CertificatePdfPreview({ recordId }: { recordId: string }) {
   );
 }
 
-export function CertificateModal({ certificate, loading, error, onRetry, label, onClose }: {
+export function CertificateModal({ certificate, eventId, loading, error, onRetry, label, onClose }: {
   certificate?: MemberCertificate;
+  eventId?: string;
   loading: boolean;
   error: string;
   onRetry?: () => void;
@@ -98,8 +107,9 @@ export function CertificateModal({ certificate, loading, error, onRetry, label, 
   onClose: () => void;
 }) {
   const available = certificate?.available && certificate.recordId;
+  const generationEventId = certificate?.canGenerate ? eventId : undefined;
   return (
-    <Modal open onClose={onClose} title={label} className={available && !error ? "max-w-4xl" : undefined}>
+    <Modal open onClose={onClose} title={label} className={(available || generationEventId) && !error ? "max-w-4xl" : undefined}>
       {certificate && <p className="mb-4 break-words text-sm text-[var(--muted)]">{certificate.title}</p>}
       {loading ? <CertificateLoading message="Consultando tu constancia..." /> : error ? (
         <div className="space-y-4">
@@ -108,13 +118,15 @@ export function CertificateModal({ certificate, loading, error, onRetry, label, 
         </div>
       ) : available && certificate?.recordId ? (
         <CertificatePdfPreview key={certificate.recordId} recordId={certificate.recordId} />
+      ) : generationEventId ? (
+        <CertificatePdfPreview key={generationEventId} eventId={generationEventId} />
       ) : (
         <div className="space-y-2">
           <h3 className="font-semibold">Aún no disponible</h3>
           <p className="text-sm text-[var(--muted)]">
             {certificate?.reason === "attendance_required"
-              ? "Tu constancia estará disponible cuando se registre tu asistencia y AMECA publique el PDF."
-              : "AMECA aún no ha publicado esta constancia. Intenta de nuevo más adelante."}
+              ? "Tu constancia requiere que se registre tu asistencia al evento."
+              : "Tu constancia aún no está disponible. Intenta de nuevo más adelante."}
           </p>
         </div>
       )}

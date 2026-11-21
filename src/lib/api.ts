@@ -1008,6 +1008,12 @@ export async function listMyEventCertificates(eventId: string) {
   return request<import("./types").MemberCertificate[]>(`/members/me/events/${eventId}/certificates`);
 }
 
+export async function generateMyAttendanceCertificate(eventId: string) {
+  return request<{ recordId: string }>(`/members/me/events/${eventId}/certificates/attendance/generate`, {
+    method: "POST",
+  });
+}
+
 export async function listCertificateTypes(eventId: string) {
   return request<import("./types").CertificateTypeStatus[]>(`/admin/events/${eventId}/certificate-types`);
 }

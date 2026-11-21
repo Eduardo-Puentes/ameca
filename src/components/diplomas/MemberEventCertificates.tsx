@@ -18,7 +18,7 @@ export function MemberEventCertificates({ eventId }: { eventId: string }) {
             <p className="text-xs text-[var(--muted)]">{item.displayName}</p>
             <p className="break-words font-medium">{item.title}</p>
           </div>
-          <CertificateDownloadButton certificate={item} label="Descargar constancia" />
+          <CertificateDownloadButton certificate={item} eventId={eventId} label="Descargar constancia" />
         </div>
       ))}
     </Card>

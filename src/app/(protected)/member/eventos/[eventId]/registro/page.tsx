@@ -229,6 +229,7 @@ export default function MemberEventoRegistroPage() {
             </div>
           </div>
           <CertificateDownloadButton
+            eventId={eventId}
             certificate={certificates.items.find((item) => item.typeId === "attendance")}
             loading={certificates.loading} error={certificates.error} onRetry={certificates.retry}
             label="Constancia de asistencia"
