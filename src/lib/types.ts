@@ -697,6 +697,7 @@ export type MemberCertificate = {
   presentationId: string | null;
   title: string;
   available: boolean;
+  canGenerate?: boolean;
   recordId: string | null;
   typeId?: CertificateType;
   displayName?: string | null;

@@ -21,8 +21,9 @@ export function useEventCertificates(eventId: string, revision = "") {
   return { items: current?.items ?? [], loading: !current, error: current?.error ?? "", retry: () => setAttempt((value) => value + 1) };
 }
 
-export function CertificateDownloadButton({ certificate, loading = false, error = "", onRetry, label }: {
+export function CertificateDownloadButton({ certificate, eventId, loading = false, error = "", onRetry, label }: {
   certificate?: MemberCertificate;
+  eventId?: string;
   loading?: boolean;
   error?: string;
   onRetry?: () => void;
@@ -35,7 +36,7 @@ export function CertificateDownloadButton({ certificate, loading = false, error 
         aria-label={`${label}${certificate ? `: ${certificate.title}` : ""}`} aria-haspopup="dialog">
         <Download className="h-4 w-4" /> {label}
       </Button>
-      {open && <CertificateModal certificate={certificate} loading={loading} error={error}
+      {open && <CertificateModal certificate={certificate} eventId={eventId} loading={loading} error={error}
         onRetry={onRetry} label={label} onClose={() => setOpen(false)} />}
     </>
   );
@@ -43,6 +44,6 @@ export function CertificateDownloadButton({ certificate, loading = false, error 
 
 export function AttendanceCertificateButton({ eventId }: { eventId: string }) {
   const { items, loading, error, retry } = useEventCertificates(eventId);
-  return <CertificateDownloadButton certificate={items.find((item) => item.typeId === "attendance")}
+  return <CertificateDownloadButton eventId={eventId} certificate={items.find((item) => item.typeId === "attendance")}
     loading={loading} error={error} onRetry={retry} label="Constancia de asistencia" />;
 }
